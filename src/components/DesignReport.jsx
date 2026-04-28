@@ -255,7 +255,7 @@ const DesignReport = ({ data, inputs }) => {
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Switching Device</span>
-                <strong style={{ color: 'var(--accent-blue)' }}>{data.electrical.switchingDevice}</strong>
+                <strong style={{ color: '#fff' }}>{data.electrical.switchingDevice}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Stator Resistance</span>
@@ -281,7 +281,7 @@ const DesignReport = ({ data, inputs }) => {
             <ul style={{ listStyle: 'none', padding: 0 }}>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Torque Density</span>
-                <strong style={{ color: 'var(--accent-blue)' }}>{data.mechanical.maxTorqueDensity}</strong>
+                <strong style={{ color: '#fff' }}>{data.mechanical.maxTorqueDensity}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Rotor Inertia</span>
