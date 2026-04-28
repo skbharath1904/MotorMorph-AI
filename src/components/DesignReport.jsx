@@ -36,6 +36,10 @@ const DesignReport = ({ data, inputs }) => {
 
   if (!data) return null;
 
+  // Derived dimensions for consistency
+  const statorD = parseInt(data.dimensions.statorDiameter);
+  const boreD = Math.round(statorD * 0.72);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -99,7 +103,14 @@ const DesignReport = ({ data, inputs }) => {
            <div className="specs-col">
              <h3 className="section-header"><Ruler size={18}/> Physical Dimensions</h3>
              <div className="specs-list">
-               {[{ l: 'Stator Diameter', v: data.dimensions.statorDiameter }, { l: 'Rotor Length', v: data.dimensions.rotorLength }, { l: 'Overall Length', v: data.dimensions.overallLength }, { l: 'Air Gap', v: data.dimensions.airGap }, { l: 'Pole/Slot Combo', v: `${data.dimensions.slots}S / ${data.dimensions.poles}P` }].map((it, i) => (
+               {[
+                 { l: 'Stator Outer Dia.', v: data.dimensions.statorDiameter }, 
+                 { l: 'Stator Bore Dia.', v: `${boreD} mm` },
+                 { l: 'Rotor Length', v: data.dimensions.rotorLength }, 
+                 { l: 'Overall Length', v: data.dimensions.overallLength }, 
+                 { l: 'Air Gap', v: data.dimensions.airGap }, 
+                 { l: 'Pole/Slot Combo', v: `${data.dimensions.slots}S / ${data.dimensions.poles}P` }
+               ].map((it, i) => (
                  <div key={i} className="spec-item"><span>{it.l}</span><strong>{it.v}</strong></div>
                ))}
              </div>
@@ -148,7 +159,7 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         </div>
 
-        {/* 06. LIVE DESIGN PREVIEW (RE-ADDED) */}
+        {/* 06. LIVE DESIGN PREVIEW */}
         <div className="pdf-section ui-only" style={{ marginBottom: '3rem' }}>
            <div style={{ 
              display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
@@ -186,7 +197,7 @@ const DesignReport = ({ data, inputs }) => {
            </AnimatePresence>
         </div>
 
-        {/* 07. PERFORMANCE GRAPHS (RE-ADDED) */}
+        {/* 07. PERFORMANCE GRAPHS */}
         <div className="pdf-section page-break" style={{ marginBottom: '3rem' }}>
           <h3 className="section-header"><Activity size={18}/> Performance Characteristics</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
