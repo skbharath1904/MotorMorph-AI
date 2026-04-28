@@ -114,7 +114,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'maxRpm': round(max_rpm), 'baseRpm': round(max_rpm * 0.35), 'operatingVoltage': voltage,
             'estimatedEfficiency': '94.8%', 'weightKg': round(motor_weight_kg, 1)
         },
-        'thermal': { 'coolingMethod': 'Liquid Cooling', 'maxCoilTemp': '155°C', 'coolantFlowRate': '5.8 L/min' },
+        'thermal': { 'coolingMethod': 'Liquid Cooling', 'maxCoilTemp': '155°C', 'coolantFlowRate': '5.8 L/min', 'thermalResistance': '0.045 K/W' },
         'dimensions': { 'statorDiameter': f"{stator_d_mm} mm", 'rotorLength': f"{rotor_l_mm} mm", 'overallLength': f"{overall_l_mm} mm", 'airGap': f"{air_gap_mm} mm", 'poles': poles, 'slots': slots },
         'electrical': { 'phaseCurrent': f"{round((peak_power_kw*1000)/voltage, 1)} A", 'switchingDevice': 'IGBT' if voltage > 100 else 'MOSFET', 'backEmfConstant': f"{round((voltage*0.9)/(2*math.pi*max_rpm/60), 3)} V·s/rad", 'statorResistance': f"{round(0.005 + motor_weight_kg*0.0008, 3)} Ω", 'windingType': 'Distributed' },
         'mechanical': { 'maxTorqueDensity': f"{round(torque_density, 1)} Nm/L", 'rotorInertia': f"{round(0.0004 * motor_weight_kg, 5)} kg·m²", 'maxCentrifugalForce': f"{round(motor_weight_kg*140)} N", 'criticalSpeed': f"{round(max_rpm * 1.3)} RPM" },
