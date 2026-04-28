@@ -7,6 +7,7 @@ import MotorCrossSection from './MotorCrossSection';
 
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
+  const [showCrossSection, setShowCrossSection] = React.useState(false);
 
   const handleDownloadPdf = () => {
     const element = reportRef.current;
@@ -43,8 +44,6 @@ const DesignReport = ({ data, inputs }) => {
       </div>
     );
   }
-
-  const [showCrossSection, setShowCrossSection] = React.useState(false);
 
   return (
     <motion.div 
