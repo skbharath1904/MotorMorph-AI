@@ -240,7 +240,7 @@ const DesignReport = ({ data, inputs }) => {
             </div>
           </div>
           <p style={{ marginTop: '1.5rem', fontSize: '10px', textAlign: 'center', color: '#000', fontWeight: 'bold' }}>
-            © MOTOR_MORPH AI ENGINEERING | DESIGN VALIDATED FOR {inputs.vehicleType.toUpperCase()} CLASS
+            © MOTOR_MORPH AI ENGINEERING | DESIGN VALIDATED FOR {inputs?.vehicleType?.toUpperCase() || 'GENERAL'} CLASS
           </p>
         </div>
       </div>
