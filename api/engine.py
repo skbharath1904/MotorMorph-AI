@@ -81,7 +81,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     ld = 0.85 if is_2w else 1.1 if is_car else 1.3
     d_m = (t_peak_nm / (k_mag * ld))**(1/3)
     d_stator_mm = round(d_m * 1000)
-    rotor_l_mm = round(t_peak_nm * 1000000 / (k_mag * (d_stator_mm**2)))
+    rotor_l_mm = round((t_peak_nm / (k_mag * (d_stator_mm / 1000)**2)) * 1000)
     
     m_motor_kg = (math.pi * (d_stator_mm/2000)**2 * (rotor_l_mm/1000) * 7600) * 1.6
     w_min, w_max = (15, 25) if is_2w else (50, 90) if is_car else (80, 300)
