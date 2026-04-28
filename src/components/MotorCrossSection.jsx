@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -8,7 +6,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
   if (!data || !data.dimensions) return null;
 
-  const { dimensions } = data;
+  const { dimensions, specifications, motorType } = data;
   const statorD = parseFloat(dimensions.statorDiameter);
   const poles = parseInt(dimensions.poles) || 8;
   const slots = parseInt(dimensions.slots) || 12;
@@ -19,7 +17,6 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const centerX = vbWidth / 2;
   const centerY = vbHeight / 2;
   
-  // In PDF mode, force zoom to 100% (1.0) and reset offset for static capture
   const activeZoom = isPdfMode ? 1.0 : zoom;
   const activeOffset = isPdfMode ? { x: 0, y: 0 } : offset;
   
@@ -49,20 +46,19 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
     setOffset({ x: clientX - dragStart.x, y: clientY - dragStart.y });
   };
 
-  // ── BLUEPRINT COLOR PALETTE (PDF vs UI) ──
   const colors = isPdfMode ? {
     bg: '#ffffff',
     housing: '#000000',
-    housingFill: '#f9f9f9',
-    statorIron: '#eeeeee',
-    windingsA: '#e67e22',
-    windingsB: '#8e44ad',
-    windingsC: '#7f8c8d',
-    airgap: '#2980b9',
-    poleN: '#c0392b',
-    poleS: '#2c3e50',
+    housingFill: '#ffffff',
+    statorIron: '#f0f0f0',
+    windingsA: '#666666',
+    windingsB: '#333333',
+    windingsC: '#999999',
+    airgap: '#000000',
+    poleN: '#1a1a1a',
+    poleS: '#4a4a4a',
     shaft: '#000000',
-    dimension: '#27ae60',
+    dimension: '#000000',
     text: '#000000',
     labelLine: '#000000'
   } : {
@@ -93,12 +89,25 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
         style={{ 
           display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column',
           background: colors.bg, padding: isPdfMode ? '0' : '2rem', borderRadius: isPdfMode ? '0' : '32px', 
-          border: isPdfMode ? 'none' : '2px solid #222',
-          overflow: 'hidden', minHeight: isPdfMode ? '600px' : '850px', 
+          border: isPdfMode ? '1px solid #000' : '2px solid #222',
+          overflow: 'hidden', minHeight: isPdfMode ? '750px' : '850px', 
           cursor: isDragging ? 'grabbing' : (isPdfMode ? 'default' : 'grab'),
           touchAction: 'none', position: 'relative'
         }}
       >
+        {/* ── ENGINEERING DATA BLOCK (PDF ONLY) ── */}
+        {isPdfMode && (
+          <g transform="translate(50, 50)" style={{ fontFamily: 'monospace', fontSize: '14px' }}>
+            <rect x="0" y="0" width="350" height="120" fill="none" stroke="#000" strokeWidth="2" />
+            <text x="10" y="25" fontWeight="bold">ENGINEERING ASSEMBLY DRAWING</text>
+            <line x1="0" y1="35" x2="350" y2="35" stroke="#000" strokeWidth="1" />
+            <text x="10" y="55">MOTOR TYPE: {motorType.split(' ')[0]}</text>
+            <text x="10" y="75">DATE: {new Date().toLocaleDateString()}</text>
+            <text x="10" y="95">POWER: {specifications.peakPowerKw}kW | {specifications.operatingVoltage}V</text>
+            <text x="10" y="112">DOC ID: MM-AI-{(Math.random() * 10000).toFixed(0)}</text>
+          </g>
+        )}
+
         {!isPdfMode && (
           <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.6)', padding: '8px', borderRadius: '12px', backdropFilter: 'blur(10px)', zIndex: 10 }}>
             <button onClick={() => { setZoom(1); setOffset({x:0, y:0}); }} style={{ background: '#333', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.7rem' }}>RESET</button>
@@ -113,17 +122,29 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
           width="100%" height="auto" viewBox={`0 0 ${vbWidth} ${vbHeight}`} 
           style={{ overflow: 'visible', userSelect: 'none' }}
         >
+          {/* Engineering Block for PDF (rendered inside SVG for scale) */}
+          {isPdfMode && (
+             <g transform="translate(950, 950)">
+               <rect x="0" y="0" width="400" height="200" fill="#fff" stroke="#000" strokeWidth="3" />
+               <text x="20" y="40" fontSize="24" fontWeight="bold">DESIGN SUMMARY</text>
+               <text x="20" y="80" fontSize="18">ST_DIAMETER: {dimensions.statorDiameter}</text>
+               <text x="20" y="110" fontSize="18">RT_LENGTH: {dimensions.rotorLength}</text>
+               <text x="20" y="140" fontSize="18">POLES/SLOTS: {dimensions.poles}P/{dimensions.slots}S</text>
+               <text x="20" y="170" fontSize="18">AIR_GAP: {dimensions.airGap}</text>
+             </g>
+          )}
+
           <g transform={`translate(${activeOffset.x / (activeZoom * 0.4)}, ${activeOffset.y / (activeZoom * 0.4)})`}>
             
             {/* ── HOUSING ── */}
-            <circle cx={centerX} cy={centerY} r={housingRadius} fill={colors.housingFill} stroke={colors.housing} strokeWidth="12" />
+            <circle cx={centerX} cy={centerY} r={housingRadius} fill={colors.housingFill} stroke={colors.housing} strokeWidth={isPdfMode ? "3" : "12"} />
             {[...Array(64)].map((_, i) => {
               const angle = (i * 360) / 64;
-              return <rect key={`f-${i}`} x={centerX - 4} y={centerY - housingRadius - 25} width="8" height="30" fill={isPdfMode ? "#ccc" : "#2a2a2a"} transform={`rotate(${angle}, ${centerX}, ${centerY})`} />;
+              return <rect key={`f-${i}`} x={centerX - 4} y={centerY - housingRadius - 25} width="8" height="30" fill={isPdfMode ? "#666" : "#2a2a2a"} transform={`rotate(${angle}, ${centerX}, ${centerY})`} />;
             })}
 
             {/* ── STATOR ── */}
-            <circle cx={centerX} cy={centerY} r={statorCoreRadius} fill={colors.statorIron} stroke={isPdfMode ? "#999" : "#444"} strokeWidth="2" />
+            <circle cx={centerX} cy={centerY} r={statorCoreRadius} fill={colors.statorIron} stroke={isPdfMode ? "#000" : "#444"} strokeWidth="2" />
             {[...Array(slots)].map((_, i) => {
               const angle = (i * 360) / slots;
               const phase = i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C';
@@ -132,16 +153,16 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               return (
                 <g key={`slot-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
                   <rect x={centerX - boxSize/2} y={centerY - statorInnerRadius - boxSize * 0.85} width={boxSize} height={boxSize} rx="5" fill={phaseColor} stroke="#000" strokeWidth="3" />
-                  <text x={centerX} y={centerY - statorInnerRadius - boxSize * 0.85 + boxSize/1.3} fill="#000" fontSize={boxSize * 0.8} textAnchor="middle" fontWeight="900">{phase}</text>
+                  <text x={centerX} y={centerY - statorInnerRadius - boxSize * 0.85 + boxSize/1.3} fill="#fff" fontSize={boxSize * 0.8} textAnchor="middle" fontWeight="900">{phase}</text>
                 </g>
               );
             })}
 
             {/* ── AIR GAP ── */}
-            <circle cx={centerX} cy={centerY} r={(statorInnerRadius + rotorRadius) / 2} fill="transparent" stroke={colors.airgap} strokeWidth="4" strokeDasharray="15 10" />
+            <circle cx={centerX} cy={centerY} r={(statorInnerRadius + rotorRadius) / 2} fill="transparent" stroke={colors.airgap} strokeWidth={isPdfMode ? "1" : "4"} strokeDasharray="15 10" />
 
             {/* ── ROTOR ── */}
-            <circle cx={centerX} cy={centerY} r={rotorRadius} fill={isPdfMode ? "#f0f0f0" : "#000"} stroke="#222" strokeWidth="3" />
+            <circle cx={centerX} cy={centerY} r={rotorRadius} fill={isPdfMode ? "#fff" : "#000"} stroke="#000" strokeWidth="3" />
             {[...Array(poles)].map((_, i) => {
               const angle = (i * 360) / poles;
               const isNorth = i % 2 === 0;
@@ -154,7 +175,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               );
             })}
 
-            <circle cx={centerX} cy={centerY} r={shaftRadius} fill={isPdfMode ? "#fff" : "#000"} stroke={colors.shaft} strokeWidth="8" />
+            <circle cx={centerX} cy={centerY} r={shaftRadius} fill={isPdfMode ? "#eee" : "#000"} stroke={colors.shaft} strokeWidth="8" />
 
             {/* ── MEASUREMENTS ── */}
             <g style={{ fontFamily: 'monospace' }}>
@@ -182,14 +203,14 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               <line x1={centerX - housingRadius} y1={centerY - 100} x2={centerX - housingRadius - 150} y2={centerY - 250} stroke={colors.labelLine} strokeWidth="4" />
               <text x={centerX - housingRadius - 155} y={centerY - 255} fill={colors.text} textAnchor="end">EXTERNAL HOUSING</text>
 
-              <line x1={centerX + statorInnerRadius} y1={centerY - statorInnerRadius} x2={centerX + 250} y2={centerY - 450} stroke={colors.windingsA} strokeWidth="4" />
-              <text x={centerX + 255} y={centerY - 455} fill={isPdfMode ? "#000" : colors.windingsA}>STATOR WINDINGS (ABC)</text>
+              <line x1={centerX + statorInnerRadius} y1={centerY - statorInnerRadius} x2={centerX + 250} y2={centerY - 450} stroke={isPdfMode ? "#000" : colors.windingsA} strokeWidth="4" />
+              <text x={centerX + 255} y={centerY - 455} fill={colors.text}>STATOR WINDINGS (ABC)</text>
 
-              <line x1={centerX + rotorRadius + 5} y1={centerY - 50} x2={centerX + 350} y2={centerY - 150} stroke={colors.airgap} strokeWidth="4" />
-              <text x={centerX + 355} y={centerY - 155} fill={isPdfMode ? "#000" : colors.airgap}>AIR GAP: {airGapVal}mm</text>
+              <line x1={centerX + rotorRadius + 5} y1={centerY - 50} x2={centerX + 350} y2={centerY - 150} stroke={colors.labelLine} strokeWidth="4" />
+              <text x={centerX + 355} y={centerY - 155} fill={colors.text}>AIR GAP: {airGapVal}mm</text>
 
-              <line x1={centerX - rotorRadius} y1={centerY + 100} x2={centerX - 250} y2={centerY + 400} stroke={colors.poleN} strokeWidth="4" />
-              <text x={centerX - 255} y={centerY + 405} fill={isPdfMode ? "#000" : colors.poleN} textAnchor="end">ROTOR MAGNET POLES</text>
+              <line x1={centerX - rotorRadius} y1={centerY + 100} x2={centerX - 250} y2={centerY + 400} stroke={colors.labelLine} strokeWidth="4" />
+              <text x={centerX - 255} y={centerY + 405} fill={colors.text} textAnchor="end">ROTOR MAGNET POLES</text>
             </g>
           </g>
         </svg>
@@ -200,13 +221,13 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
         gap: '1.5rem', background: isPdfMode ? '#fff' : 'rgba(0,0,0,0.3)', 
         padding: '1.5rem', borderRadius: '20px', 
-        border: isPdfMode ? '1px solid #000' : '1px solid #333' 
+        border: isPdfMode ? '2px solid #000' : '1px solid #333' 
       }}>
         <LegendItem color={isPdfMode ? "#eee" : "#333"} title="1. External Housing" desc="Frame w/ cooling fins" isPdf={isPdfMode} />
         <LegendItem color={isPdfMode ? "#f0f0f0" : "#1a1a1a"} title="2. Stator Core" desc="Laminated silicon steel yoke" isPdf={isPdfMode} />
-        <LegendItem color={colors.windingsA} title="3. Stator Windings" desc="3-Phase (A/B/C) slot boxes" isPhase isPdf={isPdfMode} />
-        <LegendItem color={colors.airgap} title="4. Air Gap" desc={`Flux region: ${airGapVal}mm`} isDashed isPdf={isPdfMode} />
-        <LegendItem color={colors.poleN} title="5. Rotor Poles" desc="Permanent magnets (N/S)" isPole isPdf={isPdfMode} />
+        <LegendItem color={isPdfMode ? "#666" : colors.windingsA} title="3. Stator Windings" desc="3-Phase (A/B/C) slot boxes" isPhase isPdf={isPdfMode} />
+        <LegendItem color={isPdfMode ? "#000" : colors.airgap} title="4. Air Gap" desc={`Flux region: ${airGapVal}mm`} isDashed isPdf={isPdfMode} />
+        <LegendItem color={isPdfMode ? "#333" : colors.poleN} title="5. Rotor Poles" desc="Permanent magnets (N/S)" isPole isPdf={isPdfMode} />
         <LegendItem color={isPdfMode ? "#000" : "#fff"} title="6. Drive Shaft" desc="Main torque output shaft" isCircle isPdf={isPdfMode} />
       </div>
     </div>
@@ -217,13 +238,13 @@ const LegendItem = ({ color, title, desc, isPhase, isPole, isCircle, isDashed, i
   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
     {isPhase ? (
       <div style={{ display: 'flex', gap: '3px' }}>
-        <div style={{ width: '16px', height: '24px', background: '#ff9f43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', border: '1px solid #000' }}>A</div>
-        <div style={{ width: '16px', height: '24px', background: '#a29bfe', border: '1px solid #000' }}></div>
+        <div style={{ width: '16px', height: '24px', background: isPdf ? '#666' : '#ff9f43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', border: '1px solid #000' }}>A</div>
+        <div style={{ width: '16px', height: '24px', background: isPdf ? '#999' : '#a29bfe', border: '1px solid #000' }}></div>
       </div>
     ) : isPole ? (
       <div style={{ display: 'flex' }}>
-        <div style={{ width: '18px', height: '24px', background: '#ff3b30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>N</div>
-        <div style={{ width: '18px', height: '24px', background: '#007aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>S</div>
+        <div style={{ width: '18px', height: '24px', background: isPdf ? '#1a1a1a' : '#ff3b30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>N</div>
+        <div style={{ width: '18px', height: '24px', background: isPdf ? '#4a4a4a' : '#007aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>S</div>
       </div>
     ) : isCircle ? (
       <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid ${color}`, background: isPdf ? '#fff' : '#000' }}></div>
@@ -238,7 +259,5 @@ const LegendItem = ({ color, title, desc, isPhase, isPole, isCircle, isDashed, i
     </div>
   </div>
 );
-
-export default MotorCrossSection;
 
 export default MotorCrossSection;
