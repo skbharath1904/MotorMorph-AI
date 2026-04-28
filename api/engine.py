@@ -48,16 +48,32 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     # 🔴 TRACTIVE EFFORT & POWER
     v_mps = v_kmh / 3.6
-    f_total = ((crr := float(inputs.get('rollingResistance', 0.015))) * m_vehicle * 9.81) + \
-               (0.5 * 1.225 * float(inputs.get('dragCoefficient', 0.3)) * float(inputs.get('frontalArea', 2.2)) * (v_mps**2)) + \
-               (m_vehicle * 9.81 * 0.04)
+    crr = float(inputs.get('rollingResistance', 0.015))
+    cd = float(inputs.get('dragCoefficient', 0.3))
+    fa = float(inputs.get('frontalArea', 2.2))
+    gradient = float(inputs.get('maxGradient', 10)) / 100
+    accel_time = float(inputs.get('accelerationTime', 10))
     
-    raw_p_kw = (f_total * v_mps * 1.3) / 1000
-    p_min, p_max = (3, 12) if is_2w else (90, 150) if is_car else (150, 400)
+    # Resistance Forces at target speed
+    f_rolling = crr * m_vehicle * 9.81
+    f_drag = 0.5 * 1.225 * cd * fa * (v_mps**2)
+    f_grade = m_vehicle * 9.81 * math.sin(math.atan(gradient))
+    
+    # Acceleration Force (to reach 100kmh / 27.7mps in t seconds)
+    v_accel = min(v_mps, 27.7) 
+    f_accel = m_vehicle * (v_accel / accel_time)
+    
+    # Peak Power Required
+    p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
+    p_accel = (f_accel * (v_accel/2)) / 1000 # Avg power during accel
+    
+    raw_p_kw = max(p_road_load, p_accel) * 1.25 # 25% safety margin
+    
+    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     
     peak_power_kw = max(p_min, min(p_max, raw_p_kw))
     if raw_p_kw > p_max:
-        notes.append(f"Power Demand ({raw_p_kw:.1f}kW) exceeded {vehicle_type} safety limits. Capped at {p_max}kW to prevent thermal runaway and protect battery health.")
+        notes.append(f"Power Demand ({raw_p_kw:.1f}kW) for {gradient*100}% grade / {accel_time}s accel exceeded {vehicle_type} safety limits. Capped at {p_max}kW.")
 
     # 🔴 RPM & TORQUE
     n_max = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500

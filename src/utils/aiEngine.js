@@ -81,26 +81,33 @@ export const generateMotorDesignLocal = async (inputs) => {
   const P_max_vehicle = isTwoWheeler ? 12 : isCar ? 150 : 400;
   const P_max = Math.min(P_max_vi * 1.1, P_max_vehicle);
 
-  // ── RULE 3: Road-load physics → required peak power ────────────────────────
+  // ── Road-load physics → required peak power ────────────────────────
   const vMps = targetSpeed / 3.6;
-  const rho  = 1.225, g = 9.81, eta_dt = 0.92;
+  const gradient = (parseFloat(inputs.maxGradient) || 10) / 100;
+  const accelTime = parseFloat(inputs.accelerationTime) || 10;
+  
+  const rho  = 1.225, g = 9.81;
   const F_aero    = 0.5 * rho * dragCoefficient * frontalArea * vMps ** 2;
   const F_rolling = rollingResistance * vehicleWeight * g;
-  const F_grade   = vehicleWeight * g * Math.sin(Math.atan(0.10)); // 10% grade
-  const F_cont    = F_aero + F_rolling;
-  const F_peak    = F_cont + F_grade;
-
-  let peakPowerKw = (F_peak * vMps) / (1000 * eta_dt) * 1.15;
+  const F_grade   = vehicleWeight * g * Math.sin(Math.atan(gradient));
+  
+  const vAccel = Math.min(vMps, 27.7);
+  const F_accel = vehicleWeight * (vAccel / accelTime);
+  
+  const P_road_load = (F_aero + F_rolling + F_grade) * vMps / 1000;
+  const P_accel = (F_accel * (vAccel / 2)) / 1000;
+  
+  let peakPowerKw = Math.max(P_road_load, P_accel) * 1.25;
 
   const P_min_vehicle = isTwoWheeler ? 3 : isCar ? 30 : 80;
   if (peakPowerKw < P_min_vehicle) peakPowerKw = P_min_vehicle;
 
   if (peakPowerKw > P_max) {
-    notes.push(`Peak power reduced from ${peakPowerKw.toFixed(1)} kW to ${P_max.toFixed(1)} kW (V×I limit: ${voltage}V × ${I_max}A).`);
+    notes.push(`Peak power reduced from ${peakPowerKw.toFixed(1)} kW to ${P_max.toFixed(1)} kW (Constraint limit).`);
     peakPowerKw = P_max;
   }
 
-  const contRatio = Math.min(0.70, Math.max(0.50, F_cont / F_peak));
+  const contRatio = Math.min(0.70, Math.max(0.50, (F_aero + F_rolling) * vMps / (peakPowerKw * 1000 || 1)));
   let continuousPowerKw = peakPowerKw * contRatio;
 
   // ── RULE 5: RPM limits by vehicle type ───────────────────────────────────
