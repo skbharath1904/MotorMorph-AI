@@ -19,12 +19,7 @@ const DesignReport = ({ data, inputs }) => {
       margin: 0,
       filename: `MotorMorph_Report_${data.motorType.split(' ')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true,
-        backgroundColor: '#ffffff'
-      },
+      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
@@ -62,7 +57,6 @@ const DesignReport = ({ data, inputs }) => {
             </button>
           </div>
 
-          {/* Stats & Charts in UI */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
             {[
               { icon: <Zap size={14}/>, label: 'Peak Power', val: data.specifications.peakPowerKw + ' kW' },
@@ -77,18 +71,23 @@ const DesignReport = ({ data, inputs }) => {
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          {/* Detailed UI Specs */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
             <div className="specs-section">
               <h3 className="section-title"><Ruler size={16}/> Physical Dimensions</h3>
-              {Object.entries(data.dimensions).map(([k, v], i) => (
-                <div key={i} className="spec-row"><span>{k.replace(/([A-Z])/g, ' $1').toUpperCase()}</span><strong>{v}</strong></div>
-              ))}
+              <div className="spec-row"><span>STATOR DIAMETER</span><strong>{data.dimensions.statorDiameter}</strong></div>
+              <div className="spec-row"><span>ROTOR LENGTH</span><strong>{data.dimensions.rotorLength}</strong></div>
+              <div className="spec-row"><span>OVERALL LENGTH</span><strong>{data.dimensions.overallLength}</strong></div>
+              <div className="spec-row"><span>AIR GAP</span><strong>{data.dimensions.airGap}</strong></div>
+              <div className="spec-row"><span>POLE/SLOT COMBO</span><strong>{data.dimensions.slots}S / {data.dimensions.poles}P</strong></div>
             </div>
             <div className="specs-section">
-              <h3 className="section-title"><Zap size={16}/> Electrical Specs</h3>
-              {Object.entries(data.electrical).map(([k, v], i) => (
-                <div key={i} className="spec-row"><span>{k.replace(/([A-Z])/g, ' $1').toUpperCase()}</span><strong>{v}</strong></div>
-              ))}
+              <h3 className="section-title"><TrendingUp size={16}/> System Performance</h3>
+              <div className="spec-row"><span>CONTINUOUS POWER</span><strong>{data.specifications.continuousPowerKw} kW</strong></div>
+              <div className="spec-row"><span>PEAK EFFICIENCY</span><strong>{data.specifications.estimatedEfficiency}</strong></div>
+              <div className="spec-row"><span>CONT. TORQUE</span><strong>{data.specifications.continuousTorqueNm} Nm</strong></div>
+              <div className="spec-row"><span>BASE SPEED</span><strong>{data.specifications.baseRpm} RPM</strong></div>
+              <div className="spec-row"><span>EST. TOTAL WEIGHT</span><strong>{data.specifications.weightKg} kg</strong></div>
             </div>
           </div>
 
@@ -113,32 +112,14 @@ const DesignReport = ({ data, inputs }) => {
             <div className="pdf-section-box">
               <h2 className="pdf-section-title">01. RECOMMENDED ARCHITECTURE</h2>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontSize: '20pt', color: '#000' }}>{data.motorType}</h3>
+                <h3 style={{ fontSize: '18pt', color: '#000' }}>{data.motorType}</h3>
                 <div className="pdf-badge">Industry Validated</div>
               </div>
-              <p style={{ marginTop: '10px', fontSize: '11pt', fontStyle: 'italic', color: '#333' }}>{data.motorSelectionReason}</p>
+              <p style={{ marginTop: '10px', fontSize: '11pt', color: '#333' }}>{data.motorSelectionReason}</p>
             </div>
 
             <div className="pdf-section-box">
-              <h2 className="pdf-section-title">02. INPUT PARAMETERS & PERFORMANCE TARGETS</h2>
-              <table className="pdf-table">
-                <tbody>
-                  <tr>
-                    <td><strong>Vehicle Class:</strong> {inputs?.vehicleType}</td>
-                    <td><strong>Target Speed:</strong> {inputs?.targetSpeed} km/h</td>
-                    <td><strong>Target Range:</strong> {inputs?.range} km</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Vehicle Weight:</strong> {inputs?.vehicleWeight} kg</td>
-                    <td><strong>System Voltage:</strong> {inputs?.voltage} V</td>
-                    <td><strong>Max Gradient:</strong> {inputs?.maxGradient}%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="pdf-section-box">
-              <h2 className="pdf-section-title">03. PRIMARY OUTPUT SPECIFICATIONS</h2>
+              <h2 className="pdf-section-title">02. PRIMARY OUTPUT SPECIFICATIONS</h2>
               <table className="pdf-table-grid">
                 <tbody>
                   <tr>
@@ -152,78 +133,80 @@ const DesignReport = ({ data, inputs }) => {
             </div>
 
             <div className="pdf-section-box">
-              <h2 className="pdf-section-title">04. PHYSICAL & ELECTRICAL DETAILS</h2>
+              <h2 className="pdf-section-title">03. MECHANICAL & THERMAL SPECIFICATIONS</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <table className="pdf-table mini">
-                  <thead><tr><th colSpan="2">DIMENSIONS</th></tr></thead>
+                  <thead><tr><th colSpan="2">MECHANICAL & THERMAL</th></tr></thead>
                   <tbody>
-                    {Object.entries(data.dimensions).map(([k, v], i) => (
-                      <tr key={i}><td>{k.toUpperCase()}</td><td>{v}</td></tr>
-                    ))}
+                    <tr><td>TORQUE DENSITY</td><td>{data.mechanical.maxTorqueDensity}</td></tr>
+                    <tr><td>ROTOR INERTIA</td><td>{data.mechanical.rotorInertia}</td></tr>
+                    <tr><td>CENTRIFUGAL FORCE</td><td>{data.mechanical.maxCentrifugalForce}</td></tr>
+                    <tr><td>BEARING LOAD</td><td>{data.mechanical.bearingLoad}</td></tr>
+                    <tr><td>CRITICAL SPEED</td><td>{data.mechanical.criticalSpeed}</td></tr>
+                    <tr><td>COGGING TORQUE</td><td>{data.mechanical.coggingTorque}</td></tr>
                   </tbody>
                 </table>
                 <table className="pdf-table mini">
-                  <thead><tr><th colSpan="2">ELECTRICAL</th></tr></thead>
+                  <thead><tr><th colSpan="2">SYSTEM PERFORMANCE</th></tr></thead>
                   <tbody>
-                    {Object.entries(data.electrical).map(([k, v], i) => (
-                      <tr key={i}><td>{k.toUpperCase()}</td><td>{v}</td></tr>
-                    ))}
+                    <tr><td>CONTINUOUS POWER</td><td>{data.specifications.continuousPowerKw} kW</td></tr>
+                    <tr><td>PEAK EFFICIENCY</td><td>{data.specifications.estimatedEfficiency}</td></tr>
+                    <tr><td>CONT. TORQUE</td><td>{data.specifications.continuousTorqueNm} Nm</td></tr>
+                    <tr><td>BASE SPEED</td><td>{data.specifications.baseRpm} RPM</td></tr>
+                    <tr><td>EST. TOTAL WEIGHT</td><td>{data.specifications.weightKg} kg</td></tr>
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div className="pdf-section-box">
+              <h2 className="pdf-section-title">04. THERMAL MANAGEMENT</h2>
+              <table className="pdf-table mini">
+                <tbody>
+                  <tr>
+                    <td><strong>PRIMARY COOLING:</strong> {data.thermal.coolingMethod}</td>
+                    <td><strong>MAX COIL TEMP:</strong> {data.thermal.maxCoilTemp}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>COOLANT FLOW:</strong> {data.thermal.coolantFlowRate}</td>
+                    <td><strong>THERMAL RESISTANCE:</strong> {data.thermal.thermalResistance}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* PAGE 2: CHARTS & MECHANICAL */}
+          {/* PAGE 2: PERFORMANCE CURVES */}
           <div className="pdf-page">
             <div className="pdf-section-box">
               <h2 className="pdf-section-title">05. PERFORMANCE CHARACTERISTICS</h2>
-              <div className="pdf-chart-box">
-                <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>EFFICIENCY VS. SPEED PROFILE</h4>
-                <div style={{ height: '80mm', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="rpm" stroke="#000" />
-                      <YAxis stroke="#000" domain={[0, 100]} />
-                      <Line type="monotone" dataKey="efficiency" stroke="#00d2ff" strokeWidth={3} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="pdf-chart-frame">
+                <h4 style={{ textAlign: 'center', marginBottom: '5px', fontSize: '10pt' }}>EFFICIENCY VS. SPEED PROFILE</h4>
+                <LineChart width={650} height={300} data={data.performanceCurve} margin={{ top: 10, right: 30, left: 40, bottom: 20 }}>
+                  <XAxis dataKey="rpm" stroke="#000" />
+                  <YAxis stroke="#000" domain={[0, 100]} />
+                  <Line type="monotone" dataKey="efficiency" stroke="#00d2ff" strokeWidth={4} dot={false} isAnimationActive={false} />
+                </LineChart>
               </div>
-              <div className="pdf-chart-box" style={{ marginTop: '15px' }}>
-                <h4 style={{ textAlign: 'center', marginBottom: '10px' }}>TORQUE VS. SPEED CHARACTERISTICS</h4>
-                <div style={{ height: '80mm', width: '100%' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 20, bottom: 20 }}>
-                      <XAxis dataKey="rpm" stroke="#000" />
-                      <YAxis stroke="#000" />
-                      <Line type="monotone" dataKey="torque" stroke="#ff9f43" strokeWidth={3} dot={false} isAnimationActive={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="pdf-chart-frame" style={{ marginTop: '20px' }}>
+                <h4 style={{ textAlign: 'center', marginBottom: '5px', fontSize: '10pt' }}>TORQUE VS. SPEED CHARACTERISTICS</h4>
+                <LineChart width={650} height={300} data={data.performanceCurve} margin={{ top: 10, right: 30, left: 40, bottom: 20 }}>
+                  <XAxis dataKey="rpm" stroke="#000" />
+                  <YAxis stroke="#000" />
+                  <Line type="monotone" dataKey="torque" stroke="#ff9f43" strokeWidth={4} dot={false} isAnimationActive={false} />
+                </LineChart>
               </div>
             </div>
 
             <div className="pdf-section-box">
-              <h2 className="pdf-section-title">06. MECHANICAL & SYSTEM PERFORMANCE</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <table className="pdf-table mini">
-                  <thead><tr><th colSpan="2">MECHANICAL</th></tr></thead>
-                  <tbody>
-                    {Object.entries(data.mechanical).map(([k, v], i) => (
-                      <tr key={i}><td>{k.toUpperCase()}</td><td>{v}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-                <table className="pdf-table mini">
-                  <thead><tr><th colSpan="2">SYSTEM</th></tr></thead>
-                  <tbody>
-                    {Object.entries(data.specifications).slice(0, 6).map(([k, v], i) => (
-                      <tr key={i}><td>{k.toUpperCase()}</td><td>{v}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <h2 className="pdf-section-title">06. ELECTRICAL SPECIFICATIONS</h2>
+              <table className="pdf-table mini">
+                <tbody>
+                  {Object.entries(data.electrical).map(([k, v], i) => (
+                    <tr key={i}><td>{k.toUpperCase().replace(/([A-Z])/g, ' $1')}</td><td>{v}</td></tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -243,10 +226,6 @@ const DesignReport = ({ data, inputs }) => {
                  <div><strong>PEAK TORQUE:</strong> {data.specifications.peakTorqueNm} Nm</div>
               </div>
             </div>
-            <div style={{ marginTop: '40px', textAlign: 'center', borderTop: '2px solid #000', paddingTop: '10px' }}>
-              <p style={{ fontWeight: 900 }}>CONFIDENTIAL ENGINEERING DOCUMENT - MOTOR_MORPH AI v2.0</p>
-              <p style={{ fontSize: '9pt' }}>Generated on {new Date().toLocaleString()} | Doc ID: MMAI-{Math.floor(Math.random()*90000)+10000}</p>
-            </div>
           </div>
         </div>
 
@@ -256,7 +235,7 @@ const DesignReport = ({ data, inputs }) => {
         .spec-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .spec-row span { color: var(--text-secondary); font-size: 0.85rem; }
         .spec-row strong { font-size: 0.9rem; }
-        .section-title { font-size: 1rem; margin-bottom: 1.2rem; display: flex; alignItems: center; gap: 0.5rem; }
+        .section-title { font-size: 1rem; margin-bottom: 1.2rem; display: flex; alignItems: center; gap: 0.5rem; color: var(--accent-blue); }
         
         /* ── PDF ONLY STYLES ── */
         .pdf-only-report { display: none; }
@@ -267,38 +246,33 @@ const DesignReport = ({ data, inputs }) => {
         .pdf-page {
           width: 210mm;
           height: 296mm;
-          padding: 15mm;
+          padding: 12mm;
           background: #fff !important;
           color: #000 !important;
-          position: relative;
-          box-sizing: border-box;
           page-break-after: always;
+          box-sizing: border-box;
         }
 
-        .pdf-header-banner { border-bottom: 4px solid #000; margin-bottom: 15px; padding-bottom: 10px; }
-        .pdf-section-box { border: 2px solid #000; padding: 15px; margin-bottom: 15px; }
-        .pdf-section-title { background: #000; color: #fff; padding: 5px 10px; font-size: 11pt; margin-bottom: 10px; text-transform: uppercase; }
+        .pdf-header-banner { border-bottom: 3px solid #000; margin-bottom: 10px; }
+        .pdf-section-box { border: 1.5px solid #000; padding: 10px; margin-bottom: 10px; }
+        .pdf-section-title { background: #000; color: #fff; padding: 4px 8px; font-size: 10pt; margin-bottom: 8px; }
         
-        .pdf-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .pdf-table td { padding: 8px; border: 1px solid #ddd; font-size: 10pt; }
-        
-        .pdf-table-grid { width: 100%; border-collapse: collapse; }
-        .pdf-table-grid td { width: 25%; border: 2px solid #000; padding: 10px; text-align: center; font-weight: bold; }
-        .stat-cell { font-size: 9pt; }
-        .stat-cell span { font-size: 16pt; display: block; margin-top: 5px; }
+        .pdf-table td { padding: 6px; border: 1px solid #ccc; font-size: 9.5pt; }
+        .pdf-table-grid td { border: 1.5px solid #000; padding: 8px; text-align: center; }
+        .stat-cell { font-size: 8.5pt; }
+        .stat-cell span { font-size: 14pt; font-weight: 900; color: #000 !important; }
 
-        .pdf-table.mini th { background: #f0f0f0; padding: 5px; border: 1px solid #000; font-size: 9pt; }
-        .pdf-table.mini td { font-size: 8.5pt; padding: 4px 8px; border: 1px solid #eee; }
+        .pdf-table.mini th { background: #f0f0f0; padding: 4px; border: 1px solid #000; font-size: 8.5pt; }
+        .pdf-table.mini td { font-size: 8pt; padding: 3px 6px; border: 1px solid #eee; font-weight: bold; }
 
-        .pdf-badge { border: 2px solid #00d2ff; color: #00d2ff; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 10pt; }
-        
-        .pdf-chart-box { border: 1px solid #000; padding: 10px; background: #fff; }
-        .pdf-blueprint-frame { border: 3px solid #000; padding: 15px; height: 180mm; display: flex; align-items: center; justify-content: center; }
-        .pdf-footer-data { background: #000; color: #fff; padding: 15px; margin-top: 10px; font-size: 10pt; }
+        .pdf-badge { border: 2px solid #00d2ff; color: #00d2ff; padding: 3px 8px; font-weight: bold; font-size: 9pt; }
+        .pdf-chart-frame { border: 1px solid #000; padding: 10px; text-align: center; }
+        .pdf-blueprint-frame { border: 2px solid #000; padding: 15px; height: 160mm; display: flex; align-items: center; justify-content: center; }
+        .pdf-footer-data { background: #000; color: #fff; padding: 12px; font-size: 9.5pt; }
 
-        @media print {
-          .pdf-export-mode { width: 210mm !important; }
-        }
+        .pdf-export-mode .recharts-cartesian-axis-line { stroke: #000 !important; stroke-width: 2px !important; }
+        .pdf-export-mode .recharts-text { fill: #000 !important; font-weight: bold !important; font-size: 10pt !important; }
+        .pdf-export-mode .recharts-line-curve { stroke: #000 !important; stroke-width: 4px !important; }
       `}} />
     </motion.div>
   );
