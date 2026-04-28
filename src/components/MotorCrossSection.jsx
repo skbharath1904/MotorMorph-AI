@@ -8,9 +8,8 @@ const MotorCrossSection = ({ data }) => {
 
   if (!data || !data.dimensions) return null;
 
-  const { dimensions, specifications } = data;
+  const { dimensions } = data;
   const statorD = parseFloat(dimensions.statorDiameter);
-  const rotorL = parseFloat(dimensions.rotorLength);
   const poles = parseInt(dimensions.poles) || 8;
   const slots = parseInt(dimensions.slots) || 12;
   const airGapVal = parseFloat(dimensions.airGap);
@@ -26,7 +25,7 @@ const MotorCrossSection = ({ data }) => {
   const housingRadius = (statorD / 2 * 1.35) * currentScale;
   const statorCoreRadius = (statorD / 2 * 1.25) * currentScale;
   const statorInnerRadius = (statorD / 2) * currentScale;
-  const visualAirGap = Math.max(28, currentScale * 16); 
+  const visualAirGap = Math.max(30, currentScale * 18); 
   const rotorRadius = statorInnerRadius - visualAirGap;
   const rotorCoreRadius = rotorRadius * 0.75;
   const shaftRadius = rotorCoreRadius * 0.4;
@@ -55,27 +54,27 @@ const MotorCrossSection = ({ data }) => {
     poleN: '#ff3b30',
     poleS: '#007aff',
     shaft: '#ffffff',
-    dimension: '#00ff00', // Bright Green for measurements
+    dimension: '#00ff00', 
     label: '#ffffff'
   };
 
   return (
     <div className="motor-drawing-container" style={{ marginBottom: '4rem', width: '100%' }}>
-      <div className="no-pdf" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '15px' }}>
+      <div className="no-pdf" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h4 style={{ color: '#00ffff', textTransform: 'uppercase', letterSpacing: '2px', fontSize: '1rem', margin: 0, fontWeight: '900' }}>
-            Interactive Engineering Blueprint
+          <h4 style={{ color: '#00ffff', textTransform: 'uppercase', letterSpacing: '2.5px', fontSize: '1.1rem', margin: 0, fontWeight: '1000' }}>
+            Engineering Assembly Blueprint
           </h4>
-          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#aaa' }}>
-            PAN: Click & Drag • ZOOM: + / −
+          <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#888' }}>
+            PROFESSIONAL CROSS-SECTIONAL MODEL
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={() => { setZoom(1); setOffset({x:0, y:0}); }} style={{ background: '#333', color: '#fff', border: '1px solid #444', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: '900' }}>RESET</button>
-          <button onClick={() => handleZoom(-0.25)} style={{ background: '#222', border: '1px solid #444', color: '#fff', padding: '10px 25px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.4rem' }}>−</button>
-          <div style={{ alignSelf: 'center', color: '#00ffff', fontSize: '1.1rem', fontWeight: '900', width: '70px', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
-          <button onClick={() => handleZoom(0.25)} style={{ background: '#222', border: '1px solid #444', color: '#fff', padding: '10px 25px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.4rem' }}>+</button>
+        <div style={{ display: 'flex', gap: '15px' }}>
+          <button onClick={() => { setZoom(1); setOffset({x:0, y:0}); }} style={{ background: '#222', color: '#fff', border: '1px solid #444', padding: '12px 25px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '1000' }}>RESET VIEW</button>
+          <button onClick={() => handleZoom(-0.25)} style={{ background: '#111', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.5rem' }}>−</button>
+          <div style={{ alignSelf: 'center', color: '#00ffff', fontSize: '1.2rem', fontWeight: '1000', width: '80px', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
+          <button onClick={() => handleZoom(0.25)} style={{ background: '#111', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.5rem' }}>+</button>
         </div>
       </div>
 
@@ -103,11 +102,15 @@ const MotorCrossSection = ({ data }) => {
           {/* Main Content Group */}
           <g transform={`translate(${offset.x / (zoom * 0.4)}, ${offset.y / (zoom * 0.4)})`}>
             
-            {/* ── HOUSING & CORE ── */}
-            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#050505" stroke="#333" strokeWidth="15" />
+            {/* ── HOUSING ── */}
+            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#0d0d0d" stroke="#333" strokeWidth="15" />
+            {[...Array(64)].map((_, i) => {
+              const angle = (i * 360) / 64;
+              return <rect key={`f-${i}`} x={centerX - 4} y={centerY - housingRadius - 30} width="8" height="35" fill="#2a2a2a" transform={`rotate(${angle}, ${centerX}, ${centerY})`} />;
+            })}
+
+            {/* ── STATOR CORE ── */}
             <circle cx={centerX} cy={centerY} r={statorCoreRadius} fill={colors.statorIron} stroke="#444" strokeWidth="2" />
-            
-            {/* Phased boxes (ABC) */}
             {[...Array(slots)].map((_, i) => {
               const angle = (i * 360) / slots;
               const phase = i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C';
@@ -141,28 +144,30 @@ const MotorCrossSection = ({ data }) => {
 
             <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#000" stroke="#fff" strokeWidth="8" />
 
-            {/* ── BRIGHT MEASUREMENTS (Positioned far from motor to avoid merging) ── */}
-            <g style={{ fontFamily: 'monospace' }}>
+            {/* ── DIMENSION NAMES (Bright & Separated) ── */}
+            <g style={{ fontFamily: 'Outfit, sans-serif' }}>
               {/* Outer Diameter Measurement */}
               <g transform={`translate(${housingRadius + 250}, 0)`}>
-                <line x1={centerX} y1={centerY - housingRadius} x2={centerX} y2={centerY + housingRadius} stroke={colors.dimension} strokeWidth="4" />
-                <line x1={centerX - 30} y1={centerY - housingRadius} x2={centerX + 30} y2={centerY - housingRadius} stroke={colors.dimension} strokeWidth="4" />
-                <line x1={centerX - 30} y1={centerY + housingRadius} x2={centerX + 30} y2={centerY + housingRadius} stroke={colors.dimension} strokeWidth="4" />
-                <rect x={centerX + 40} y={centerY - 25} width="220" height="50" rx="10" fill="#000" stroke={colors.dimension} strokeWidth="2" />
-                <text x={centerX + 150} y={centerY + 12} fill={colors.dimension} fontSize="28" fontWeight="1000" textAnchor="middle">Ø {(statorD * 1.35).toFixed(1)}mm</text>
+                <line x1={centerX} y1={centerY - housingRadius} x2={centerX} y2={centerY + housingRadius} stroke={colors.dimension} strokeWidth="5" />
+                <line x1={centerX - 40} y1={centerY - housingRadius} x2={centerX + 40} y2={centerY - housingRadius} stroke={colors.dimension} strokeWidth="5" />
+                <line x1={centerX - 40} y1={centerY + housingRadius} x2={centerX + 40} y2={centerY + housingRadius} stroke={colors.dimension} strokeWidth="5" />
+                <rect x={centerX + 50} y={centerY - 45} width="450" height="90" rx="15" fill="#000" stroke={colors.dimension} strokeWidth="3" />
+                <text x={centerX + 275} y={centerY - 10} fill={colors.dimension} fontSize="32" fontWeight="1000" textAnchor="middle">Ø {(statorD * 1.35).toFixed(1)}mm</text>
+                <text x={centerX + 275} y={centerY + 30} fill="#fff" fontSize="24" fontWeight="1000" textAnchor="middle">TOTAL OUTER DIAMETER</text>
               </g>
 
-              {/* Stator ID Measurement */}
+              {/* Stator Bore Measurement */}
               <g transform={`translate(0, ${statorInnerRadius + 250})`}>
-                <line x1={centerX - statorInnerRadius} y1={centerY} x2={centerX + statorInnerRadius} y2={centerY} stroke={colors.dimension} strokeWidth="4" />
-                <line x1={centerX - statorInnerRadius} y1={centerY - 30} x2={centerX - statorInnerRadius} y2={centerY + 30} stroke={colors.dimension} strokeWidth="4" />
-                <line x1={centerX + statorInnerRadius} y1={centerY - 30} x2={centerX + statorInnerRadius} y2={centerY + 30} stroke={colors.dimension} strokeWidth="4" />
-                <rect x={centerX - 110} y={centerY + 40} width="220" height="50" rx="10" fill="#000" stroke={colors.dimension} strokeWidth="2" />
-                <text x={centerX} y={centerY + 78} fill={colors.dimension} fontSize="28" fontWeight="1000" textAnchor="middle">Ø {statorD}mm</text>
+                <line x1={centerX - statorInnerRadius} y1={centerY} x2={centerX + statorInnerRadius} y2={centerY} stroke={colors.dimension} strokeWidth="5" />
+                <line x1={centerX - statorInnerRadius} y1={centerY - 40} x2={centerX - statorInnerRadius} y2={centerY + 40} stroke={colors.dimension} strokeWidth="5" />
+                <line x1={centerX + statorInnerRadius} y1={centerY - 40} x2={centerX + statorInnerRadius} y2={centerY + 40} stroke={colors.dimension} strokeWidth="5" />
+                <rect x={centerX - 225} y={centerY + 50} width="450" height="90" rx="15" fill="#000" stroke={colors.dimension} strokeWidth="3" />
+                <text x={centerX} y={centerY + 105} fill={colors.dimension} fontSize="32" fontWeight="1000" textAnchor="middle">Ø {statorD}mm</text>
+                <text x={centerX} y={centerY + 130} fill="#fff" fontSize="24" fontWeight="1000" textAnchor="middle">STATOR INNER BORE DIAMETER</text>
               </g>
             </g>
 
-            {/* ── BOLD ASSEMBLY LABELS ── */}
+            {/* ── ASSEMBLY LABELS ── */}
             <g className="labels" fontSize="24" fontWeight="1000" style={{ fontFamily: 'Outfit, sans-serif' }}>
               <line x1={centerX - housingRadius} y1={centerY - 100} x2={centerX - housingRadius - 200} y2={centerY - 450} stroke="#fff" strokeWidth="5" />
               <text x={centerX - housingRadius - 205} y={centerY - 455} fill="#fff" textAnchor="end">EXTERNAL HOUSING</text>
@@ -175,22 +180,16 @@ const MotorCrossSection = ({ data }) => {
 
               <line x1={centerX - rotorRadius} y1={centerY + 100} x2={centerX - 350} y2={centerY + 500} stroke={colors.poleN} strokeWidth="5" />
               <text x={centerX - 355} y={centerY + 505} fill={colors.poleN} textAnchor="end">ROTOR MAGNET POLES</text>
+              
+              <line x1={centerX} y1={centerY + shaftRadius} x2={centerX + 200} y2={centerY + 450} stroke="#fff" strokeWidth="4" />
+              <text x={centerX + 205} y={centerY + 455} fill="#fff">DRIVE SHAFT</text>
             </g>
           </g>
         </svg>
 
-        {/* HUD Stats */}
-        <div style={{ position: 'absolute', top: '40px', right: '40px', background: 'rgba(0,0,0,0.85)', padding: '20px 30px', borderRadius: '25px', border: '3px solid #00ffff', color: '#fff', fontSize: '1rem', backdropFilter: 'blur(10px)' }}>
-          <div style={{ color: '#00ffff', fontWeight: '1000', marginBottom: '10px', fontSize: '1.2rem' }}>PREDICTED SPECS</div>
-          <div style={{ marginBottom: '5px' }}>Mass: <strong style={{color: '#ff9f43'}}>{specifications.weightKg} kg</strong></div>
-          <div style={{ marginBottom: '5px' }}>Length: <strong style={{color: '#ff9f43'}}>{rotorL} mm</strong></div>
-          <div style={{ marginBottom: '5px' }}>Peak Torque: <strong style={{color: '#ff9f43'}}>{specifications.peakTorqueNm} Nm</strong></div>
-          <div>Efficiency: <strong style={{color: '#00ff00'}}>{specifications.estimatedEfficiency}</strong></div>
-        </div>
-
         {/* Floating Hint */}
-        <div style={{ position: 'absolute', bottom: '40px', left: '40px', background: 'rgba(255,255,255,0.1)', padding: '15px 30px', borderRadius: '50px', color: '#fff', fontWeight: '1000', border: '1px solid rgba(255,255,255,0.2)' }}>
-          🖐️ DRAG TO EXPLORE • +/- TO ZOOM
+        <div style={{ position: 'absolute', bottom: '40px', left: '40px', background: 'rgba(0,180,255,0.2)', padding: '15px 35px', borderRadius: '50px', color: '#fff', fontWeight: '1000', border: '2px solid #00ffff', backdropFilter: 'blur(5px)' }}>
+          🖐️ CLICK & DRAG TO PAN • USE + / − TO ZOOM
         </div>
       </div>
     </div>
