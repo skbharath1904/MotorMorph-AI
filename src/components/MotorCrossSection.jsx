@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
