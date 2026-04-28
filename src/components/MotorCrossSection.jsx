@@ -169,13 +169,24 @@ const MotorCrossSection = ({ data }) => {
             <circle cx={centerX} cy={centerY} r={shaftRadius * 0.4} fill="#2a2a2a" stroke="#444" />
           </g>
 
-          {/* ── LABELS ── */}
-          <g className="blueprint-labels" fontSize="18" fontWeight="900" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            <line x1={centerX + statorRadius} y1={centerY - statorRadius + 50} x2={centerX + statorRadius + 220} y2={centerY - statorRadius - 80} stroke={colors.windingsA} strokeWidth="2.5" />
-            <text x={centerX + statorRadius + 225} y={centerY - statorRadius - 85} fill={colors.windingsA}>STATOR WINDINGS</text>
+          {/* ── PRIMARY SECTION LABELS ── */}
+          <g fontSize="22" fontWeight="900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            {/* STATOR ASSEMBLY LABEL */}
+            <path d={`M ${centerX} ${centerY - housingRadius - 40} L ${centerX + 150} ${centerY - housingRadius - 100}`} stroke="#fff" strokeWidth="3" fill="none" />
+            <text x={centerX + 155} y={centerY - housingRadius - 105} fill="#fff">STATOR ASSEMBLY</text>
 
-            <line x1={centerX - housingRadius} y1={centerY - 50} x2={centerX - housingRadius - 200} y2={centerY - 140} stroke={colors.housing} strokeWidth="2.5" />
-            <text x={centerX - housingRadius - 205} y={centerY - 145} fill="#aaa" textAnchor="end">HOUSING & FINS</text>
+            {/* ROTOR ASSEMBLY LABEL */}
+            <path d={`M ${centerX} ${centerY + rotorRadius - 60} L ${centerX - 150} ${centerY + rotorRadius + 120}`} stroke="#fff" strokeWidth="3" fill="none" />
+            <text x={centerX - 155} y={centerY + rotorRadius + 125} fill="#fff" textAnchor="end">ROTOR ASSEMBLY</text>
+          </g>
+
+          {/* ── DETAILED LABELS ── */}
+          <g className="blueprint-labels" fontSize="16" fontWeight="900" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            <line x1={centerX + statorRadius} y1={centerY - statorRadius + 50} x2={centerX + statorRadius + 220} y2={centerY - statorRadius - 30} stroke={colors.windingsA} strokeWidth="2.5" />
+            <text x={centerX + statorRadius + 225} y={centerY - statorRadius - 35} fill={colors.windingsA}>PHASE WINDINGS (SLOTS)</text>
+
+            <line x1={centerX - housingRadius} y1={centerY - 50} x2={centerX - housingRadius - 200} y2={centerY - 80} stroke={colors.housing} strokeWidth="2.5" />
+            <text x={centerX - housingRadius - 205} y={centerY - 85} fill="#aaa" textAnchor="end">HOUSING & FINS</text>
 
             <line x1={centerX + statorRadius} y1={centerY + 60} x2={centerX + statorRadius + 200} y2={centerY + 140} stroke="#888" strokeWidth="2.5" />
             <text x={centerX + statorRadius + 205} y={centerY + 145} fill="#aaa">STATOR YOKE (IRON)</text>
