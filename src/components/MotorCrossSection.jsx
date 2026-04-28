@@ -14,7 +14,7 @@ const MotorCrossSection = ({ data }) => {
   const slots = parseInt(dimensions.slots) || 12;
   const airGapVal = parseFloat(dimensions.airGap);
 
-  const vbWidth = 1600; // Even wider
+  const vbWidth = 1600; 
   const vbHeight = 1300;
   const centerX = vbWidth / 2;
   const centerY = vbHeight / 2;
@@ -62,18 +62,18 @@ const MotorCrossSection = ({ data }) => {
       <div className="no-pdf" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#111', padding: '15px', borderRadius: '15px' }}>
         <div>
           <h4 style={{ color: '#00ffff', textTransform: 'uppercase', letterSpacing: '3px', fontSize: '1.2rem', margin: 0, fontWeight: '1000' }}>
-            Interactive Engineering Assembly
+            Engineering Assembly Blueprint
           </h4>
-          <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#00ff00', fontWeight: 'bold' }}>
-            DRAG TO MOVE • ZOOM UP TO 700%
+          <p style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#888', fontWeight: 'bold' }}>
+            PROFESSIONAL CROSS-SECTIONAL MODEL
           </p>
         </div>
         
         <div style={{ display: 'flex', gap: '15px' }}>
           <button onClick={() => { setZoom(1); setOffset({x:0, y:0}); }} style={{ background: '#00ffff', color: '#000', border: 'none', padding: '12px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '1000' }}>RESET VIEW</button>
-          <button onClick={() => handleZoom(-0.5)} style={{ background: '#333', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.8rem' }}>−</button>
+          <button onClick={() => handleZoom(-0.5)} style={{ background: '#222', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.8rem' }}>−</button>
           <div style={{ alignSelf: 'center', color: '#00ffff', fontSize: '1.4rem', fontWeight: '1000', width: '90px', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
-          <button onClick={() => handleZoom(0.5)} style={{ background: '#333', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.8rem' }}>+</button>
+          <button onClick={() => handleZoom(0.5)} style={{ background: '#222', border: '1px solid #444', color: '#fff', padding: '10px 30px', borderRadius: '12px', cursor: 'pointer', fontSize: '1.8rem' }}>+</button>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ const MotorCrossSection = ({ data }) => {
         style={{ 
           display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column',
           background: '#000', padding: '3rem', borderRadius: '40px', border: '5px solid #222',
-          overflow: 'hidden', minHeight: '950px', cursor: isDragging ? 'grabbing' : 'grab',
+          overflow: 'hidden', minHeight: '900px', cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none', position: 'relative'
         }}
       >
@@ -143,9 +143,8 @@ const MotorCrossSection = ({ data }) => {
 
             <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#000" stroke="#fff" strokeWidth="10" />
 
-            {/* ── NON-MERGING DYNAMIC DIMENSIONS ── */}
+            {/* ── DIAMETER MEASUREMENTS ── */}
             <g style={{ fontFamily: 'monospace' }}>
-              {/* TOTAL OUTER DIAMETER (Far offset) */}
               <g transform={`translate(${housingRadius + 350}, 0)`}>
                 <line x1={centerX} y1={centerY - housingRadius} x2={centerX} y2={centerY + housingRadius} stroke={colors.dimension} strokeWidth="6" />
                 <line x1={centerX - 50} y1={centerY - housingRadius} x2={centerX + 50} y2={centerY - housingRadius} stroke={colors.dimension} strokeWidth="6" />
@@ -155,7 +154,6 @@ const MotorCrossSection = ({ data }) => {
                 <text x={centerX + 335} y={centerY + 40} fill="#fff" fontSize="28" fontWeight="1000" textAnchor="middle">TOTAL OUTER DIAMETER</text>
               </g>
 
-              {/* STATOR BORE DIAMETER (Far offset) */}
               <g transform={`translate(0, ${statorInnerRadius + 350})`}>
                 <line x1={centerX - statorInnerRadius} y1={centerY} x2={centerX + statorInnerRadius} y2={centerY} stroke={colors.dimension} strokeWidth="6" />
                 <line x1={centerX - statorInnerRadius} y1={centerY - 50} x2={centerX - statorInnerRadius} y2={centerY + 50} stroke={colors.dimension} strokeWidth="6" />
@@ -166,7 +164,7 @@ const MotorCrossSection = ({ data }) => {
               </g>
             </g>
 
-            {/* ── ULTRA-BOLD LABELS ── */}
+            {/* ── ASSEMBLY LABELS ── */}
             <g className="labels" fontSize="28" fontWeight="1000" style={{ fontFamily: 'Outfit, sans-serif' }}>
               <line x1={centerX - housingRadius} y1={centerY - 100} x2={centerX - housingRadius - 300} y2={centerY - 550} stroke="#fff" strokeWidth="6" />
               <text x={centerX - housingRadius - 305} y={centerY - 555} fill="#fff" textAnchor="end" fontSize="32">EXTERNAL HOUSING</text>
@@ -182,14 +180,45 @@ const MotorCrossSection = ({ data }) => {
             </g>
           </g>
         </svg>
+      </div>
 
-        {/* Hover Hint */}
-        <div style={{ position: 'absolute', bottom: '40px', left: '40px', background: '#00ffff', padding: '15px 40px', borderRadius: '50px', color: '#000', fontWeight: '1000', fontSize: '1rem', border: '3px solid #fff' }}>
-          🖐️ CLICK & DRAG TO PAN • +/- TO ZOOM (700% MAX)
-        </div>
+      {/* ── PARTS LEGEND (RESTORED & ENHANCED) ── */}
+      <div className="blueprint-legend" style={{ width: '100%', marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '2.5rem', background: 'rgba(255,255,255,0.03)', padding: '2.5rem', borderRadius: '24px', border: '2px solid #222' }}>
+        <LegendItem color="#333" title="1. External Housing" desc="Structural frame w/ cooling fins" />
+        <LegendItem color="#1a1a1a" title="2. Stator Core" desc="Laminated silicon steel yoke" />
+        <LegendItem color={colors.windingsA} title="3. Stator Windings" desc="3-Phase (A/B/C) slot boxes" isPhase />
+        <LegendItem color={colors.airgap} title="4. Air Gap" desc={`Flux region: ${airGapVal}mm`} isDashed />
+        <LegendItem color={colors.poleN} title="5. Rotor Poles" desc="Permanent magnets (N/S pairs)" isPole />
+        <LegendItem color="#fff" title="6. Drive Shaft" desc="Main torque output shaft" isCircle />
       </div>
     </div>
   );
 };
+
+const LegendItem = ({ color, title, desc, isPhase, isPole, isCircle, isDashed }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+    {isPhase ? (
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ width: '18px', height: '28px', background: '#ff9f43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '1000', border: '1px solid #000' }}>A</div>
+        <div style={{ width: '18px', height: '28px', background: '#a29bfe', border: '1px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '1000' }}>B</div>
+      </div>
+    ) : isPole ? (
+      <div style={{ display: 'flex' }}>
+        <div style={{ width: '20px', height: '28px', background: '#ff3b30', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '1000', color: '#fff' }}>N</div>
+        <div style={{ width: '20px', height: '28px', background: '#007aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '1000', color: '#fff' }}>S</div>
+      </div>
+    ) : isCircle ? (
+      <div style={{ width: '30px', height: '30px', borderRadius: '50%', border: `3px solid ${color}`, background: '#000' }}></div>
+    ) : isDashed ? (
+      <div style={{ width: '40px', height: '6px', borderTop: `3px dashed ${color}` }}></div>
+    ) : (
+      <div style={{ width: '40px', height: '28px', background: color, border: '1px solid #555' }}></div>
+    )}
+    <div>
+      <strong style={{ display: 'block', color: '#fff', fontSize: '1.05rem', fontWeight: '1000' }}>{title}</strong>
+      <span style={{ fontSize: '0.8rem', color: '#888' }}>{desc}</span>
+    </div>
+  </div>
+);
 
 export default MotorCrossSection;
