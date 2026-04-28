@@ -110,8 +110,18 @@ const MotorCrossSection = ({ data }) => {
 
               return (
                 <g key={`slot-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
-                  {/* Slot Opening / Phase Label */}
-                  <text x={centerX} y={centerY - statorRadius - 10} fill={phaseColor} fontSize="10" textAnchor="middle" fontWeight="bold">{phase}</text>
+                  {/* Slot Opening / Phase Label Box */}
+                  <rect 
+                    x={centerX - 6} y={centerY - statorRadius - 18} 
+                    width="12" height="12" 
+                    rx="2" fill={phaseColor} stroke="#000" strokeWidth="0.5"
+                  />
+                  <text 
+                    x={centerX} y={centerY - statorRadius - 8} 
+                    fill="#000" fontSize="9" textAnchor="middle" fontWeight="900"
+                  >
+                    {phase}
+                  </text>
                   
                   {/* Trapezoidal Slot */}
                   <path 
