@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
-from .engine import generate_motor_design_logic
-from .ml_model import get_ml_insights
+from api.engine import generate_motor_design_logic
+from api.ml_model import get_ml_insights
 
 app = FastAPI()
 

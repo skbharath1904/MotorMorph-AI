@@ -61,16 +61,24 @@ const MotorModel = ({ dimensions }) => {
 };
 
 const Motor3D = ({ dimensions }) => {
+  // Use a key based on dimensions to force the Canvas to re-mount when the motor changes
+  // This prevents issues with Three.js state not updating correctly
+  const vizKey = `${dimensions?.statorDiameter}-${dimensions?.rotorLength}`;
+
   return (
-    <div style={{ 
-      width: '100%', 
-      height: '350px', 
-      background: 'rgba(0,0,0,0.2)', 
-      borderRadius: '16px', 
-      overflow: 'hidden',
-      border: '1px solid rgba(255,255,255,0.05)',
-      position: 'relative'
-    }}>
+    <div 
+      key={vizKey}
+      style={{ 
+        width: '100%', 
+        height: '350px', 
+        background: 'rgba(0,0,0,0.3)', 
+        borderRadius: '16px', 
+        overflow: 'hidden',
+        border: '1px solid rgba(0, 210, 255, 0.2)',
+        position: 'relative',
+        boxShadow: 'inset 0 0 40px rgba(0,0,0,0.5)'
+      }}
+    >
       <div style={{
         position: 'absolute',
         top: '15px',
