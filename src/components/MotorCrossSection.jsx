@@ -23,7 +23,7 @@ const MotorCrossSection = ({ data }) => {
   const statorCoreRadius = (statorD / 2 * 1.25) * currentScale;
   const statorInnerRadius = (statorD / 2) * currentScale;
   
-  const visualAirGap = Math.max(20, currentScale * 12); 
+  const visualAirGap = Math.max(22, currentScale * 14); 
   const rotorRadius = statorInnerRadius - visualAirGap;
   const rotorCoreRadius = rotorRadius * 0.75;
   const shaftRadius = rotorCoreRadius * 0.4;
@@ -77,52 +77,56 @@ const MotorCrossSection = ({ data }) => {
       }}>
         <svg className="motor-svg" width="100%" height="auto" viewBox={`0 0 ${vbWidth} ${vbHeight}`} style={{ overflow: 'visible' }}>
           {/* ── DIMENSION LINES ── */}
-          <g stroke="#555" strokeWidth="1" opacity="0.5">
-            <line x1={centerX + housingRadius + 70} y1={centerY - housingRadius} x2={centerX + housingRadius + 70} y2={centerY + housingRadius} />
-            <line x1={centerX + housingRadius + 60} y1={centerY - housingRadius} x2={centerX + housingRadius + 80} y2={centerY - housingRadius} />
-            <line x1={centerX + housingRadius + 60} y1={centerY + housingRadius} x2={centerX + housingRadius + 80} y2={centerY + housingRadius} />
-            <text x={centerX + housingRadius + 95} y={centerY} fill="var(--accent-blue)" fontSize="18" fontWeight="bold" transform={`rotate(90, ${centerX + housingRadius + 95}, ${centerY})`}>Ø {statorD * 1.35}mm</text>
+          <g stroke="#555" strokeWidth="1" opacity="0.4">
+            <line x1={centerX + housingRadius + 80} y1={centerY - housingRadius} x2={centerX + housingRadius + 80} y2={centerY + housingRadius} />
+            <line x1={centerX + housingRadius + 70} y1={centerY - housingRadius} x2={centerX + housingRadius + 90} y2={centerY - housingRadius} />
+            <line x1={centerX + housingRadius + 70} y1={centerY + housingRadius} x2={centerX + housingRadius + 90} y2={centerY + housingRadius} />
+            <text x={centerX + housingRadius + 105} y={centerY} fill="var(--accent-blue)" fontSize="18" fontWeight="bold" transform={`rotate(90, ${centerX + housingRadius + 105}, ${centerY})`}>Ø {statorD * 1.35}mm</text>
           </g>
 
           {/* ── EXTERNAL HOUSING ── */}
           <g>
-            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#0d0d0d" stroke={colors.housing} strokeWidth="8" />
+            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#0d0d0d" stroke={colors.housing} strokeWidth="10" />
             {[...Array(64)].map((_, i) => {
               const angle = (i * 360) / 64;
-              return <rect key={`f-${i}`} x={centerX - 2} y={centerY - housingRadius - 20} width="4" height="24" fill={colors.housing} transform={`rotate(${angle}, ${centerX}, ${centerY})`} />;
+              return <rect key={`f-${i}`} x={centerX - 2.5} y={centerY - housingRadius - 22} width="5" height="26" fill={colors.housing} transform={`rotate(${angle}, ${centerX}, ${centerY})`} />;
             })}
           </g>
 
           {/* ── STATOR CORE ── */}
           <g>
-            <circle cx={centerX} cy={centerY} r={statorCoreRadius} fill={colors.statorIron} stroke="#444" strokeWidth="2" />
+            <circle cx={centerX} cy={centerY} r={statorCoreRadius} fill={colors.statorIron} stroke="#333" strokeWidth="2" />
             
-            {/* Phased boxes (Removed trapezoidal coils per user request) */}
+            {/* Phased labels (NO BOXES per user request) */}
             {[...Array(slots)].map((_, i) => {
               const angle = (i * 360) / slots;
               const phase = i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C';
               const phaseColor = i % 3 === 0 ? colors.windingsA : i % 3 === 1 ? colors.windingsB : colors.windingsC;
-              const boxSize = Math.max(22, statorCoreRadius * 0.12);
+              const fontSize = Math.max(16, statorCoreRadius * 0.1);
 
               return (
                 <g key={`slot-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
-                  <rect x={centerX - boxSize/2} y={centerY - statorInnerRadius - boxSize * 0.6} width={boxSize} height={boxSize} rx="4" fill={phaseColor} stroke="#000" strokeWidth="2" />
-                  <text x={centerX} y={centerY - statorInnerRadius - boxSize * 0.6 + boxSize/1.35} fill="#000" fontSize={boxSize * 0.75} textAnchor="middle" fontWeight="900">{phase}</text>
+                  <text 
+                    x={centerX} y={centerY - statorInnerRadius - 10} 
+                    fill={phaseColor} fontSize={fontSize} textAnchor="middle" fontWeight="900"
+                  >
+                    {phase}
+                  </text>
                   
-                  {/* Slot empty space */}
-                  <rect x={centerX - 10} y={centerY - statorInnerRadius} width="20" height="40" fill="#000" opacity="0.3" />
+                  {/* Clean slot line */}
+                  <line x1={centerX} y1={centerY - statorInnerRadius} x2={centerX} y2={centerY - statorInnerRadius + 35} stroke="#333" strokeWidth="1" strokeDasharray="2 2" />
                 </g>
               );
             })}
           </g>
 
           {/* ── AIR GAP ── */}
-          <circle cx={centerX} cy={centerY} r={(statorInnerRadius + rotorRadius) / 2} fill="transparent" stroke={colors.airgap} strokeWidth="2" strokeDasharray="6 4" />
+          <circle cx={centerX} cy={centerY} r={(statorInnerRadius + rotorRadius) / 2} fill="transparent" stroke={colors.airgap} strokeWidth="2" strokeDasharray="8 5" />
 
           {/* ── ROTOR ASSEMBLY ── */}
           <g>
-            <circle cx={centerX} cy={centerY} r={rotorRadius} fill="#111" stroke="#333" strokeWidth="2" />
-            <circle cx={centerX} cy={centerY} r={rotorCoreRadius} fill="#222" stroke="#444" strokeWidth="1" />
+            <circle cx={centerX} cy={centerY} r={rotorRadius} fill="#111" stroke="#222" strokeWidth="2" />
+            <circle cx={centerX} cy={centerY} r={rotorCoreRadius} fill="#222" stroke="#333" strokeWidth="1" />
             
             {/* Magnets */}
             {[...Array(poles)].map((_, i) => {
@@ -140,35 +144,29 @@ const MotorCrossSection = ({ data }) => {
 
           {/* ── SHAFT ── */}
           <g>
-            <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#111" stroke={colors.shaft} strokeWidth="4" />
-            <circle cx={centerX} cy={centerY} r={shaftRadius * 0.4} fill="#222" stroke="#444" />
+            <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#0a0a0a" stroke={colors.shaft} strokeWidth="5" />
+            <circle cx={centerX} cy={centerY} r={shaftRadius * 0.4} fill="#1a1a1a" stroke="#444" />
           </g>
 
-          {/* ── PRECISE LABELLING ── */}
+          {/* ── ASSEMBLY LABELS ── */}
           <g className="labels" fontSize="18" fontWeight="900" style={{ fontFamily: 'Outfit, sans-serif' }}>
-            {/* HOUSING */}
             <line x1={centerX - housingRadius} y1={centerY - 100} x2={centerX - housingRadius - 100} y2={centerY - 250} stroke={colors.housing} strokeWidth="3" />
             <text x={centerX - housingRadius - 105} y={centerY - 255} fill="#aaa" textAnchor="end">HOUSING & FINS</text>
 
-            {/* SLOTS / WINDINGS */}
-            <line x1={centerX + statorInnerRadius + 10} y1={centerY - statorInnerRadius + 20} x2={centerX + 250} y2={centerY - 450} stroke={colors.windingsA} strokeWidth="3" />
-            <text x={centerX + 255} y={centerY - 455} fill={colors.windingsA}>PHASED SLOTS (A, B, C)</text>
+            <line x1={centerX + statorInnerRadius + 10} y1={centerY - statorInnerRadius + 5} x2={centerX + 250} y2={centerY - 450} stroke={colors.windingsA} strokeWidth="3" />
+            <text x={centerX + 255} y={centerY - 455} fill={colors.windingsA}>STATOR WINDING SLOTS</text>
 
-            {/* AIR GAP */}
             <line x1={centerX + rotorRadius + 5} y1={centerY - 30} x2={centerX + statorCoreRadius + 150} y2={centerY - 80} stroke={colors.airgap} strokeWidth="3" />
             <text x={centerX + statorCoreRadius + 155} y={centerY - 85} fill={colors.airgap}>AIR GAP ({dimensions.airGap}mm)</text>
 
-            {/* STATOR IRON */}
-            <line x1={centerX + statorCoreRadius} y1={centerY + 50} x2={centerX + statorCoreRadius + 150} y2={centerY + 140} stroke="#888" strokeWidth="3" />
+            <line x1={centerX + statorCoreRadius} y1={centerY + 50} x2={centerX + statorCoreRadius + 150} y2={centerY + 140} stroke="#666" strokeWidth="3" />
             <text x={centerX + statorCoreRadius + 155} y={centerY + 145} fill="#888">STATOR IRON CORE</text>
 
-            {/* ROTOR POLES */}
             <line x1={centerX - rotorRadius} y1={centerY + 50} x2={centerX - 250} y2={centerY + 400} stroke={colors.poleN} strokeWidth="3" />
-            <text x={centerX - 255} y={centerY + 405} fill={colors.poleN} textAnchor="end">ROTOR MAGNET POLES (N/S)</text>
+            <text x={centerX - 255} y={centerY + 405} fill={colors.poleN} textAnchor="end">ROTOR MAGNET POLES</text>
 
-            {/* DRIVE SHAFT */}
             <line x1={centerX} y1={centerY + shaftRadius} x2={centerX + 150} y2={centerY + 420} stroke={colors.shaft} strokeWidth="3" />
-            <text x={centerX + 155} y={centerY + 425} fill="#fff">MAIN DRIVE SHAFT</text>
+            <text x={centerX + 155} y={centerY + 425} fill="#fff">DRIVE SHAFT</text>
           </g>
         </svg>
 
@@ -176,7 +174,7 @@ const MotorCrossSection = ({ data }) => {
         <div className="blueprint-legend" style={{ width: '100%', marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
           <LegendItem color={colors.housing} title="1. Housing & Fins" desc="External frame" />
           <LegendItem color={colors.statorIron} title="2. Stator Core" desc="Iron back-yoke" />
-          <LegendItem color={colors.windingsA} title="3. Phase Windings" desc="A/B/C phased slots" isPhase />
+          <LegendItem color={colors.windingsA} title="3. Phase Windings" desc="A/B/C phased slots" isTextOnly />
           <LegendItem color={colors.airgap} title="4. Air Gap" desc="Flux transfer space" isDashed />
           <LegendItem color={colors.poleN} title="5. Rotor Magnets" desc="Alternating N/S poles" isPole />
           <LegendItem color={colors.shaft} title="6. Drive Shaft" desc="Torque output" isCircle />
@@ -186,13 +184,10 @@ const MotorCrossSection = ({ data }) => {
   );
 };
 
-const LegendItem = ({ color, title, desc, isPhase, isPole, isCircle, isDashed }) => (
+const LegendItem = ({ color, title, desc, isTextOnly, isPole, isCircle, isDashed }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-    {isPhase ? (
-      <div style={{ display: 'flex', gap: '3px' }}>
-        <div style={{ width: '14px', height: '24px', background: '#ff9f43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900' }}>A</div>
-        <div style={{ width: '14px', height: '24px', background: '#a29bfe' }}></div>
-      </div>
+    {isTextOnly ? (
+      <div style={{ display: 'flex', gap: '5px', fontSize: '14px', fontWeight: '900', color: '#ff9f43' }}>A B C</div>
     ) : isPole ? (
       <div style={{ display: 'flex' }}>
         <div style={{ width: '15px', height: '24px', background: '#ff2d55', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>N</div>
