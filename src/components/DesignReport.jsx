@@ -156,8 +156,26 @@ const DesignReport = ({ data, inputs }) => {
           </button>
         </div>
 
-        {/* ── Engineering Cross-Section Section (CONDITIONAL) ── */}
-        {showCrossSection && <MotorCrossSection data={data} />}
+        {/* ── UI-only Toggleable View ── */}
+        {showCrossSection && (
+          <div className="ui-only-diagram" style={{ marginTop: '1rem' }}>
+            <MotorCrossSection data={data} />
+          </div>
+        )}
+
+        {/* ── PDF-only Dedicated Blueprint Page ── */}
+        <div className="pdf-only-blueprint-page">
+          <div className="pdf-page-break" style={{ height: '20px' }}></div>
+          <h2 style={{ textAlign: 'center', marginBottom: '2rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
+            Technical Appendix: Motor Cross-Section Blueprint
+          </h2>
+          <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '2px solid #000' }}>
+            <MotorCrossSection data={data} isPdfMode={true} />
+          </div>
+          <p style={{ marginTop: '1rem', fontSize: '10px', textAlign: 'center', color: '#666' }}>
+            Note: All dimensions are in millimeters (mm). This blueprint is an AI-generated engineering representation based on calculated physical parameters.
+          </p>
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <div className="stat-card">
@@ -546,9 +564,20 @@ const DesignReport = ({ data, inputs }) => {
           font-weight: 800 !important;
           font-size: 14px !important;
         }
-        .pdf-export-mode .recharts-line .recharts-curve {
-          stroke: #000 !important;
-          stroke-width: 4px !important;
+        .pdf-export-mode .ui-only-diagram {
+          display: none !important;
+        }
+        .pdf-only-blueprint-page {
+          display: none;
+        }
+        .pdf-export-mode .pdf-only-blueprint-page {
+          display: block !important;
+          page-break-before: always !important;
+          margin-top: 50mm !important; /* Force onto next page */
+        }
+        .pdf-export-mode .pdf-only-blueprint-page svg {
+          max-width: 100% !important;
+          height: auto !important;
         }
       `}} />
     </motion.div>
