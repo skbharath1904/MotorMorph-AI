@@ -153,10 +153,35 @@ const MotorCrossSection = ({ data }) => {
           <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#222" stroke="#666" strokeWidth="1" className="part-shaft" />
           <circle cx={centerX} cy={centerY} r={shaftRadius * 0.3} fill="#111" stroke="#444" strokeWidth="1" />
 
-          {/* Labels */}
-          <g className="no-pdf">
+          {/* Labels and Leader Lines */}
+          <g className="drawing-labels">
+            {/* Housing Label */}
+            <line x1={centerX - housingRadius} y1={centerY - housingRadius} x2={centerX - housingRadius - 40} y2={centerY - housingRadius - 20} stroke="#666" strokeWidth="1" />
+            <text x={centerX - housingRadius - 45} y={centerY - housingRadius - 25} fill="#aaa" fontSize="9" textAnchor="end">EXTERNAL HOUSING / FINS</text>
+
+            {/* Stator Label */}
+            <line x1={centerX + statorRadius - 10} y1={centerY - statorRadius + 10} x2={centerX + statorRadius + 40} y2={centerY - statorRadius - 20} stroke="#666" strokeWidth="1" />
+            <text x={centerX + statorRadius + 45} y={centerY - statorRadius - 25} fill="#aaa" fontSize="9">STATOR YOKE & TEETH</text>
+
+            {/* Windings Label */}
+            <line x1={centerX + statorRadius - 30} y1={centerY - statorRadius + 30} x2={centerX + statorRadius + 60} y2={centerY - statorRadius + 10} stroke="url(#windingGrad)" strokeWidth="1" />
+            <text x={centerX + statorRadius + 65} y={centerY - statorRadius + 15} fill="#b87333" fontSize="9" fontWeight="bold">COPPER WINDINGS (SLOTS)</text>
+
+            {/* Air Gap Label */}
+            <line x1={centerX - (statorRadius - slotDepth) + 5} y1={centerY + 5} x2={centerX - (statorRadius - slotDepth) - 50} y2={centerY + 20} stroke="#00d2ff" strokeWidth="1" strokeDasharray="2 1" />
+            <text x={centerX - (statorRadius - slotDepth) - 55} y={centerY + 25} fill="#00d2ff" fontSize="9" textAnchor="end">MAGNETIC AIR GAP ({airGap}mm)</text>
+
+            {/* Rotor/Poles Label */}
+            <line x1={centerX} y1={centerY + rotorRadius - 5} x2={centerX - 30} y2={centerY + rotorRadius + 40} stroke="#ff0055" strokeWidth="1" />
+            <text x={centerX - 35} y={centerY + rotorRadius + 45} fill="#ff0055" fontSize="9" textAnchor="end">{poles}-POLE ROTOR ASSEMBLY</text>
+
+            {/* Shaft Label */}
+            <line x1={centerX} y1={centerY} x2={centerX + 60} y2={centerY + 60} stroke="#888" strokeWidth="1" />
+            <text x={centerX + 65} y={centerY + 65} fill="#888" fontSize="9">MAIN DRIVE SHAFT</text>
+
+            {/* Dimensions */}
             <line x1={centerX + statorRadius} y1={centerY} x2={centerX + statorRadius + 30} y2={centerY} stroke="#00d2ff" strokeWidth="1" />
-            <text x={centerX + statorRadius + 35} y={centerY + 4} fill="#00d2ff" fontSize="10" fontWeight="700">Ø {statorD}mm (Stator)</text>
+            <text x={centerX + statorRadius + 35} y={centerY + 4} fill="#00d2ff" fontSize="10" fontWeight="700">Ø {statorD}mm</text>
           </g>
         </svg>
 
@@ -234,6 +259,17 @@ const MotorCrossSection = ({ data }) => {
         .pdf-export-mode .part-pole {
           fill: #ddd !important;
           stroke: #000 !important;
+        }
+        
+        .pdf-export-mode .drawing-labels text {
+          fill: #000 !important;
+          font-weight: 900 !important;
+          font-size: 10px !important;
+        }
+
+        .pdf-export-mode .drawing-labels line {
+          stroke: #000 !important;
+          stroke-width: 1.5px !important;
         }
         
         .pdf-export-mode .drawing-key {
