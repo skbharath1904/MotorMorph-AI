@@ -9,6 +9,11 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
   const { poles = 8, slots = 12 } = data.dimensions;
   
+  // Predict derived dimensions based on AI-calculated statorDiameter
+  const statorOuterD = parseInt(data.dimensions.statorDiameter) || 200;
+  const boreD = Math.round(statorOuterD * 0.72); // Typical 72% bore ratio
+  const totalOuterD = Math.round(statorOuterD * 1.08); // Housing add-on
+
   const handleZoom = (delta) => {
     setScale(prev => Math.min(Math.max(prev + delta, 0.4), 2.0));
   };
@@ -30,7 +35,6 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const CX = 500;
   const CY = 450;
 
-  // Precision coordinate helper
   const getPoint = (radius, angleDeg) => {
     const angleRad = (angleDeg - 90) * (Math.PI / 180);
     return {
@@ -39,15 +43,14 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
     };
   };
 
-  // Explicit radii for cores and boundaries
   const pts = {
-    housing: getPoint(245, -30),      // Top Right - Touching Housing Fins
-    statorCore: getPoint(222, 35),    // Touching Inside Gap of Housing
-    statorSlots: getPoint(212, 65),   // Pointing to A/B/C box
-    airGap: getPoint(185, 95),        // Middle of Air Gap
-    poles: getPoint(170, 150),        // Magnetic Poles surface
-    rotorCore: getPoint(110, 210),    // Touching Gap outside Main Shaft
-    shaft: getPoint(45, 275)          // Main Shaft edge
+    housing: getPoint(245, -30),
+    statorCore: getPoint(222, 35),
+    statorSlots: getPoint(212, 65),
+    airGap: getPoint(185, 95),
+    poles: getPoint(170, 150),
+    rotorCore: getPoint(110, 210),
+    shaft: getPoint(45, 275)
   };
 
   return (
@@ -87,7 +90,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               <circle cx={CX} cy={CY} r="230" fill="none" stroke={colors.housing} strokeWidth="8" />
             </g>
 
-            {/* 2. STATOR CORE (r=200 to r=230) */}
+            {/* 2. STATOR CORE */}
             <circle cx={CX} cy={CY} r="215" fill="none" stroke={colors.stator} strokeWidth="30" />
 
             {/* 3. STATOR SLOTS */}
@@ -103,7 +106,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             {/* 4. AIR GAP */}
             <circle cx={CX} cy={CY} r="185" fill="none" stroke={colors.dimension} strokeWidth="2" strokeDasharray="8 6" opacity="1.0" />
 
-            {/* 5. ROTOR CORE (r=50 to r=165) */}
+            {/* 5. ROTOR CORE */}
             <circle cx={CX} cy={CY} r="165" fill={colors.rotor} stroke="#333" strokeWidth="2" />
             
             {/* MAGNETIC POLES */}
@@ -120,7 +123,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             <circle cx={CX} cy={CY} r="50" fill={isPdfMode ? "#fff" : "#111"} stroke={colors.text} strokeWidth="2" />
             <circle cx={CX} cy={CY} r="15" fill={colors.text} opacity={isPdfMode ? 0.2 : 0.4} />
 
-            {/* ── MEASUREMENTS ── */}
+            {/* ── UPDATED MEASUREMENTS (PREDICTED VALUES) ── */}
             <g stroke={colors.dimension} strokeWidth="2.5" fill="none">
               <line x1={CX + 280} y1={CY - 230} x2={CX + 280} y2={CY + 230} />
               <line x1={CX + 260} y1={CY - 230} x2={CX + 300} y2={CY - 230} />
@@ -130,20 +133,20 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               <line x1={CX + 200} y1={CY + 260} x2={CX + 200} y2={CY + 300} />
             </g>
 
-            {/* Callout Boxes */}
             <g>
+               {/* Right Callout: Total Outer Diameter */}
                <rect x={CX + 320} y={CY - 25} width="220" height="55" rx="10" fill="none" stroke={colors.dimension} strokeWidth="1.5" />
-               <text x={CX + 430} y={CY + 5} textAnchor="middle" fill={colors.dimension} fontSize="18" fontWeight="900">Ø {data.dimensions.statorDiameter}</text>
+               <text x={CX + 430} y={CY + 5} textAnchor="middle" fill={colors.dimension} fontSize="18" fontWeight="900">Ø {totalOuterD} mm</text>
                <text x={CX + 430} y={CY + 22} textAnchor="middle" fill={colors.dimension} fontSize="10" fontWeight="800">TOTAL OUTER DIAMETER</text>
 
+               {/* Bottom Callout: Stator Inner Bore Diameter */}
                <rect x={CX - 110} y={CY + 320} width="220" height="55" rx="10" fill="none" stroke={colors.dimension} strokeWidth="1.5" />
-               <text x={CX} y={CY + 350} textAnchor="middle" fill={colors.dimension} fontSize="18" fontWeight="900">Ø 98mm</text>
+               <text x={CX} y={CY + 350} textAnchor="middle" fill={colors.dimension} fontSize="18" fontWeight="900">Ø {boreD} mm</text>
                <text x={CX} y={CY + 367} textAnchor="middle" fill={colors.dimension} fontSize="10" fontWeight="800">STATOR INNER BORE DIAMETER</text>
             </g>
 
-            {/* ── UPDATED PRECISION LEADERS ── */}
+            {/* ── LABELS ── */}
             <g stroke={colors.leader} strokeWidth="2" fill="none">
-               {/* Bullets precisely touching the gaps/parts */}
                <circle cx={pts.housing.x} cy={pts.housing.y} r="5" fill={colors.leader} stroke="none" />
                <circle cx={pts.statorCore.x} cy={pts.statorCore.y} r="5" fill={colors.leader} stroke="none" />
                <circle cx={pts.statorSlots.x} cy={pts.statorSlots.y} r="5" fill={colors.leader} stroke="none" />
@@ -152,7 +155,6 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
                <circle cx={pts.rotorCore.x} cy={pts.rotorCore.y} r="5" fill={colors.leader} stroke="none" />
                <circle cx={pts.shaft.x} cy={pts.shaft.y} r="5" fill={colors.leader} stroke="none" />
 
-               {/* Professional Leader Pathing */}
                <path d={`M ${pts.housing.x} ${pts.housing.y} L ${CX + 300} ${CY - 300}`} /> 
                <path d={`M ${pts.statorCore.x} ${pts.statorCore.y} L ${CX + 350} ${CY - 230}`} />
                <path d={`M ${pts.statorSlots.x} ${pts.statorSlots.y} L ${CX + 350} ${CY - 160}`} />
@@ -164,7 +166,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
             <g fill={colors.text} fontSize="17" fontWeight="900" fontFamily="Inter, sans-serif">
                <text x={CX + 305} y={CY - 305} textAnchor="start">EXTERNAL HOUSING</text>
-               <text x={CX + 355} y={CY - 235} textAnchor="start">STATOR CORE</text>
+               <text x={CX + 355} y={CY - 225} textAnchor="start">STATOR CORE</text>
                <text x={CX + 355} y={CY - 165} textAnchor="start">STATOR SLOTS</text>
                <text x={CX + 355} y={CY + 115} textAnchor="start">AIR GAP: {data.dimensions.airGap}</text>
                <text x={CX - 355} y={CY + 155} textAnchor="end">MAGNETIC POLES</text>
@@ -174,22 +176,6 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
           </svg>
         </motion.div>
       </div>
-
-      {/* ── LEGEND ── */}
-      {!isPdfMode && (
-        <div style={{ 
-          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', 
-          padding: '30px', background: '#0a0a0a', borderRadius: '24px', 
-          border: '1px solid #111' 
-        }}>
-          <div className="cad-legend-item"><div className="cad-icon-box" style={{ background: colors.housing }} /><div><div className="cad-label-num">1. External Housing</div><div className="cad-label-desc">Frame w/ cooling fins</div></div></div>
-          <div className="cad-legend-item"><div className="cad-icon-box" style={{ background: colors.stator }} /><div><div className="cad-label-num">2. Stator Core</div><div className="cad-label-desc">Laminated silicon steel yoke</div></div></div>
-          <div className="cad-legend-item"><div className="cad-icon-multi"><div style={{ background: colors.windings[0] }} /><div style={{ background: colors.windings[1] }} /></div><div><div className="cad-label-num">3. Stator Slots</div><div className="cad-label-desc">3-Phase (A/B/C) slot boxes</div></div></div>
-          <div className="cad-legend-item"><div className="cad-dashed-line" /><div><div className="cad-label-num">4. Air Gap</div><div className="cad-label-desc">Flux region: {data.dimensions.airGap}</div></div></div>
-          <div className="cad-legend-item"><div className="cad-magnet-icon"><span style={{ background: colors.magnets.N }}>N</span><span style={{ background: colors.magnets.S }}>S</span></div><div><div className="cad-label-num">5. Magnetic Poles</div><div className="cad-label-desc">Permanent magnets (N/S)</div></div></div>
-          <div className="cad-legend-item"><div className="cad-shaft-icon" /><div><div className="cad-label-num">6. Main Shaft</div><div className="cad-label-desc">Central torque transmission</div></div></div>
-        </div>
-      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         .cad-tool-btn { background: #111; border: 1px solid #222; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
