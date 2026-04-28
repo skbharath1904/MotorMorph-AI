@@ -141,16 +141,34 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Motor type
     if peak_power_kw > 200 and not is_commercial:
         motor_type = MOTOR_TYPES[1]
-        reason = f"Induction Motor (IM) selected: peak power {peak_power_kw:.1f} kW > 200 kW."
+        reason = (
+            f"Induction Motor (IM) selected: Peak power demand of {peak_power_kw:.1f} kW exceeds typical PMSM cost-efficiency thresholds. "
+            "IMs provide robust high-speed performance without rare-earth magnets, eliminating magnet-drag losses at highway speeds. "
+            "This architecture is proven in high-performance drivetrains like the Tesla Model S for its extreme thermal ruggedness and magnet-free rotor reliability."
+        )
     elif vehicle_weight < 500 or is_two_wheeler:
         motor_type = MOTOR_TYPES[2]
-        reason = f"BLDC selected: vehicle mass {vehicle_weight} kg qualifies as lightweight EV."
+        reason = (
+            f"BLDC selected: Vehicle mass of {vehicle_weight} kg qualifies as a lightweight EV platform. "
+            "BLDCs offer the best power-to-weight ratio and simplified control architecture for urban mobility. "
+            f"At {voltage}V, this motor provides superior startup torque and high efficiency (up to 92%) while maintaining a lower BOM cost "
+            "compared to complex AC induction or synchronous systems, making it the optimal choice for light-duty electric transport."
+        )
     elif peak_torque_nm > 600 or is_commercial:
         motor_type = MOTOR_TYPES[3]
-        reason = f"SRM selected: peak torque {round(peak_torque_nm)} Nm."
+        reason = (
+            f"SRM selected: Extreme peak torque requirements ({round(peak_torque_nm)} Nm) on a {vehicle_weight} kg platform necessitate a Switched Reluctance architecture. "
+            "SRMs are virtually indestructible due to their magnet-free rotor and concentrated stator windings. "
+            "They deliver exceptional low-speed 'breakaway' torque and are the industry standard for heavy-duty commercial traction where "
+            "mechanical reliability under high thermal stress is the primary design priority."
+        )
     else:
         motor_type = MOTOR_TYPES[0]
-        reason = f"PMSM selected: {peak_power_kw:.1f} kW, {round(peak_torque_nm)} Nm on {voltage}V."
+        reason = (
+            f"PMSM selected: At {peak_power_kw:.1f} kW and {round(peak_torque_nm)} Nm, a Permanent Magnet Synchronous Motor offers the highest overall efficiency plateau (>95%). "
+            "PMSMs deliver the best power density and smooth torque control, making them the gold standard for modern passenger EVs. "
+            f"The integration of high-energy magnets ensures maximum range from your {battery_kwh} kWh battery by minimizing stator losses during diverse driving cycles."
+        )
 
     # RULE 10: Efficiency
     k_r = 0.025 + (0.015 if peak_power_kw < 20 else 0)
