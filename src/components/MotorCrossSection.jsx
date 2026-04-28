@@ -67,7 +67,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               <circle cx={CX} cy={CY} r="230" fill="none" stroke={colors.housing} strokeWidth="8" />
             </g>
 
-            {/* 2. STATOR CORE */}
+            {/* 2. STATOR CORE (The Gap between housing and slots) */}
             <circle cx={CX} cy={CY} r="215" fill="none" stroke={colors.stator} strokeWidth="30" />
 
             {/* 3. STATOR SLOTS (A/B/C boxes) */}
@@ -83,10 +83,10 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             {/* 4. AIR GAP (GREEN DOTTED LINE) */}
             <circle cx={CX} cy={CY} r="185" fill="none" stroke={colors.dimension} strokeWidth="2" strokeDasharray="8 6" opacity="1.0" />
 
-            {/* 5. ROTOR ASSEMBLY */}
+            {/* 5. ROTOR CORE ASSEMBLY (Gap between poles and shaft) */}
             <circle cx={CX} cy={CY} r="165" fill={colors.rotor} stroke="#333" strokeWidth="2" />
             
-            {/* ROTOR POLES (Magnets) */}
+            {/* MAGNETIC POLES (Magnets) */}
             {[...Array(poles)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/poles)} ${CX} ${CY})`}>
                 <path d={`M ${CX-30} ${CY-165} A 165 165 0 0 1 ${CX+30} ${CY-165} L ${CX+25} ${CY-178} A 150 150 0 0 0 ${CX-25} ${CY-178} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
@@ -121,29 +121,35 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
                <text x={CX} y={CY + 367} textAnchor="middle" fill={colors.dimension} fontSize="10" fontWeight="800">STATOR INNER BORE DIAMETER</text>
             </g>
 
-            {/* ── UPDATED LABELS (EXACT NAMES REQUESTED) ── */}
+            {/* ── UPDATED LABELS (NEW ENGINEERING SCHEMA) ── */}
             <g stroke={colors.leader} strokeWidth="1.5" fill="none">
                {/* Bullets */}
-               <circle cx={CX - 230} cy={CY - 50} r="4" fill={colors.leader} stroke="none" /> {/* External Housing */}
+               <circle cx={CX - 230} cy={CY - 100} r="4" fill={colors.leader} stroke="none" /> {/* External Housing */}
+               <circle cx={CX + 205} cy={CY - 235} r="4" fill={colors.leader} stroke="none" /> {/* Stator Core */}
                <circle cx={CX + 215} cy={CY - 160} r="4" fill={colors.leader} stroke="none" /> {/* Stator Slots */}
-               <circle cx={CX - 165} cy={CY + 50} r="4" fill={colors.leader} stroke="none" /> {/* Rotor Poles */}
                <circle cx={CX + 185} cy={CY + 50} r="4" fill={colors.leader} stroke="none" /> {/* Air Gap */}
-               <circle cx={CX + 40} cy={CY + 20} r="4" fill={colors.leader} stroke="none" /> {/* Main Shaft */}
+               <circle cx={CX - 165} cy={CY + 50} r="4" fill={colors.leader} stroke="none" /> {/* Magnetic Poles */}
+               <circle cx={CX + 120} cy={CY + 120} r="4" fill={colors.leader} stroke="none" /> {/* Rotor Core */}
+               <circle cx={CX - 40} cy={CY + 20} r="4" fill={colors.leader} stroke="none" /> {/* Main Shaft */}
 
                {/* Leader Lines */}
-               <path d={`M ${CX - 230} ${CY - 50} L ${CX - 300} ${CY - 100}`} /> 
+               <path d={`M ${CX - 230} ${CY - 100} L ${CX - 300} ${CY - 150}`} /> 
+               <path d={`M ${CX + 205} ${CY - 235} L ${CX + 300} ${CY - 240}`} />
                <path d={`M ${CX + 215} ${CY - 160} L ${CX + 300} ${CY - 180}`} />
-               <path d={`M ${CX - 165} ${CY + 50} L ${CX - 300} ${CY + 100}`} />
                <path d={`M ${CX + 185} ${CY + 50} L ${CX + 300} ${CY + 100}`} />
-               <path d={`M ${CX + 40} ${CY + 20} L ${CX + 100} ${CY + 150} L ${CX + 300} ${CY + 150}`} />
+               <path d={`M ${CX - 165} ${CY + 50} L ${CX - 300} ${CY + 100}`} />
+               <path d={`M ${CX + 120} ${CY + 120} L ${CX + 300} ${CY + 160}`} />
+               <path d={`M ${CX - 40} ${CY + 20} L ${CX - 300} ${CY + 20}`} />
             </g>
 
             <g fill={colors.text} fontSize="16" fontWeight="900" fontFamily="Inter, sans-serif">
-               <text x={CX - 305} y={CY - 105} textAnchor="end">EXTERNAL HOUSING</text>
+               <text x={CX - 305} y={CY - 155} textAnchor="end">EXTERNAL HOUSING</text>
+               <text x={CX + 305} y={CY - 245} textAnchor="start">STATOR CORE</text>
                <text x={CX + 305} y={CY - 185} textAnchor="start">STATOR SLOTS</text>
-               <text x={CX - 305} y={CY + 105} textAnchor="end">ROTOR POLES</text>
                <text x={CX + 305} y={CY + 105} textAnchor="start">AIR GAP: {data.dimensions.airGap}</text>
-               <text x={CX + 305} y={CY + 155} textAnchor="start">MAIN SHAFT</text>
+               <text x={CX - 305} y={CY + 105} textAnchor="end">MAGNETIC POLES</text>
+               <text x={CX + 305} y={CY + 165} textAnchor="start">ROTOR CORE</text>
+               <text x={CX - 305} y={CY + 25} textAnchor="end">MAIN SHAFT</text>
             </g>
           </svg>
         </motion.div>
@@ -160,7 +166,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
           <div className="cad-legend-item"><div className="cad-icon-box" style={{ background: colors.stator }} /><div><div className="cad-label-num">2. Stator Core</div><div className="cad-label-desc">Laminated silicon steel yoke</div></div></div>
           <div className="cad-legend-item"><div className="cad-icon-multi"><div style={{ background: colors.windings[0] }} /><div style={{ background: colors.windings[1] }} /></div><div><div className="cad-label-num">3. Stator Slots</div><div className="cad-label-desc">3-Phase (A/B/C) slot boxes</div></div></div>
           <div className="cad-legend-item"><div className="cad-dashed-line" /><div><div className="cad-label-num">4. Air Gap</div><div className="cad-label-desc">Flux region: {data.dimensions.airGap}</div></div></div>
-          <div className="cad-legend-item"><div className="cad-magnet-icon"><span style={{ background: colors.magnets.N }}>N</span><span style={{ background: colors.magnets.S }}>S</span></div><div><div className="cad-label-num">5. Rotor Poles</div><div className="cad-label-desc">Permanent magnets (N/S)</div></div></div>
+          <div className="cad-legend-item"><div className="cad-magnet-icon"><span style={{ background: colors.magnets.N }}>N</span><span style={{ background: colors.magnets.S }}>S</span></div><div><div className="cad-label-num">5. Magnetic Poles</div><div className="cad-label-desc">Permanent magnets (N/S)</div></div></div>
           <div className="cad-legend-item"><div className="cad-shaft-icon" /><div><div className="cad-label-num">6. Main Shaft</div><div className="cad-label-desc">Central torque transmission</div></div></div>
         </div>
       )}
