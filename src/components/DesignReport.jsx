@@ -1,11 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Download, Cpu, Thermometer, Zap, BarChart3, Activity, 
   Settings, Ruler, TrendingUp, Gauge, Weight, Wind, Square, 
   CircleDashed, Timer
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import html2pdf from 'html2pdf.js';
 
 const DesignReport = ({ data, inputs }) => {
@@ -22,8 +21,7 @@ const DesignReport = ({ data, inputs }) => {
       filename: `MotorMorph_Report_${data.motorType.split(' ')[0]}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
       html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff', windowWidth: 1000 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     
     html2pdf().from(element).set(opt).save().then(() => {
@@ -77,14 +75,7 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         </div>
 
-        {/* 03. CONSTRAINT NOTICE */}
-        {data.rangeLimitation && (
-          <div className="pdf-section constraint-box">
-            <strong style={{ color: '#ff6b6b' }}>Constraint Notice:</strong> {data.rangeLimitation}
-          </div>
-        )}
-
-        {/* 04. STAT CARDS */}
+        {/* 03. STAT CARDS */}
         <div className="pdf-section stat-cards-row">
            {[
              { icon: <Zap size={14}/>, label: 'Peak Power', val: data.specifications.peakPowerKw + ' kW' },
@@ -99,16 +90,7 @@ const DesignReport = ({ data, inputs }) => {
            ))}
         </div>
 
-        {/* 05. ACCURACY SCORE */}
-        <div className="pdf-section accuracy-box">
-           <div className="accuracy-circle">{data.accuracy.score}%</div>
-           <div>
-             <p style={{ margin: 0, fontWeight: 800, fontSize: '1.05rem' }}>Prediction Accuracy: <span style={{ color: '#00d2ff' }}>{data.accuracy.score}%</span></p>
-             <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Design constraints applied — see notice above.</p>
-           </div>
-        </div>
-
-        {/* 06. SPECS GRIDS */}
+        {/* 04. SPECS GRIDS */}
         <div className="pdf-section specs-grid-row">
            <div className="specs-col">
              <h3 className="section-header"><Ruler size={18}/> Physical Dimensions</h3>
@@ -147,7 +129,7 @@ const DesignReport = ({ data, inputs }) => {
            </div>
         </div>
 
-        {/* 07. THERMAL MANAGEMENT */}
+        {/* 05. THERMAL MANAGEMENT */}
         <div className="pdf-section" style={{ marginBottom: '3rem' }}>
           <h3 className="section-header"><Thermometer size={18}/> Thermal Management</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
@@ -162,37 +144,6 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         </div>
 
-        {/* 08. GRAPHS */}
-        <div className="pdf-section page-break" style={{ marginBottom: '3rem' }}>
-          <h3 className="section-header"><Activity size={18}/> Performance Characteristics</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-             <div className="pdf-chart-container">
-                <h4 className="chart-label">EFFICIENCY VS. SPEED</h4>
-                <div style={{ width: '100%', height: 350 }}>
-                   <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-                         <XAxis dataKey="rpm" stroke="#888" fontSize={11} label={{ value: 'RPM', position: 'insideBottom', offset: -10, fill: '#888' }} />
-                         <YAxis stroke="#00d2ff" fontSize={11} domain={[0, 100]} />
-                         <Line type="monotone" dataKey="efficiency" stroke="#00d2ff" strokeWidth={4} dot={false} isAnimationActive={false} />
-                      </LineChart>
-                   </ResponsiveContainer>
-                </div>
-             </div>
-             <div className="pdf-chart-container">
-                <h4 className="chart-label">TORQUE VS. SPEED</h4>
-                <div style={{ width: '100%', height: 350 }}>
-                   <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
-                         <XAxis dataKey="rpm" stroke="#888" fontSize={11} label={{ value: 'RPM', position: 'insideBottom', offset: -10, fill: '#888' }} />
-                         <YAxis stroke="#ff9f43" fontSize={11} />
-                         <Line type="monotone" dataKey="torque" stroke="#ff9f43" strokeWidth={4} dot={false} isAnimationActive={false} />
-                      </LineChart>
-                   </ResponsiveContainer>
-                </div>
-             </div>
-          </div>
-        </div>
-
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
@@ -202,7 +153,6 @@ const DesignReport = ({ data, inputs }) => {
         .section-header { font-size: 1rem; margin-bottom: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
         .input-grid { display: grid; gridTemplateColumns: repeat(3, 1fr); gap: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.5rem; borderRadius: 12px; border: 1px solid var(--glass-border); }
         .stat-label { color: var(--text-secondary); font-size: 0.75rem; display: block; }
-        .constraint-box { background: rgba(255, 60, 60, 0.08); border: 1px solid rgba(255, 60, 60, 0.2); padding: 1.2rem; borderRadius: 10px; marginBottom: 2rem; color: #ff9a9a; fontSize: 0.85rem; }
         .stat-cards-row { display: grid; gridTemplateColumns: repeat(4, 1fr); gap: 1rem; marginBottom: 2rem; }
         .stat-card { padding: 1.5rem; background: rgba(255,255,255,0.03); borderRadius: 12px; border: 1px solid var(--glass-border); }
         .stat-card-label { fontSize: 0.7rem; color: var(--text-secondary); marginBottom: 10px; display: flex; align-items: center; gap: 6px; }
@@ -214,8 +164,6 @@ const DesignReport = ({ data, inputs }) => {
         .spec-item span { color: var(--text-secondary); font-size: 0.9rem; }
         .spec-item strong { font-size: 0.95rem; color: #fff; }
         .thermal-card { padding: 1rem; background: rgba(255,255,255,0.02); borderRadius: 10px; border: 1px solid var(--glass-border); }
-        .chart-label { textAlign: center; marginBottom: 1rem; fontSize: 0.9rem; color: var(--text-secondary); }
-        .pdf-chart-container { background: rgba(255,255,255,0.01); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border); }
 
         .pdf-export-mode { background: #ffffff !important; color: #000000 !important; width: 210mm !important; padding: 10mm !important; }
         .pdf-export-mode .report-container { background: #fff !important; border: none !important; padding: 0 !important; }
@@ -228,7 +176,6 @@ const DesignReport = ({ data, inputs }) => {
         .pdf-export-mode .stat-card { border: 1.5px solid #000 !important; background: #fff !important; }
         .pdf-export-mode .input-grid { background: #f9f9f9 !important; border: 1px solid #ddd !important; }
         .pdf-export-mode .justification-box { background: #f0f0f0 !important; border: 1px solid #ccc !important; }
-        .pdf-export-mode .pdf-chart-container { background: #fff !important; border: 1px solid #000 !important; }
         .pdf-export-mode .ui-only { display: none !important; }
       `}} />
     </motion.div>
