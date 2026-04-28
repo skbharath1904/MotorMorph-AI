@@ -145,35 +145,35 @@ const MotorCrossSection = ({ data }) => {
             <circle cx={centerX} cy={centerY} r={shaftRadius * 0.4} fill="#333" stroke="#555" />
           </g>
 
-          {/* ── LEADER LINES & LABELS (Reverted to side style with better clearance) ── */}
-          <g className="blueprint-labels" pointerEvents="none" fontSize="11" fontWeight="bold">
+          {/* ── LEADER LINES & LABELS ── */}
+          <g className="blueprint-labels" pointerEvents="none" fontSize="15" fontWeight="900" style={{ fontFamily: 'Inter, sans-serif' }}>
             {/* HOUSING - LEFT */}
-            <line x1={centerX - housingRadius} y1={centerY - 20} x2={centerX - housingRadius - 60} y2={centerY - 60} stroke="#666" strokeWidth="1" />
-            <text x={centerX - housingRadius - 65} y={centerY - 65} fill="#aaa" textAnchor="end">HOUSING & FINS</text>
+            <line x1={centerX - housingRadius} y1={centerY - 20} x2={centerX - housingRadius - 60} y2={centerY - 80} stroke="#888" strokeWidth="1.5" />
+            <text x={centerX - housingRadius - 65} y={centerY - 85} fill="#fff" textAnchor="end">HOUSING & FINS</text>
 
             {/* WINDINGS - RIGHT */}
-            <line x1={centerX + statorRadius - 15} y1={centerY - statorRadius + 20} x2={centerX + statorRadius + 80} y2={centerY - statorRadius - 20} stroke="#cd7f32" strokeWidth="1" />
-            <text x={centerX + statorRadius + 85} y={centerY - statorRadius - 25} fill="#cd7f32">STATOR WINDINGS (SLOTS)</text>
+            <line x1={centerX + statorRadius - 15} y1={centerY - statorRadius + 20} x2={centerX + statorRadius + 80} y2={centerY - statorRadius - 40} stroke="#ff9f43" strokeWidth="1.5" />
+            <text x={centerX + statorRadius + 85} y={centerY - statorRadius - 45} fill="#ff9f43">STATOR WINDINGS (SLOTS)</text>
 
             {/* STATOR IRON - RIGHT */}
-            <line x1={centerX + statorRadius} y1={centerY + 20} x2={centerX + statorRadius + 80} y2={centerY + 60} stroke="#888" strokeWidth="1" />
-            <text x={centerX + statorRadius + 85} y={centerY + 65} fill="#aaa">STATOR IRON (YOKE)</text>
+            <line x1={centerX + statorRadius} y1={centerY + 20} x2={centerX + statorRadius + 80} y2={centerY + 80} stroke="#aaa" strokeWidth="1.5" />
+            <text x={centerX + statorRadius + 85} y={centerY + 85} fill="#fff">STATOR IRON (YOKE)</text>
 
             {/* AIR GAP - LEFT */}
-            <line x1={centerX - rotorRadius - 2} y1={centerY + 10} x2={centerX - housingRadius - 100} y2={centerY + 40} stroke="#00d2ff" strokeWidth="1" />
-            <text x={centerX - housingRadius - 105} y={centerY + 45} fill="#00d2ff" textAnchor="end">AIR GAP ({airGap}mm)</text>
+            <line x1={centerX - rotorRadius - 2} y1={centerY + 10} x2={centerX - housingRadius - 100} y2={centerY + 60} stroke="#00d2ff" strokeWidth="1.5" />
+            <text x={centerX - housingRadius - 105} y={centerY + 65} fill="#00d2ff" textAnchor="end">AIR GAP ({airGap}mm)</text>
 
             {/* ROTOR - LEFT */}
-            <line x1={centerX - rotorRadius + 15} y1={centerY + rotorRadius - 15} x2={centerX - housingRadius - 80} y2={centerY + 180} stroke="#ff2d55" strokeWidth="1" />
-            <text x={centerX - housingRadius - 85} y={centerY + 185} fill="#ff2d55" textAnchor="end">MAGNETIC POLES</text>
+            <line x1={centerX - rotorRadius + 15} y1={centerY + rotorRadius - 15} x2={centerX - housingRadius - 80} y2={centerY + 200} stroke="#ff2d55" strokeWidth="1.5" />
+            <text x={centerX - housingRadius - 85} y={centerY + 205} fill="#ff2d55" textAnchor="end">MAGNETIC POLES</text>
 
             {/* SHAFT - RIGHT */}
-            <line x1={centerX + shaftRadius - 5} y1={centerY + 5} x2={centerX + 60} y2={centerY + 220} stroke="#fff" strokeWidth="1" />
-            <text x={centerX + 65} y={centerY + 225} fill="#fff">DRIVE SHAFT</text>
+            <line x1={centerX + shaftRadius - 5} y1={centerY + 5} x2={centerX + 60} y2={centerY + 240} stroke="#fff" strokeWidth="1.5" />
+            <text x={centerX + 65} y={centerY + 245} fill="#fff">DRIVE SHAFT</text>
             
             {/* Dimension */}
-            <line x1={centerX + statorRadius} y1={centerY} x2={centerX + statorRadius + 60} y2={centerY} stroke="#00d2ff" strokeWidth="1" strokeDasharray="2 2" />
-            <text x={centerX + statorRadius + 65} y={centerY + 4} fill="#00d2ff" fontSize="13" fontWeight="900">Ø {statorD}mm</text>
+            <line x1={centerX + statorRadius} y1={centerY} x2={centerX + statorRadius + 60} y2={centerY} stroke="#00d2ff" strokeWidth="2" strokeDasharray="4 2" />
+            <text x={centerX + statorRadius + 65} y={centerY + 6} fill="#00d2ff" fontSize="18" fontWeight="900">Ø {statorD}mm</text>
           </g>
         </svg>
 
