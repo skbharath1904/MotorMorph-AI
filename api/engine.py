@@ -8,7 +8,6 @@ MOTOR_TYPES = [
     'Brushless DC Motor (BLDC)',
     'Switched Reluctance Motor (SRM)'
 ]
-COOLING = ['Air Cooling', 'Liquid Cooling', 'Oil Cooling']
 
 def max_current_for_voltage(v: float) -> int:
     if v <= 48: return 300
@@ -60,42 +59,68 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     peak_torque_nm = (peak_power_kw * 1000 * 60) / (2 * math.pi * max_rpm)
 
     # Motor Type Selection
-    if peak_power_kw > 200: motor_type = MOTOR_TYPES[1]
-    elif is_two_wheeler: motor_type = MOTOR_TYPES[2]
-    elif is_commercial: motor_type = MOTOR_TYPES[3]
-    else: motor_type = MOTOR_TYPES[0]
+    if peak_power_kw > 200: motor_type = MOTOR_TYPES[1] # Induction
+    elif is_two_wheeler: motor_type = MOTOR_TYPES[2] # BLDC
+    elif is_commercial: motor_type = MOTOR_TYPES[3] # SRM
+    else: motor_type = MOTOR_TYPES[0] # PMSM
 
-    # Battery
+    # ── POLE & SLOT SELECTION LOGIC ──
+    poles = 8
+    slots = 12
+    reasoning = ""
+
+    if 'PMSM' in motor_type or 'BLDC' in motor_type:
+        if is_two_wheeler:
+            poles, slots = 8, 12 # Smallest/Simplest
+            reasoning = "High-speed simple BLDC"
+        elif is_car:
+            poles, slots = 6, 18 # Balanced
+            reasoning = "Balanced efficiency/torque PMSM"
+        else: # Commercial
+            poles, slots = 8, 24 # Higher poles
+            reasoning = "High-torque distributed winding"
+            
+    elif 'Induction' in motor_type or 'IM' in motor_type:
+        if is_two_wheeler:
+            poles, slots = 2, 18
+            reasoning = "High-speed simple IM"
+        elif is_car:
+            poles, slots = 4, 24
+            reasoning = "Balanced performance IM"
+        else: # Commercial
+            poles, slots = 6, 18
+            reasoning = "High-torque IM configuration"
+
+    elif 'SRM' in motor_type:
+        if is_two_wheeler:
+            slots, poles = 6, 4 # SRM notation: Stator/Rotor
+            reasoning = "Simplest 6/4 SRM"
+        elif is_car:
+            slots, poles = 10, 8
+            reasoning = "Standard 10/8 SRM"
+        else: # Commercial
+            slots, poles = 10, 8
+            reasoning = "High-torque 10/8 SRM"
+
+    # q calculation (Slots per pole per phase)
+    if 'SRM' not in motor_type:
+        q = slots / (poles * 3)
+        q_str = f"q = {q:.2f}"
+    else:
+        q_str = "N/A (SRM)"
+
+    # Battery & Weight
     wh_per_km = (continuous_power_kw * 1000) / max(target_speed, 1)
     battery_kwh = round((wh_per_km * range_km / 1000), 1)
-    
-    # Weight
     kg_per_kw = 1.1 if 'PMSM' in motor_type else 1.3 if 'IM' in motor_type else 1.0 if 'BLDC' in motor_type else 1.4
     motor_weight_kg = round(continuous_power_kw * kg_per_kw + 5)
 
-    # Phase Current
-    phase_current = round((peak_power_kw * 1000) / (math.sqrt(3) * voltage * 0.92 * 0.97))
-    phase_current = min(phase_current, i_max)
-
-    # ── POLES & SLOTS CALCULATION ──
-    if max_rpm > 12000:
-        poles, slots = 6, 18
-    elif max_rpm > 8000:
-        poles, slots = 8, 24
-    elif max_rpm > 5000:
-        poles, slots = 10, 30
-    else:
-        poles, slots = 12, 36
-
-    if motor_type == MOTOR_TYPES[3]: # SRM
-        poles, slots = 8, 12
-
-    # ── PHYSICAL DIMENSIONS ──
+    # Physical Dimensions
     stator_d = max(110, round((peak_torque_nm * 3500 / 1.5)**(1/3)))
     rotor_l = round(stator_d * 0.95) if max_rpm > 10000 else round(stator_d * 1.2)
     air_gap = max(0.4, stator_d * 0.004)
 
-    reason = f"{motor_type} selected for {vehicle_type}. Optimized for {battery_kwh} kWh battery and {target_speed} km/h."
+    selection_reason = f"{motor_type} ({poles}P/{slots}S, {q_str}). {reasoning} optimized for {vehicle_type}."
 
     efficiency_data = []
     for r in range(0, max_rpm + 500, 500):
@@ -107,7 +132,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     return {
         'motorType': motor_type,
-        'motorSelectionReason': reason,
+        'motorSelectionReason': selection_reason,
         'rangeLimitation': ' '.join(notes),
         'accuracy': { 'score': 98, 'label': 'High', 'note': 'Validated physics model.' },
         'specifications': {
@@ -118,7 +143,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         },
         'thermal': { 'coolingMethod': 'Liquid Cooling' if peak_power_kw > 50 else 'Air Cooling', 'maxCoilTemp': '155°C', 'coolantFlowRate': '5.0 L/min', 'thermalResistance': '0.05 K/W' },
         'dimensions': { 'statorDiameter': f"{stator_d} mm", 'rotorLength': f"{rotor_l} mm", 'overallLength': f"{rotor_l + 45} mm", 'airGap': f"{air_gap:.2f} mm", 'poles': poles, 'slots': slots },
-        'electrical': { 'phaseCurrent': f"{phase_current} A", 'lineVoltage': f"{voltage} V", 'backEmfConstant': '0.12 V·s/rad', 'switchingFreq': '12 kHz', 'statorResistance': '0.02 Ω', 'dqInductance': '0.1 mH', 'windingType': 'Distributed' },
+        'electrical': { 'phaseCurrent': round((peak_power_kw * 1000) / (math.sqrt(3) * voltage * 0.92 * 0.97)), 'lineVoltage': f"{voltage} V", 'backEmfConstant': '0.12 V·s/rad', 'switchingFreq': '12 kHz', 'statorResistance': '0.02 Ω', 'dqInductance': '0.1 mH', 'windingType': 'Distributed' },
         'mechanical': { 'maxTorqueDensity': '25 Nm/L', 'rotorInertia': '0.01 kg·m²', 'maxCentrifugalForce': '4000 N', 'bearingLoad': '800 N', 'coggingTorque': '0.1 Nm', 'criticalSpeed': f"{round(max_rpm * 1.2)} RPM" },
         'performanceCurve': efficiency_data
     }
