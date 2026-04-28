@@ -335,40 +335,40 @@ const DesignReport = ({ data, inputs }) => {
 
         {/* Performance Characteristics Section */}
         <div className="pdf-page-break">
-          <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Activity size={18} color="var(--accent-purple)"/> Performance Characteristics
+          <h3 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.6rem', borderBottom: '2px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
+            <Activity size={22} color="var(--accent-purple)"/> Performance Characteristics
           </h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem', marginBottom: '3rem' }}>
             {/* Efficiency Chart */}
-            <div style={{ background: 'rgba(255,255,255,0.01)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-              <h4 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Efficiency vs. Speed
+            <div style={{ background: 'rgba(255,255,255,0.01)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+              <h4 style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center' }}>
+                Efficiency vs. Speed Profile
               </h4>
-              <div style={{ width: '100%', height: 220 }}>
+              <div style={{ width: '100%', height: 350 }}>
                 <ResponsiveContainer>
-                  <LineChart data={data.performanceCurve}>
-                    <XAxis dataKey="rpm" stroke="#666" fontSize={10} hide={false} />
-                    <YAxis stroke="#00d2ff" fontSize={10} domain={[0, 100]} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="efficiency" stroke="#00d2ff" strokeWidth={3} dot={false} />
+                  <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+                    <XAxis dataKey="rpm" stroke="#888" fontSize={12} tick={{ fill: '#888' }} label={{ value: 'Motor Speed (RPM)', position: 'insideBottom', offset: -10, fill: '#888', fontSize: 12 }} />
+                    <YAxis stroke="#00d2ff" fontSize={12} domain={[0, 100]} tick={{ fill: '#00d2ff' }} label={{ value: 'Efficiency (%)', angle: -90, position: 'insideLeft', offset: 15, fill: '#00d2ff', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #333', borderRadius: '10px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+                    <Line type="monotone" dataKey="efficiency" stroke="#00d2ff" strokeWidth={4} dot={false} animationDuration={1500} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Torque Chart */}
-            <div style={{ background: 'rgba(255,255,255,0.01)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-              <h4 style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Torque vs. Speed
+            <div className="pdf-page-break" style={{ background: 'rgba(255,255,255,0.01)', padding: '2rem', borderRadius: '16px', border: '1px solid var(--glass-border)' }}>
+              <h4 style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#fff', textTransform: 'uppercase', letterSpacing: '2px', textAlign: 'center' }}>
+                Torque vs. Speed Characteristics
               </h4>
-              <div style={{ width: '100%', height: 220 }}>
+              <div style={{ width: '100%', height: 350 }}>
                 <ResponsiveContainer>
-                  <LineChart data={data.performanceCurve}>
-                    <XAxis dataKey="rpm" stroke="#666" fontSize={10} />
-                    <YAxis stroke="#ff9f43" fontSize={10} />
-                    <Tooltip contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="torque" stroke="#ff9f43" strokeWidth={3} dot={false} />
+                  <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
+                    <XAxis dataKey="rpm" stroke="#888" fontSize={12} tick={{ fill: '#888' }} label={{ value: 'Motor Speed (RPM)', position: 'insideBottom', offset: -10, fill: '#888', fontSize: 12 }} />
+                    <YAxis stroke="#ff9f43" fontSize={12} tick={{ fill: '#ff9f43' }} label={{ value: 'Torque (Nm)', angle: -90, position: 'insideLeft', offset: 15, fill: '#ff9f43', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid #333', borderRadius: '10px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+                    <Line type="monotone" dataKey="torque" stroke="#ff9f43" strokeWidth={4} dot={false} animationDuration={1500} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
