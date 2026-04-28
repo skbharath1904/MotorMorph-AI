@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Download, Cpu, Thermometer, Maximize, Zap, BarChart3, Activity, Settings } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import html2pdf from 'html2pdf.js';
+import Motor3D from './Motor3D';
 
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
@@ -106,6 +107,11 @@ const DesignReport = ({ data, inputs }) => {
             <strong>Constraint Notice:</strong> {data.rangeLimitation}
           </div>
         )}
+
+        {/* ── 3D Visualization Section ── */}
+        <div style={{ marginBottom: '2rem' }}>
+          <Motor3D dimensions={data.dimensions} />
+        </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <div className="stat-card">
