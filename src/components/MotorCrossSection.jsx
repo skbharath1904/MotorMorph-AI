@@ -4,8 +4,7 @@ import { Minus, Plus, RotateCcw } from 'lucide-react';
 
 const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const [scale, setScale] = useState(0.75);
-  const [hoveredPart, setHoveredPart] = useState(null);
-
+  
   if (!data) return null;
 
   const { poles = 8, slots = 24 } = data.dimensions;
@@ -17,15 +16,15 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const resetZoom = () => setScale(0.75);
 
   const colors = {
-    bg: '#050505',
-    housing: '#2d3436',
-    stator: '#1a1a1a',
+    bg: isPdfMode ? '#ffffff' : '#050505',
+    housing: isPdfMode ? '#000000' : '#2d3436',
+    stator: isPdfMode ? '#333333' : '#1a1a1a',
     windings: ['#ff9f43', '#00d2ff', '#a29bfe'],
-    rotor: '#111',
+    rotor: isPdfMode ? '#111111' : '#111',
     magnets: { N: '#ff4757', S: '#2f3542' },
-    dimension: '#00ff00',
-    leader: '#ffffff',
-    text: '#ffffff'
+    dimension: isPdfMode ? '#000000' : '#00ff00',
+    leader: isPdfMode ? '#000000' : '#ffffff',
+    text: isPdfMode ? '#000000' : '#ffffff'
   };
 
   return (
@@ -33,9 +32,9 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
       
       {/* ── INTERACTIVE VIEWPORT ── */}
       <div style={{ 
-        position: 'relative', width: '100%', height: '700px', 
+        position: 'relative', width: '100%', height: isPdfMode ? '500px' : '700px', 
         background: colors.bg, borderRadius: '24px', 
-        border: '1px solid #1a1a1a', overflow: 'hidden',
+        border: isPdfMode ? '2px solid #000' : '1px solid #1a1a1a', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         
@@ -52,10 +51,10 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
         <motion.div 
           style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          animate={{ scale }}
+          animate={{ scale: isPdfMode ? 0.6 : scale }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
         >
-          <svg viewBox="0 0 800 800" style={{ width: '90%', height: '90%' }}>
+          <svg viewBox="0 0 800 800" style={{ width: '100%', height: '100%' }}>
             
             {/* 1. STATOR ASSEMBLY */}
             <circle cx="400" cy="400" r="320" fill="none" stroke={colors.housing} strokeWidth="3" />
@@ -72,7 +71,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
             {/* 3. ROTOR ASSEMBLY */}
             <circle cx="400" cy="400" r="205" fill={colors.rotor} stroke="#333" strokeWidth="2" />
-            <circle cx="400" cy="400" r="140" fill="#0a0a0a" stroke="#222" strokeWidth="1" />
+            <circle cx="400" cy="400" r="140" fill={isPdfMode ? "#fff" : "#0a0a0a"} stroke="#222" strokeWidth="1" />
 
             {/* 4. MAGNETS / ROTOR SLOTS */}
             <g id="magnets">
@@ -86,12 +85,12 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
             {/* 5. DRIVE SHAFT */}
             <g id="shaft">
-              <circle cx="400" cy="400" r="50" fill="#111" stroke="#fff" strokeWidth="2" />
-              <line x1="390" y1="400" x2="410" y2="400" stroke="#fff" strokeWidth="1" opacity="0.5" />
-              <line x1="400" y1="390" x2="400" y2="410" stroke="#fff" strokeWidth="1" opacity="0.5" />
+              <circle cx="400" cy="400" r="50" fill={isPdfMode ? "#fff" : "#111"} stroke={colors.text} strokeWidth="2" />
+              <line x1="390" y1="400" x2="410" y2="400" stroke={colors.text} strokeWidth="1" opacity="0.5" />
+              <line x1="400" y1="390" x2="400" y2="410" stroke={colors.text} strokeWidth="1" opacity="0.5" />
             </g>
 
-            {/* ── MEASUREMENTS (Neon Green) ── */}
+            {/* ── MEASUREMENTS ── */}
             <g stroke={colors.dimension} strokeWidth="2" fill="none">
               <line x1="680" y1="80" x2="680" y2="720" />
               <line x1="660" y1="80" x2="700" y2="80" />
@@ -102,26 +101,24 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             </g>
 
             <g>
-               <rect x="710" y="375" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" style={{ filter: 'drop-shadow(0 0 5px #00ff00)' }} />
+               <rect x="710" y="375" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
                <text x="790" y="402" textAnchor="middle" fill={colors.dimension} fontSize="16" fontWeight="900">Ø {data.dimensions.statorDiameter}</text>
                <text x="790" y="418" textAnchor="middle" fill={colors.dimension} fontSize="9" fontWeight="700">TOTAL OUTER DIAMETER</text>
 
-               <rect x="320" y="760" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" style={{ filter: 'drop-shadow(0 0 5px #00ff00)' }} />
+               <rect x="320" y="760" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
                <text x="400" y="787" textAnchor="middle" fill={colors.dimension} fontSize="16" fontWeight="900">Ø 98mm</text>
                <text x="400" y="803" textAnchor="middle" fill={colors.dimension} fontSize="9" fontWeight="700">STATOR INNER BORE DIAMETER</text>
             </g>
 
-            {/* ── UPDATED LABELS & LEADERS (MATCHING IMAGE TEXT) ── */}
-            <g stroke="#fff" strokeWidth="1.5" fill="none">
-               {/* Bullets */}
-               <circle cx="430" cy="150" r="4" fill="#fff" stroke="none" /> {/* Stator Slot */}
-               <circle cx="600" cy="250" r="4" fill="#fff" stroke="none" /> {/* Stator Laminations */}
-               <circle cx="410" cy="370" r="4" fill="#fff" stroke="none" /> {/* Shaft */}
-               <circle cx="500" cy="405" r="4" fill="#fff" stroke="none" /> {/* Air Gap */}
-               <circle cx="460" cy="500" r="4" fill="#fff" stroke="none" /> {/* Rotor Laminations */}
-               <circle cx="405" cy="535" r="4" fill="#fff" stroke="none" /> {/* Rotor Slot */}
+            {/* ── LABELS & LEADERS (Color Swapped for PDF) ── */}
+            <g stroke={colors.leader} strokeWidth="1.5" fill="none">
+               <circle cx="430" cy="150" r="4" fill={colors.leader} stroke="none" />
+               <circle cx="600" cy="250" r="4" fill={colors.leader} stroke="none" />
+               <circle cx="410" cy="370" r="4" fill={colors.leader} stroke="none" />
+               <circle cx="500" cy="405" r="4" fill={colors.leader} stroke="none" />
+               <circle cx="460" cy="500" r="4" fill={colors.leader} stroke="none" />
+               <circle cx="405" cy="535" r="4" fill={colors.leader} stroke="none" />
 
-               {/* Leader Lines */}
                <path d="M 430 150 L 640 150" /> 
                <path d="M 600 250 L 640 250" />
                <path d="M 410 370 L 640 370" />
@@ -130,7 +127,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
                <path d="M 405 535 L 640 535" />
             </g>
 
-            <g fill="#fff" fontSize="18" fontWeight="700" fontFamily="Inter, sans-serif">
+            <g fill={colors.text} fontSize="18" fontWeight="700" fontFamily="Inter, sans-serif">
                <text x="645" y="155">Stator Slot</text>
                <text x="645" y="255">Stator Laminations</text>
                <text x="645" y="375">Shaft</text>
@@ -144,7 +141,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
       {/* ── PARTS LEGEND ── */}
       <div style={{ 
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', 
+        display: isPdfMode ? 'none' : 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', 
         padding: '30px', background: '#0a0a0a', borderRadius: '24px', 
         border: '1px solid #111' 
       }}>
