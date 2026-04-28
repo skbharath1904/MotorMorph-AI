@@ -61,31 +61,31 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               {[...Array(72)].map((_, i) => (
                 <rect key={i} x="398" y="145" width="4" height="25" fill={colors.housing} transform={`rotate(${i * 5} 400 400)`} />
               ))}
-              <circle cx="400" cy="400" r="230" fill="none" stroke={colors.housing} strokeWidth="6" />
+              <circle cx="400" cy="400" r="230" fill="none" stroke={colors.housing} strokeWidth="8" />
             </g>
 
             {/* 2. STATOR CORE */}
-            <circle cx="400" cy="400" r="205" fill="none" stroke={colors.stator} strokeWidth="35" />
+            <circle cx="400" cy="400" r="215" fill="none" stroke={colors.stator} strokeWidth="30" />
 
-            {/* 3. STATOR WINDINGS (A/B/C) */}
+            {/* 3. STATOR WINDINGS (A/B/C) - Moved slightly out to show air gap */}
             {[...Array(slots)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/slots)} 400 400)`}>
-                <rect x="385" y="200" width="30" height="30" rx="3" fill={colors.windings[i % 3]} />
-                <text x="400" y="220" textAnchor="middle" fontSize="14" fontWeight="900" fill="#fff" pointerEvents="none">
+                <rect x="385" y="195" width="30" height="30" rx="3" fill={colors.windings[i % 3]} />
+                <text x="400" y="215" textAnchor="middle" fontSize="14" fontWeight="900" fill="#fff" pointerEvents="none">
                   {['A', 'B', 'C'][i % 3]}
                 </text>
               </g>
             ))}
 
-            {/* 4. AIR GAP */}
-            <circle cx="400" cy="400" r="172" fill="none" stroke={colors.dimension} strokeWidth="1" strokeDasharray="5 3" opacity="0.5" />
+            {/* 4. CLEAR AIR GAP (GREEN DOTTED LINE) */}
+            <circle cx="400" cy="400" r="182" fill="none" stroke={colors.dimension} strokeWidth="1.5" strokeDasharray="6 4" opacity="0.8" />
 
-            {/* 5. ROTOR ASSEMBLY */}
-            <circle cx="400" cy="400" r="170" fill={colors.rotor} />
+            {/* 5. ROTOR ASSEMBLY - Moved slightly in to show air gap */}
+            <circle cx="400" cy="400" r="165" fill={colors.rotor} stroke="#222" strokeWidth="2" />
             {[...Array(poles)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/poles)} 400 400)`}>
-                <path d="M 370 232 A 168 168 0 0 1 430 232 L 425 250 A 150 150 0 0 0 375 250 Z" fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} />
-                <text x="400" y="246" textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff" pointerEvents="none">
+                <path d="M 370 235 A 165 165 0 0 1 430 235 L 425 255 A 145 145 0 0 0 375 255 Z" fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} />
+                <text x="400" y="250" textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff" pointerEvents="none">
                   {i % 2 === 0 ? 'N' : 'S'}
                 </text>
               </g>
@@ -93,42 +93,47 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
             {/* 6. DRIVE SHAFT */}
             <circle cx="400" cy="400" r="45" fill={isPdfMode ? "#fff" : "#111"} stroke={colors.text} strokeWidth="2" />
-            <circle cx="400" cy="400" r="12" fill={colors.text} opacity="0.2" />
+            <circle cx="400" cy="400" r="12" fill={colors.text} opacity={isPdfMode ? 0.2 : 0.5} />
 
-            {/* ── ENGINEERING DIMENSIONS ── */}
+            {/* ── ENGINEERING MEASUREMENTS (ELITE STYLE) ── */}
             <g stroke={colors.dimension} strokeWidth="2" fill="none">
-              <line x1="680" y1="170" x2="680" y2="630" />
-              <line x1="660" y1="170" x2="700" y2="170" />
-              <line x1="660" y1="630" x2="700" y2="630" />
+              {/* Outer Diameter Vertical */}
+              <line x1="650" y1="130" x2="650" y2="670" />
+              <line x1="630" y1="130" x2="670" y2="130" />
+              <line x1="630" y1="670" x2="670" y2="670" />
+
+              {/* Stator Inner Horizontal */}
               <line x1="280" y1="710" x2="520" y2="710" />
               <line x1="280" y1="690" x2="280" y2="730" />
               <line x1="520" y1="690" x2="520" y2="730" />
             </g>
 
-            {/* Callout Boxes */}
+            {/* Callout Boxes WITH Proper Names */}
             <g>
-               <rect x="710" y="375" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
-               <text x="790" y="402" textAnchor="middle" fill={colors.dimension} fontSize="16" fontWeight="900">Ø {data.dimensions.statorDiameter}</text>
-               <text x="790" y="418" textAnchor="middle" fill={colors.dimension} fontSize="9" fontWeight="700">TOTAL OUTER DIAMETER</text>
+               {/* Right Callout: Total Outer Diameter */}
+               <rect x="690" y="375" width="180" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
+               <text x="780" y="402" textAnchor="middle" fill={colors.dimension} fontSize="16" fontWeight="900">Ø {data.dimensions.statorDiameter}</text>
+               <text x="780" y="418" textAnchor="middle" fill={colors.dimension} fontSize="9" fontWeight="700">TOTAL OUTER DIAMETER</text>
 
-               <rect x="320" y="740" width="160" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
+               {/* Bottom Callout: Stator Inner Bore Diameter */}
+               <rect x="310" y="740" width="180" height="50" rx="8" fill="none" stroke={colors.dimension} strokeWidth="1" />
                <text x="400" y="767" textAnchor="middle" fill={colors.dimension} fontSize="16" fontWeight="900">Ø 98mm</text>
                <text x="400" y="783" textAnchor="middle" fill={colors.dimension} fontSize="9" fontWeight="700">STATOR INNER BORE DIAMETER</text>
             </g>
 
-            {/* Annotations */}
+            {/* ── LABELS & LEADERS (MATCHING USER IMAGE) ── */}
             <g stroke={colors.leader} strokeWidth="1.5" fill="none">
-               <line x1="260" y1="280" x2="350" y2="350" /> 
-               <line x1="520" y1="250" x2="430" y2="350" /> 
-               <line x1="260" y1="520" x2="370" y2="450" /> 
-               <line x1="560" y1="420" x2="430" y2="430" /> 
+               <line x1="260" y1="230" x2="350" y2="280" /> {/* External Housing */}
+               <line x1="530" y1="180" x2="430" y2="280" /> {/* Stator Windings */}
+               <line x1="260" y1="580" x2="370" y2="480" /> {/* Rotor Magnet Poles */}
+               <line x1="530" y1="450" x2="430" y2="410" /> {/* Air Gap */}
             </g>
 
-            <g fill={colors.text} fontSize="14" fontWeight="900">
-               <text x="255" y="275" textAnchor="end">EXTERNAL HOUSING</text>
-               <text x="525" y="245">STATOR WINDINGS (ABC)</text>
-               <text x="255" y="525" textAnchor="end">ROTOR MAGNET POLES</text>
-               <text x="565" y="415">AIR GAP: {data.dimensions.airGap}</text>
+            <g fill={colors.text} fontSize="14" fontWeight="900" fontFamily="Inter, sans-serif">
+               <text x="255" y="225" textAnchor="end">EXTERNAL HOUSING</text>
+               <text x="535" y="175">STATOR WINDINGS (ABC)</text>
+               <text x="255" y="585" textAnchor="end">ROTOR MAGNET POLES</text>
+               <text x="535" y="445">AIR GAP: {data.dimensions.airGap}</text>
             </g>
           </svg>
         </motion.div>
@@ -151,15 +156,19 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
       )}
 
       <style dangerouslySetInnerHTML={{__html: `
-        .cad-tool-btn { background: #111; border: 1px solid #222; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 6px; cursor: pointer; }
-        .cad-zoom-btn { background: transparent; border: none; color: #888; padding: 6px 10px; cursor: pointer; }
+        .cad-tool-btn { background: #111; border: 1px solid #222; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .cad-tool-btn:hover { background: #222; border-color: #333; }
+        .cad-zoom-btn { background: transparent; border: none; color: #888; padding: 6px 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .cad-zoom-btn:hover { color: #fff; }
+        
         .cad-legend-item { display: flex; align-items: center; gap: 15px; }
         .cad-icon-box { width: 40px; height: 32px; border-radius: 4px; border: 1px solid #333; }
         .cad-label-num { font-size: 1rem; font-weight: 800; color: #fff; }
-        .cad-label-desc { font-size: 0.8rem; color: #666; }
+        .cad-label-desc { font-size: 0.8rem; color: #666; margin-top: 2px; }
+        
         .cad-icon-multi { display: flex; gap: 2px; padding: 4px; border: 1px solid #333; border-radius: 4px; width: 40px; height: 32px; box-sizing: border-box; }
         .cad-icon-multi div { flex: 1; border-radius: 2px; }
-        .cad-dashed-line { width: 40px; border-top: 2px dashed #00ff00; }
+        .cad-dashed-line { width: 40px; border-top: 2px dashed #00ff00; margin-top: 2px; }
         .cad-magnet-icon { display: flex; gap: 1px; width: 40px; }
         .cad-magnet-icon span { width: 20px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; color: #fff; border-radius: 2px; }
         .cad-shaft-icon { width: 28px; height: 28px; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
