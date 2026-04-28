@@ -1,16 +1,26 @@
-# React + Vite
+# MotorMorph AI ⚡
+### Intelligent EV Powertrain Design & Simulation
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+MotorMorph AI is a professional-grade engineering platform designed to architect optimal electric motor configurations for EV applications. Using a physics-driven AI engine, it estimates performance, efficiency, and physical parameters in real-time.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
+- **AI-Driven Motor Synthesis**: Formulates optimal motor topology (PMSM, BLDC, IM, SRM) based on vehicle requirements (Weight, Speed, Drag, Gradient).
+- **Interactive CAD Visualizer**: High-fidelity cross-section view with interactive zoom and precision engineering annotations (Stator Core, Slots, Magnetic Poles, Rotor Core, Main Shaft).
+- **Industrial Reporting**: Generates A4-compliant engineering data-sheets with performance curves and technical appendices.
+- **Physics-First Engine**: Enforces 16 strict engineering constraints covering thermal limits, torque density, and RPM envelopes.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Technology Stack
+- **Frontend**: React.js with Vite
+- **Styling**: Vanilla CSS (Premium Glassmorphism & CAD UI)
+- **Visuals**: Framer Motion & Lucide Icons
+- **Graphs**: Recharts (Dynamic Performance Curves)
+- **PDF Engine**: html2pdf.js
 
-## React Compiler
+## 📐 Engineering Schema V4.2
+This project utilizes the **V4.2 Engineering Schema**, ensuring precise synchronization between predicted physical dimensions and visual assembly diagrams, including derived Bore and Outer Diameter calculations.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🌐 Deployment
+Hosted on Vercel: [motormorph-ai.vercel.app](https://motormorph-ai.vercel.app/)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+© 2026 MotorMorph AI Engineering Solutions
