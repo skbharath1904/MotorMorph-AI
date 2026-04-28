@@ -11,23 +11,21 @@ const MotorCrossSection = ({ data }) => {
   const poles = parseInt(dimensions.poles) || 8;
   const slots = parseInt(dimensions.slots) || 12;
 
-  // LARGE VIEWBOX to prevent any clipping (800x500)
-  const vbWidth = 800;
-  const vbHeight = 500;
-  const centerX = vbWidth / 2;
-  const centerY = vbHeight / 2;
+  // Viewbox 400x400 - Compact and centered
+  const size = 400;
+  const centerX = size / 2;
+  const centerY = size / 2;
   
-  // Scale motor down so there is plenty of room for labels on the sides
-  // Stator D should be ~180px in an 800px wide box
-  const scale = 180 / Math.max(statorD, 1);
+  // Scale motor to fit well within 400x400
+  const scale = 150 / Math.max(statorD, 1);
   
   const housingRadius = (statorD / 2 * 1.15) * scale;
   const statorRadius = (statorD / 2) * scale;
   const rotorRadius = ((statorD / 2) - airGap) * scale;
   const shaftRadius = statorRadius * 0.22;
   
-  const slotDepth = statorRadius * 0.2;
-  const yokeThickness = statorRadius * 0.1;
+  const slotDepth = statorRadius * 0.22;
+  const yokeThickness = statorRadius * 0.12;
   const toothWidth = (2 * Math.PI * (statorRadius - slotDepth)) / (slots * 3);
   const slotWidth = (2 * Math.PI * (statorRadius - slotDepth/2)) / (slots * 2);
 
@@ -41,7 +39,7 @@ const MotorCrossSection = ({ data }) => {
             Engineering Assembly Blueprint
           </h4>
           <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Interactive Radial Cross-Section
+            Numbered Identification System
           </p>
         </div>
         <div style={{ 
@@ -52,11 +50,11 @@ const MotorCrossSection = ({ data }) => {
           fontSize: '0.85rem',
           fontWeight: '700',
           color: hoveredPart ? 'var(--accent-blue)' : 'var(--text-secondary)',
-          minWidth: '220px',
+          minWidth: '200px',
           textAlign: 'center',
           transition: 'all 0.3s ease'
         }}>
-          {hoveredPart ? hoveredPart.toUpperCase() : 'HOVER COMPONENT'}
+          {hoveredPart ? hoveredPart.toUpperCase() : 'INTERACTIVE VIEW'}
         </div>
       </div>
 
@@ -66,12 +64,12 @@ const MotorCrossSection = ({ data }) => {
         alignItems: 'center', 
         flexDirection: 'column',
         background: 'rgba(0,0,0,0.6)',
-        padding: '1rem',
+        padding: '2rem',
         borderRadius: '20px',
         border: '1px solid var(--glass-border)',
-        overflow: 'visible' // CRITICAL: Ensure SVG content isn't clipped by container
+        boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
       }}>
-        <svg className="motor-svg" width="100%" height="auto" viewBox={`0 0 ${vbWidth} ${vbHeight}`} style={{ overflow: 'visible', cursor: 'crosshair' }}>
+        <svg className="motor-svg" width="100%" height="auto" viewBox={`0 0 ${size} ${size}`} style={{ maxWidth: '500px' }}>
           <defs>
             <radialGradient id="statorGrad" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#333" />
@@ -84,55 +82,58 @@ const MotorCrossSection = ({ data }) => {
           </defs>
 
           {/* ── EXTERNAL HOUSING ── */}
-          <g onMouseEnter={() => handleHover('External Housing')} onMouseLeave={() => handleHover(null)}>
+          <g onMouseEnter={() => handleHover('1. External Housing')} onMouseLeave={() => handleHover(null)}>
             <circle cx={centerX} cy={centerY} r={housingRadius} fill="#1a1a1a" stroke="#444" strokeWidth="2" />
-            {[...Array(36)].map((_, i) => {
-              const angle = (i * 360) / 36;
+            {[...Array(32)].map((_, i) => {
+              const angle = (i * 360) / 32;
               return (
-                <rect key={`f-${i}`} x={centerX - 1.5} y={centerY - housingRadius - 8} width="3" height="10" fill="#333" transform={`rotate(${angle}, ${centerX}, ${centerY})`} />
+                <rect key={`f-${i}`} x={centerX - 1.5} y={centerY - housingRadius - 6} width="3" height="8" fill="#333" transform={`rotate(${angle}, ${centerX}, ${centerY})`} />
               );
             })}
+            {/* Number Tag 1 */}
+            <circle cx={centerX - housingRadius} cy={centerY - housingRadius} r="10" fill="#222" stroke="#666" />
+            <text x={centerX - housingRadius} y={centerY - housingRadius + 3.5} fill="#fff" fontSize="10" textAnchor="middle" fontWeight="bold">1</text>
           </g>
 
           {/* ── STATOR STRUCTURE ── */}
-          <g onMouseEnter={() => handleHover('Stator (Iron Yoke & Teeth)')} onMouseLeave={() => handleHover(null)}>
+          <g onMouseEnter={() => handleHover('2. Stator Iron Core')} onMouseLeave={() => handleHover(null)}>
             <circle cx={centerX} cy={centerY} r={statorRadius} fill="url(#statorGrad)" stroke="#555" strokeWidth="1" />
-            
-            {/* Teeth & Slots */}
             {[...Array(slots)].map((_, i) => {
               const angle = (i * 360) / slots;
               return (
                 <g key={`s-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
-                  {/* Iron Tooth */}
-                  <path 
-                    d={`M ${-toothWidth/2} ${-statorRadius + yokeThickness} 
-                       L ${toothWidth/2} ${-statorRadius + yokeThickness}
-                       L ${toothWidth/1.3} ${-statorRadius + slotDepth}
-                       L ${-toothWidth/1.3} ${-statorRadius + slotDepth} Z`}
-                    fill="#151515" stroke="#333" strokeWidth="0.5"
-                    transform={`translate(${centerX}, ${centerY})`}
-                  />
-                  
-                  {/* Windings */}
+                  <path d={`M ${-toothWidth/2} ${-statorRadius + yokeThickness} L ${toothWidth/2} ${-statorRadius + yokeThickness} L ${toothWidth/1.3} ${-statorRadius + slotDepth} L ${-toothWidth/1.3} ${-statorRadius + slotDepth} Z`} fill="#151515" stroke="#333" strokeWidth="0.5" transform={`translate(${centerX}, ${centerY})`} />
                   <g transform={`rotate(${180/slots}, ${centerX}, ${centerY})`}>
                     <rect x={centerX - slotWidth/2.4} y={centerY - statorRadius + yokeThickness + 2} width={slotWidth/1.2} height={slotDepth - yokeThickness - 4} fill="#0a0a0a" stroke="#222" />
-                    {/* Copper wire representation */}
                     {[...Array(6)].map((_, j) => (
-                      <circle key={`w-${j}`} cx={centerX - slotWidth/5 + (j % 2) * (slotWidth/2.5)} cy={centerY - statorRadius + yokeThickness + 6 + Math.floor(j/2) * 6} r="1.8" fill="url(#windingGrad)" />
+                      <circle key={`w-${j}`} cx={centerX - slotWidth/5 + (j % 2) * (slotWidth/2.5)} cy={centerY - statorRadius + yokeThickness + 6 + Math.floor(j/2) * 6} r="1.6" fill="url(#windingGrad)" />
                     ))}
                   </g>
                 </g>
               );
             })}
+            {/* Number Tag 2 (Stator Iron) */}
+            <circle cx={centerX + statorRadius - 20} cy={centerY + 20} r="10" fill="#222" stroke="#888" />
+            <text x={centerX + statorRadius - 20} y={centerY + 23.5} fill="#fff" fontSize="10" textAnchor="middle" fontWeight="bold">2</text>
+            
+            {/* Number Tag 3 (Windings) */}
+            <g onMouseEnter={() => handleHover('3. Copper Windings')} onMouseLeave={() => handleHover(null)}>
+              <circle cx={centerX + statorRadius - 20} cy={centerY - statorRadius + 30} r="10" fill="#222" stroke="#cd7f32" />
+              <text x={centerX + statorRadius - 20} y={centerY - statorRadius + 33.5} fill="#cd7f32" fontSize="10" textAnchor="middle" fontWeight="bold">3</text>
+            </g>
           </g>
 
           {/* ── AIR GAP ── */}
-          <circle cx={centerX} cy={centerY} r={statorRadius - slotDepth + 0.5} fill="transparent" stroke="#00d2ff" strokeWidth="0.5" strokeDasharray="3 3" pointerEvents="all" onMouseEnter={() => handleHover('Magnetic Air Gap')} onMouseLeave={() => handleHover(null)} />
+          <g onMouseEnter={() => handleHover('4. Magnetic Air Gap')} onMouseLeave={() => handleHover(null)}>
+            <circle cx={centerX} cy={centerY} r={statorRadius - slotDepth + 0.5} fill="transparent" stroke="#00d2ff" strokeWidth="0.5" strokeDasharray="3 3" />
+            {/* Number Tag 4 */}
+            <circle cx={centerX - statorRadius + 15} cy={centerY + 15} r="10" fill="#222" stroke="#00d2ff" />
+            <text x={centerX - statorRadius + 15} y={centerY + 18.5} fill="#00d2ff" fontSize="10" textAnchor="middle" fontWeight="bold">4</text>
+          </g>
 
           {/* ── ROTOR ASSEMBLY ── */}
-          <g onMouseEnter={() => handleHover(`${motorType.split(' ')[0]} Rotor`)} onMouseLeave={() => handleHover(null)}>
+          <g onMouseEnter={() => handleHover('5. Magnetic Rotor')} onMouseLeave={() => handleHover(null)}>
             <circle cx={centerX} cy={centerY} r={rotorRadius} fill="#181818" stroke="#444" strokeWidth="1" />
-            {/* Magnetic Poles */}
             {[...Array(poles)].map((_, i) => {
               const angle = (i * 360) / poles;
               const pW = (2 * Math.PI * rotorRadius) / (poles * 2.2);
@@ -140,82 +141,32 @@ const MotorCrossSection = ({ data }) => {
                 <rect key={`p-${i}`} x={centerX - pW/2} y={centerY - rotorRadius + 2} width={pW} height={rotorRadius * 0.15} fill={i % 2 === 0 ? "#ff2d55" : "#00d2ff"} stroke="rgba(0,0,0,0.3)" transform={`rotate(${angle}, ${centerX}, ${centerY})`} rx="1" />
               );
             })}
+            {/* Number Tag 5 */}
+            <circle cx={centerX} cy={centerY + rotorRadius - 25} r="10" fill="#222" stroke="#ff2d55" />
+            <text x={centerX} y={centerY + rotorRadius - 21.5} fill="#ff2d55" fontSize="10" textAnchor="middle" fontWeight="bold">5</text>
           </g>
 
           {/* ── SHAFT ── */}
-          <g onMouseEnter={() => handleHover('Main Transmission Shaft')} onMouseLeave={() => handleHover(null)}>
+          <g onMouseEnter={() => handleHover('6. Drive Shaft')} onMouseLeave={() => handleHover(null)}>
             <circle cx={centerX} cy={centerY} r={shaftRadius} fill="#222" stroke="#666" strokeWidth="1.5" />
-            <circle cx={centerX} cy={centerY} r={shaftRadius * 0.4} fill="#333" stroke="#555" />
+            {/* Number Tag 6 */}
+            <circle cx={centerX} cy={centerY} r="10" fill="#222" stroke="#fff" />
+            <text x={centerX} y={centerY + 3.5} fill="#fff" fontSize="10" textAnchor="middle" fontWeight="bold">6</text>
           </g>
 
-          {/* ── LEADER LINES & LABELS ── */}
-          <g className="blueprint-labels" pointerEvents="none" fontSize="11" fontWeight="bold">
-            {/* HOUSING - LEFT TOP */}
-            <path d={`M ${centerX - housingRadius} ${centerY - 20} L ${centerX - housingRadius - 80} ${centerY - 100}`} stroke="#666" fill="none" strokeWidth="1" />
-            <text x={centerX - housingRadius - 85} y={centerY - 105} fill="#aaa" textAnchor="end">EXTERNAL HOUSING / FINS</text>
-
-            {/* WINDINGS - RIGHT TOP */}
-            <path d={`M ${centerX + statorRadius - 15} ${centerY - statorRadius + 20} L ${centerX + statorRadius + 80} ${centerY - 120}`} stroke="#cd7f32" fill="none" strokeWidth="1" />
-            <text x={centerX + statorRadius + 85} y={centerY - 125} fill="#cd7f32">STATOR WINDINGS (SLOTS)</text>
-
-            {/* STATOR IRON - RIGHT BOTTOM */}
-            <path d={`M ${centerX + statorRadius} ${centerY + 20} L ${centerX + statorRadius + 80} ${centerY + 60}`} stroke="#888" fill="none" strokeWidth="1" />
-            <text x={centerX + statorRadius + 85} y={centerY + 65} fill="#aaa">STATOR IRON (YOKE)</text>
-
-            {/* AIR GAP - LEFT MIDDLE */}
-            <path d={`M ${centerX - rotorRadius - 2} ${centerY + 10} L ${centerX - housingRadius - 100} ${centerY + 40}`} stroke="#00d2ff" fill="none" strokeWidth="1" />
-            <text x={centerX - housingRadius - 105} y={centerY + 45} fill="#00d2ff" textAnchor="end">AIR GAP ({airGap}mm)</text>
-
-            {/* MAGNETIC POLES - LEFT BOTTOM */}
-            <path d={`M ${centerX - rotorRadius + 15} ${centerY + rotorRadius - 15} L ${centerX - housingRadius - 80} ${centerY + 160}`} stroke="#ff2d55" fill="none" strokeWidth="1" />
-            <text x={centerX - housingRadius - 85} y={centerY + 165} fill="#ff2d55" textAnchor="end">MAGNETIC POLES (N/S)</text>
-
-            {/* SHAFT - CENTER BOTTOM */}
-            <path d={`M ${centerX} ${centerY} L ${centerX + 40} ${centerY + 180}`} stroke="#888" fill="none" strokeWidth="1" />
-            <text x={centerX + 45} y={centerY + 185} fill="#888">MAIN DRIVE SHAFT</text>
-            
-            {/* Dimension */}
-            <line x1={centerX + statorRadius} y1={centerY} x2={centerX + statorRadius + 60} y2={centerY} stroke="#00d2ff" strokeWidth="1" strokeDasharray="2 2" />
-            <text x={centerX + statorRadius + 65} y={centerY + 4} fill="#00d2ff" fontSize="12" fontWeight="900">Ø {statorD}mm</text>
-          </g>
+          {/* Dimension */}
+          <line x1={centerX + statorRadius} y1={centerY} x2={centerX + statorRadius + 40} y2={centerY} stroke="#00d2ff" strokeWidth="1" strokeDasharray="2 2" />
+          <text x={centerX + statorRadius + 45} y={centerY + 4} fill="#00d2ff" fontSize="11" fontWeight="900">Ø {statorD}mm</text>
         </svg>
 
-        {/* ── DETAILED LEGEND WITH SYMBOLS ── */}
-        <div className="blueprint-legend" style={{ width: '100%', marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '20px', height: '20px', background: '#333', border: '2px solid #555' }}></div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '0.9rem', color: '#fff' }}>Housing & Frame</strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>External structural casing</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '2px' }}>
-              <div style={{ width: '8px', height: '16px', background: '#cd7f32' }}></div>
-              <div style={{ width: '8px', height: '16px', background: '#cd7f32' }}></div>
-            </div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '0.9rem', color: '#fff' }}>Slots & Windings</strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Copper coil bundles in {slots} slots</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '20px', height: '20px', border: '2px dashed #00d2ff', borderRadius: '50%' }}></div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '0.9rem', color: '#fff' }}>Magnetic Air Gap</strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Clearance for electromagnetic flux</span>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex' }}>
-              <div style={{ width: '10px', height: '16px', background: '#ff2d55' }}></div>
-              <div style={{ width: '10px', height: '16px', background: '#00d2ff' }}></div>
-            </div>
-            <div>
-              <strong style={{ display: 'block', fontSize: '0.9rem', color: '#fff' }}>Magnetic Poles</strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{poles} alternating N/S poles</span>
-            </div>
-          </div>
+        {/* ── UNIFIED LEGEND WITH ICONS ── */}
+        <div className="blueprint-legend" style={{ width: '100%', marginTop: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+          <LegendItem num="1" title="Housing & Fins" color="#666" desc="External structural frame" />
+          <LegendItem num="2" title="Stator Yoke" color="#888" desc="Magnetic back-iron core" />
+          <LegendItem num="3" title="Copper Slots" color="#cd7f32" desc={`${slots} winding locations`} />
+          <LegendItem num="4" title="Air Gap" color="#00d2ff" desc={`${airGap}mm flux clearance`} />
+          <LegendItem num="5" title="Magnetic Poles" color="#ff2d55" desc={`${poles} poles (N/S pairs)`} />
+          <LegendItem num="6" title="Drive Shaft" color="#fff" desc="Main mechanical output" />
         </div>
       </div>
 
@@ -224,32 +175,45 @@ const MotorCrossSection = ({ data }) => {
           page-break-before: always !important;
           background: #fff !important;
           color: #000 !important;
-          padding: 30px !important;
+          padding: 40px !important;
         }
         .pdf-export-mode .drawing-layout {
           background: #fff !important;
           border: 1px solid #000 !important;
           box-shadow: none !important;
-          padding: 10px !important;
         }
-        .pdf-export-mode .motor-svg {
-          filter: grayscale(1) !important;
-        }
-        .pdf-export-mode .blueprint-labels text {
-          fill: #000 !important;
-          font-weight: 900 !important;
-          font-size: 12px !important;
-        }
-        .pdf-export-mode .blueprint-labels path {
-          stroke: #000 !important;
-          stroke-width: 1px !important;
-        }
+        .pdf-export-mode .motor-svg { filter: grayscale(1) !important; }
         .pdf-export-mode .blueprint-legend strong { color: #000 !important; }
-        .pdf-export-mode .blueprint-legend span { color: #555 !important; }
+        .pdf-export-mode .blueprint-legend span { color: #444 !important; }
         .pdf-export-mode .no-pdf { display: none !important; }
       `}} />
     </div>
   );
 };
+
+const LegendItem = ({ num, title, color, desc }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+    <div style={{ 
+      width: '24px', 
+      height: '24px', 
+      borderRadius: '50%', 
+      background: '#222', 
+      border: `2px solid ${color}`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '10px',
+      fontWeight: 'bold',
+      color: color === '#fff' ? '#fff' : color,
+      flexShrink: 0
+    }}>
+      {num}
+    </div>
+    <div>
+      <strong style={{ display: 'block', fontSize: '0.85rem', color: '#fff' }}>{title}</strong>
+      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{desc}</span>
+    </div>
+  </div>
+);
 
 export default MotorCrossSection;
