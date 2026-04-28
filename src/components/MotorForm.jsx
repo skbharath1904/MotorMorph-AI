@@ -3,16 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Activity, Weight, Gauge, Car, Wind, CircleDashed, Square, AlertCircle, TrendingUp, Timer } from 'lucide-react';
 
 const FIELD_LABELS = {
-  vehicleType:       'Vehicle Type',
-  voltage:           'Battery Voltage',
-  targetSpeed:       'Top Speed',
-  vehicleWeight:     'Vehicle Weight',
-  dragCoefficient:   'Drag Coefficient (Cd)',
-  frontalArea:       'Frontal Area',
-  rollingResistance: 'Rolling Resistance (Crr)',
-  range:             'Desired Range',
-  accelerationTime:  '0-100 km/h Time',
-  maxGradient:       'Max Gradient (%)'
+  vehicleType:       'VEHICLE TYPE',
+  voltage:           'BATTERY VOLTAGE (V)',
+  targetSpeed:       'TOP SPEED (KM/H)',
+  vehicleWeight:     'WEIGHT (KG)',
+  dragCoefficient:   'DRAG COEFF. (CD)',
+  frontalArea:       'FRONTAL AREA (M²)',
+  rollingResistance: 'ROLLING RES. (CRR)',
+  range:             'DESIRED RANGE (KM)',
+  accelerationTime:  '0-100 KM/H TIME',
+  maxGradient:       'MAX GRADIENT (%)'
 };
 
 const MotorForm = ({ onSubmit, isGenerating }) => {
@@ -94,7 +94,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
         newErrors[key] = 'Required';
         missing.push(label);
       } else if (val < min || val > max) {
-        newErrors[key] = `Must be ${min}–${max}`;
+        newErrors[key] = `Invalid Range`;
         missing.push(label);
       }
     }
@@ -108,7 +108,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
 
     if (missing.length > 0) {
       setErrors(newErrors);
-      setSubmitError(`Please fill in: ${missing.join(', ')}`);
+      setSubmitError(`Please check required fields: ${missing.slice(0, 3).join(', ')}...`);
       return;
     }
 
@@ -124,23 +124,17 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     if (!/^[0-9]$/.test(e.key)) e.preventDefault();
   };
 
-  const fieldStyle = (key) => ({
-    borderColor: errors[key] ? '#ff5a5a' : undefined,
-    boxShadow:   errors[key] ? '0 0 0 2px rgba(255,90,90,0.25)' : undefined,
-  });
-
   return (
     <motion.div
       className="glass-panel"
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5 }}
-      style={{ padding: '2rem' }}
+      style={{ padding: '2.5rem', background: 'rgba(10, 10, 10, 0.4)' }}
     >
-      <h2 className="text-gradient" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Activity size={24} />
+      <h3 style={{ color: 'var(--accent-blue)', marginBottom: '1.8rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '1.2rem', fontWeight: 800 }}>
         Vehicle Parameters
-      </h2>
+      </h3>
 
       <AnimatePresence>
         {submitError && (
@@ -149,199 +143,131 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             style={{
-              display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
-              background: 'rgba(255,90,90,0.1)',
-              border: '1px solid rgba(255,90,90,0.4)',
-              borderRadius: '8px',
-              padding: '0.75rem 1rem',
-              marginBottom: '1.25rem',
-              fontSize: '0.85rem',
-              color: '#ff8080',
-              lineHeight: 1.5
+              background: 'rgba(255,60,60,0.1)', border: '1px solid rgba(255,60,60,0.3)',
+              borderRadius: '8px', padding: '0.8rem 1rem', marginBottom: '1.5rem',
+              fontSize: '0.85rem', color: '#ff7a7a'
             }}
           >
-            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <span>{submitError}</span>
+            <AlertCircle size={14} style={{ display: 'inline', marginRight: '8px' }} />
+            {submitError}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+      <form onSubmit={handleSubmit}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '2rem' }}>
 
+          {/* Vehicle Type */}
           <div className="form-group">
-            <label className="form-label">
-              <Car size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Vehicle Type {errors.vehicleType && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.vehicleType}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Car size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.vehicleType}
             </label>
-            <select
-              name="vehicleType"
-              className="form-input"
-              value={inputs.vehicleType}
-              onChange={handleTypeChange}
-              style={{ appearance: 'none', ...fieldStyle('vehicleType') }}
-            >
-              <option value="" disabled>Select vehicle type</option>
+            <select name="vehicleType" className="form-input" value={inputs.vehicleType} onChange={handleTypeChange} style={{ background: '#0a0a0a' }}>
+              <option value="" disabled>Select Type</option>
               <option value="Two Wheeler">Two Wheeler</option>
               <option value="Car">Passenger Car</option>
               <option value="Commercial">Commercial Vehicle</option>
             </select>
           </div>
 
+          {/* Voltage */}
           <div className="form-group">
-            <label className="form-label">
-              <Zap size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Battery Voltage (V) {errors.voltage && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.voltage}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Zap size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.voltage}
             </label>
-            <select
-              name="voltage"
-              className="form-input"
-              value={isCustomVoltage ? 'others' : inputs.voltage}
-              onChange={handleChange}
-              style={{ appearance: 'none', ...fieldStyle('voltage') }}
-            >
-              <option value="" disabled>Select voltage</option>
+            <select name="voltage" className="form-input" value={isCustomVoltage ? 'others' : inputs.voltage} onChange={handleChange} style={{ background: '#0a0a0a' }}>
+              <option value="" disabled>Select Voltage</option>
               <option value="48">48V (Light EV)</option>
               <option value="400">400V (Standard EV)</option>
               <option value="800">800V (High Performance)</option>
               <option value="others">Others (Custom)</option>
             </select>
             {isCustomVoltage && (
-              <input
-                type="number"
-                className="form-input"
-                placeholder="Enter voltage (e.g. 96, 600)"
-                value={customVoltage}
-                onChange={(e) => { setCustomVoltage(e.target.value); setErrors(p => ({...p, voltage:''})); setSubmitError(''); }}
-                onKeyDown={numbersOnly}
-                style={{ marginTop: '0.5rem', ...fieldStyle('voltage') }}
-              />
+              <input type="number" className="form-input" placeholder="e.g. 600" value={customVoltage} onChange={(e) => setCustomVoltage(e.target.value)} onKeyDown={numbersOnly} style={{ marginTop: '0.6rem', background: '#0a0a0a' }} />
             )}
           </div>
 
+          {/* Top Speed */}
           <div className="form-group">
-            <label className="form-label">
-              <Gauge size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Top Speed (km/h) {errors.targetSpeed && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.targetSpeed}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Gauge size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.targetSpeed}
             </label>
-            <input
-              type="number" name="targetSpeed" className="form-input"
-              value={inputs.targetSpeed} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 120"
-              style={fieldStyle('targetSpeed')}
-            />
+            <input type="number" name="targetSpeed" className="form-input" value={inputs.targetSpeed} onChange={handleChange} onKeyDown={numbersOnly} placeholder="100" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Weight */}
           <div className="form-group">
-            <label className="form-label">
-              <Weight size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Weight (kg) {errors.vehicleWeight && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.vehicleWeight}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Weight size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.vehicleWeight}
             </label>
-            <input
-              type="number" name="vehicleWeight" className="form-input"
-              value={inputs.vehicleWeight} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 1500"
-              style={fieldStyle('vehicleWeight')}
-            />
+            <input type="number" name="vehicleWeight" className="form-input" value={inputs.vehicleWeight} onChange={handleChange} onKeyDown={numbersOnly} placeholder="180" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Drag Coeff */}
           <div className="form-group">
-            <label className="form-label">
-              <Timer size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              0-100 km/h (s) {errors.accelerationTime && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.accelerationTime}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Wind size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.dragCoefficient}
             </label>
-            <input
-              type="number" step="0.1" name="accelerationTime" className="form-input"
-              value={inputs.accelerationTime} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 8.5"
-              style={fieldStyle('accelerationTime')}
-            />
+            <input type="number" step="0.01" name="dragCoefficient" className="form-input" value={inputs.dragCoefficient} onChange={handleChange} onKeyDown={numbersOnly} placeholder="0.6" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Frontal Area */}
           <div className="form-group">
-            <label className="form-label">
-              <TrendingUp size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Max Gradient (%) {errors.maxGradient && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.maxGradient}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Square size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.frontalArea}
             </label>
-            <input
-              type="number" name="maxGradient" className="form-input"
-              value={inputs.maxGradient} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 20"
-              style={fieldStyle('maxGradient')}
-            />
+            <input type="number" step="0.1" name="frontalArea" className="form-input" value={inputs.frontalArea} onChange={handleChange} onKeyDown={numbersOnly} placeholder="1.1" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Rolling Res */}
           <div className="form-group">
-            <label className="form-label">
-              <Wind size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Drag Coeff. (Cd) {errors.dragCoefficient && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.dragCoefficient}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <CircleDashed size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.rollingResistance}
             </label>
-            <input
-              type="number" step="0.01" name="dragCoefficient" className="form-input"
-              value={inputs.dragCoefficient} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 0.28"
-              style={fieldStyle('dragCoefficient')}
-            />
+            <input type="number" step="0.001" name="rollingResistance" className="form-input" value={inputs.rollingResistance} onChange={handleChange} onKeyDown={numbersOnly} placeholder="0.012" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Desired Range */}
           <div className="form-group">
-            <label className="form-label">
-              <Square size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Frontal Area (m²) {errors.frontalArea && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.frontalArea}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Activity size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.range}
             </label>
-            <input
-              type="number" step="0.1" name="frontalArea" className="form-input"
-              value={inputs.frontalArea} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 2.2"
-              style={fieldStyle('frontalArea')}
-            />
+            <input type="number" name="range" className="form-input" value={inputs.range} onChange={handleChange} onKeyDown={numbersOnly} placeholder="300" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Acceleration */}
           <div className="form-group">
-            <label className="form-label">
-              <CircleDashed size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Rolling Res. (Crr) {errors.rollingResistance && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.rollingResistance}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Timer size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.accelerationTime}
             </label>
-            <input
-              type="number" step="0.001" name="rollingResistance" className="form-input"
-              value={inputs.rollingResistance} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 0.012"
-              style={fieldStyle('rollingResistance')}
-            />
+            <input type="number" step="0.1" name="accelerationTime" className="form-input" value={inputs.accelerationTime} onChange={handleChange} onKeyDown={numbersOnly} placeholder="8.5" style={{ background: '#0a0a0a' }} />
           </div>
 
+          {/* Gradient */}
           <div className="form-group">
-            <label className="form-label">
-              <Activity size={16} style={{ display: 'inline', marginRight: '0.5rem', verticalAlign: 'text-bottom' }}/>
-              Range (km) {errors.range && <span style={{ color: '#ff5a5a', fontSize: '0.78rem' }}>— {errors.range}</span>}
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <TrendingUp size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.maxGradient}
             </label>
-            <input
-              type="number" name="range" className="form-input"
-              value={inputs.range} onChange={handleChange} onKeyDown={numbersOnly}
-              placeholder="e.g. 350"
-              style={fieldStyle('range')}
-            />
+            <input type="number" name="maxGradient" className="form-input" value={inputs.maxGradient} onChange={handleChange} onKeyDown={numbersOnly} placeholder="20" style={{ background: '#0a0a0a' }} />
           </div>
+
         </div>
 
         <button
           type="submit"
           className="btn"
-          style={{ width: '100%', marginTop: '1rem' }}
+          style={{ 
+            width: '100%', padding: '1.2rem', background: 'linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%)',
+            boxShadow: '0 0 20px rgba(0, 210, 255, 0.4)', border: 'none', borderRadius: '12px'
+          }}
           disabled={isGenerating}
         >
           {isGenerating ? (
-            <>
-              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                <Activity size={20} />
-              </motion.div>
-              Calculating Engineering Specs...
-            </>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+              <Activity size={24} />
+            </motion.div>
           ) : (
-            <>
-              <Zap size={20} />
-              Generate Motor Design
-            </>
+            <Zap size={24} color="#fff" fill="#fff" />
           )}
         </button>
       </form>
