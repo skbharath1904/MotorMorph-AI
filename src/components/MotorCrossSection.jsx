@@ -30,6 +30,26 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
   const CX = 500;
   const CY = 450;
 
+  // Helper to get coordinates on a circle
+  const getPoint = (radius, angleDeg) => {
+    const angleRad = (angleDeg - 90) * (Math.PI / 180);
+    return {
+      x: CX + radius * Math.cos(angleRad),
+      y: CY + radius * Math.sin(angleRad)
+    };
+  };
+
+  // Explicit radii for cores and parts
+  const pts = {
+    housing: getPoint(245, -30),   // Top Right
+    statorCore: getPoint(215, 30), // Mid Right
+    statorSlots: getPoint(215, 60), // Bottom Right
+    airGap: getPoint(185, 90),     // Far Right
+    poles: getPoint(170, 150),     // Bottom Left
+    rotorCore: getPoint(100, 210),  // Left
+    shaft: getPoint(25, 270)       // Far Left
+  };
+
   return (
     <div className="motor-visualization-system" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
@@ -59,7 +79,7 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
         >
           <svg viewBox="0 0 1100 900" style={{ width: '100%', height: '100%' }}>
             
-            {/* 1. EXTERNAL HOUSING WITH FINS */}
+            {/* 1. EXTERNAL HOUSING */}
             <g id="housing">
               {[...Array(72)].map((_, i) => (
                 <rect key={i} x={CX - 2} y={CY - 255} width="4" height="25" fill={colors.housing} transform={`rotate(${i * 5} ${CX} ${CY})`} />
@@ -67,10 +87,10 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               <circle cx={CX} cy={CY} r="230" fill="none" stroke={colors.housing} strokeWidth="8" />
             </g>
 
-            {/* 2. STATOR CORE (The Gap between housing and slots) */}
+            {/* 2. STATOR CORE */}
             <circle cx={CX} cy={CY} r="215" fill="none" stroke={colors.stator} strokeWidth="30" />
 
-            {/* 3. STATOR SLOTS (A/B/C boxes) */}
+            {/* 3. STATOR SLOTS */}
             {[...Array(slots)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/slots)} ${CX} ${CY})`}>
                 <rect x={CX - 15} y={CY - 225} width="30" height="25" rx="3" fill={colors.windings[i % 3]} stroke="#000" strokeWidth="1" />
@@ -80,13 +100,13 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
               </g>
             ))}
 
-            {/* 4. AIR GAP (GREEN DOTTED LINE) */}
+            {/* 4. AIR GAP */}
             <circle cx={CX} cy={CY} r="185" fill="none" stroke={colors.dimension} strokeWidth="2" strokeDasharray="8 6" opacity="1.0" />
 
-            {/* 5. ROTOR CORE ASSEMBLY (Gap between poles and shaft) */}
+            {/* 5. ROTOR CORE BODY */}
             <circle cx={CX} cy={CY} r="165" fill={colors.rotor} stroke="#333" strokeWidth="2" />
             
-            {/* MAGNETIC POLES (Magnets) */}
+            {/* MAGNETIC POLES */}
             {[...Array(poles)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/poles)} ${CX} ${CY})`}>
                 <path d={`M ${CX-30} ${CY-165} A 165 165 0 0 1 ${CX+30} ${CY-165} L ${CX+25} ${CY-178} A 150 150 0 0 0 ${CX-25} ${CY-178} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
@@ -121,35 +141,35 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
                <text x={CX} y={CY + 367} textAnchor="middle" fill={colors.dimension} fontSize="10" fontWeight="800">STATOR INNER BORE DIAMETER</text>
             </g>
 
-            {/* ── UPDATED LABELS (NEW ENGINEERING SCHEMA) ── */}
+            {/* ── FINAL PRECISION LABELS ── */}
             <g stroke={colors.leader} strokeWidth="1.5" fill="none">
-               {/* Bullets */}
-               <circle cx={CX - 230} cy={CY - 100} r="4" fill={colors.leader} stroke="none" /> {/* External Housing */}
-               <circle cx={CX + 205} cy={CY - 235} r="4" fill={colors.leader} stroke="none" /> {/* Stator Core */}
-               <circle cx={CX + 215} cy={CY - 160} r="4" fill={colors.leader} stroke="none" /> {/* Stator Slots */}
-               <circle cx={CX + 185} cy={CY + 50} r="4" fill={colors.leader} stroke="none" /> {/* Air Gap */}
-               <circle cx={CX - 165} cy={CY + 50} r="4" fill={colors.leader} stroke="none" /> {/* Magnetic Poles */}
-               <circle cx={CX + 120} cy={CY + 120} r="4" fill={colors.leader} stroke="none" /> {/* Rotor Core */}
-               <circle cx={CX - 40} cy={CY + 20} r="4" fill={colors.leader} stroke="none" /> {/* Main Shaft */}
+               {/* Bullets with Trig Precision */}
+               <circle cx={pts.housing.x} cy={pts.housing.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.statorCore.x} cy={pts.statorCore.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.statorSlots.x} cy={pts.statorSlots.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.airGap.x} cy={pts.airGap.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.poles.x} cy={pts.poles.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.rotorCore.x} cy={pts.rotorCore.y} r="4" fill={colors.leader} stroke="none" />
+               <circle cx={pts.shaft.x} cy={pts.shaft.y} r="4" fill={colors.leader} stroke="none" />
 
-               {/* Leader Lines */}
-               <path d={`M ${CX - 230} ${CY - 100} L ${CX - 300} ${CY - 150}`} /> 
-               <path d={`M ${CX + 205} ${CY - 235} L ${CX + 300} ${CY - 240}`} />
-               <path d={`M ${CX + 215} ${CY - 160} L ${CX + 300} ${CY - 180}`} />
-               <path d={`M ${CX + 185} ${CY + 50} L ${CX + 300} ${CY + 100}`} />
-               <path d={`M ${CX - 165} ${CY + 50} L ${CX - 300} ${CY + 100}`} />
-               <path d={`M ${CX + 120} ${CY + 120} L ${CX + 300} ${CY + 160}`} />
-               <path d={`M ${CX - 40} ${CY + 20} L ${CX - 300} ${CY + 20}`} />
+               {/* Leader Paths to Margin Labels */}
+               <path d={`M ${pts.housing.x} ${pts.housing.y} L ${CX + 300} ${CY - 300}`} /> 
+               <path d={`M ${pts.statorCore.x} ${pts.statorCore.y} L ${CX + 350} ${CY - 220}`} />
+               <path d={`M ${pts.statorSlots.x} ${pts.statorSlots.y} L ${CX + 350} ${CY - 150}`} />
+               <path d={`M ${pts.airGap.x} ${pts.airGap.y} L ${CX + 350} ${CY + 120}`} />
+               <path d={`M ${pts.poles.x} ${pts.poles.y} L ${CX - 350} ${CY + 150}`} />
+               <path d={`M ${pts.rotorCore.x} ${pts.rotorCore.y} L ${CX - 350} ${CY + 220}`} />
+               <path d={`M ${pts.shaft.x} ${pts.shaft.y} L ${CX - 350} ${CY - 50}`} />
             </g>
 
             <g fill={colors.text} fontSize="16" fontWeight="900" fontFamily="Inter, sans-serif">
-               <text x={CX - 305} y={CY - 155} textAnchor="end">EXTERNAL HOUSING</text>
-               <text x={CX + 305} y={CY - 245} textAnchor="start">STATOR CORE</text>
-               <text x={CX + 305} y={CY - 185} textAnchor="start">STATOR SLOTS</text>
-               <text x={CX + 305} y={CY + 105} textAnchor="start">AIR GAP: {data.dimensions.airGap}</text>
-               <text x={CX - 305} y={CY + 105} textAnchor="end">MAGNETIC POLES</text>
-               <text x={CX + 305} y={CY + 165} textAnchor="start">ROTOR CORE</text>
-               <text x={CX - 305} y={CY + 25} textAnchor="end">MAIN SHAFT</text>
+               <text x={CX + 305} y={CY - 305} textAnchor="start">EXTERNAL HOUSING</text>
+               <text x={CX + 355} y={CY - 225} textAnchor="start">STATOR CORE</text>
+               <text x={CX + 355} y={CY - 155} textAnchor="start">STATOR SLOTS</text>
+               <text x={CX + 355} y={CY + 125} textAnchor="start">AIR GAP: {data.dimensions.airGap}</text>
+               <text x={CX - 355} y={CY + 155} textAnchor="end">MAGNETIC POLES</text>
+               <text x={CX - 355} y={CY + 225} textAnchor="end">ROTOR CORE</text>
+               <text x={CX - 355} y={CY - 45} textAnchor="end">MAIN SHAFT</text>
             </g>
           </svg>
         </motion.div>
