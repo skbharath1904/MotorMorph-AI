@@ -254,20 +254,16 @@ const DesignReport = ({ data, inputs }) => {
                 <strong>{data.electrical.phaseCurrent}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Switching Device</span>
+                <strong style={{ color: 'var(--accent-blue)' }}>{data.electrical.switchingDevice}</strong>
+              </li>
+              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Stator Resistance</span>
                 <strong>{data.electrical.statorResistance}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>d-q Inductance</span>
-                <strong>{data.electrical.dqInductance}</strong>
-              </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Back EMF Const.</span>
                 <strong>{data.electrical.backEmfConstant}</strong>
-              </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Switching Freq.</span>
-                <strong>{data.electrical.switchingFreq}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Winding Type</span>
@@ -285,7 +281,7 @@ const DesignReport = ({ data, inputs }) => {
             <ul style={{ listStyle: 'none', padding: 0 }}>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Torque Density</span>
-                <strong>{data.mechanical.maxTorqueDensity}</strong>
+                <strong style={{ color: 'var(--accent-blue)' }}>{data.mechanical.maxTorqueDensity}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Rotor Inertia</span>
@@ -296,16 +292,8 @@ const DesignReport = ({ data, inputs }) => {
                 <strong>{data.mechanical.maxCentrifugalForce}</strong>
               </li>
               <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Bearing Load</span>
-                <strong>{data.mechanical.bearingLoad}</strong>
-              </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text-secondary)' }}>Critical Speed</span>
                 <strong>{data.mechanical.criticalSpeed}</strong>
-              </li>
-              <li style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Cogging Torque</span>
-                <strong>{data.mechanical.coggingTorque}</strong>
               </li>
             </ul>
           </div>
