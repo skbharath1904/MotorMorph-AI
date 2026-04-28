@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 const MotorCrossSection = ({ data }) => {
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const svgRef = useRef(null);
 
   if (!data || !data.dimensions) return null;
 
@@ -34,22 +33,33 @@ const MotorCrossSection = ({ data }) => {
     setZoom(prev => Math.min(Math.max(prev + delta, 0.5), 5));
   };
 
-  // ── DRAGGING LOGIC ──
-  const handleMouseDown = (e) => {
+  // ── MOUSE EVENTS ──
+  const startDrag = (clientX, clientY) => {
     setIsDragging(true);
-    setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+    setDragStart({ x: clientX - offset.x, y: clientY - offset.y });
   };
 
-  const handleMouseMove = (e) => {
+  const moveDrag = (clientX, clientY) => {
     if (!isDragging) return;
     setOffset({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y
+      x: clientX - dragStart.x,
+      y: clientY - dragStart.y
     });
   };
 
-  const handleMouseUp = () => {
+  const endDrag = () => {
     setIsDragging(false);
+  };
+
+  // ── TOUCH EVENTS ──
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    startDrag(touch.clientX, touch.clientY);
+  };
+
+  const handleTouchMove = (e) => {
+    const touch = e.touches[0];
+    moveDrag(touch.clientX, touch.clientY);
   };
 
   const resetView = () => {
@@ -77,12 +87,12 @@ const MotorCrossSection = ({ data }) => {
             Engineering Assembly Blueprint
           </h4>
           <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-            Interactive Cross-Section (Drag to Pan, +/− to Zoom)
+            DRAG TO MOVE • USE +/− TO ZOOM
           </p>
         </div>
         
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={resetView} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem' }}>Reset</button>
+          <button onClick={resetView} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem' }}>Reset View</button>
           <button onClick={() => handleZoom(-0.25)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>−</button>
           <div style={{ alignSelf: 'center', color: 'var(--accent-blue)', fontSize: '0.8rem', fontWeight: 'bold', width: '45px', textAlign: 'center' }}>{Math.round(zoom * 100)}%</div>
           <button onClick={() => handleZoom(0.25)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '8px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>+</button>
@@ -91,32 +101,35 @@ const MotorCrossSection = ({ data }) => {
 
       <div 
         className="drawing-layout" 
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseDown={(e) => startDrag(e.clientX, e.clientY)}
+        onMouseMove={(e) => moveDrag(e.clientX, e.clientY)}
+        onMouseUp={endDrag}
+        onMouseLeave={endDrag}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={endDrag}
         style={{ 
           display: 'flex', 
           justifyContent: 'center', 
           alignItems: 'center', 
           flexDirection: 'column',
-          background: 'rgba(0,0,0,0.95)',
+          background: '#050505',
           padding: '2rem',
           borderRadius: '24px',
-          border: '1px solid var(--glass-border)',
+          border: '2px solid rgba(255,255,255,0.1)',
           overflow: 'hidden',
           minHeight: '850px',
           cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none', // Prevent browser scrolling while dragging diagram
           position: 'relative'
         }}
       >
         <svg 
-          ref={svgRef}
           className="motor-svg" 
           width="100%" 
           height="auto" 
           viewBox={`0 0 ${vbWidth} ${vbHeight}`} 
-          style={{ overflow: 'visible', userSelect: 'none' }}
+          style={{ overflow: 'visible', userSelect: 'none', pointerEvents: 'auto' }}
         >
           {/* Main Content Group for Panning */}
           <g transform={`translate(${offset.x / (zoom * 0.5)}, ${offset.y / (zoom * 0.5)})`}>
@@ -203,8 +216,8 @@ const MotorCrossSection = ({ data }) => {
         </svg>
 
         {/* Pan Indicator */}
-        <div style={{ position: 'absolute', bottom: '20px', left: '20px', color: 'rgba(255,255,255,0.3)', fontSize: '0.7rem' }}>
-          🖱️ Click & Drag to explore
+        <div style={{ position: 'absolute', bottom: '20px', left: '20px', color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', background: 'rgba(0,0,0,0.5)', padding: '8px 12px', borderRadius: '20px', pointerEvents: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.1rem' }}>🖐️</span> Click and Drag to Explore
         </div>
       </div>
 
