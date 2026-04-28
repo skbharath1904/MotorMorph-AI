@@ -7,7 +7,6 @@ const MotorCrossSection = ({ data }) => {
 
   const { dimensions } = data;
   const statorD = parseFloat(dimensions.statorDiameter);
-  const airGap = parseFloat(dimensions.airGap);
   const poles = parseInt(dimensions.poles) || 8;
   const slots = parseInt(dimensions.slots) || 12;
 
@@ -19,10 +18,14 @@ const MotorCrossSection = ({ data }) => {
   const baseScale = 220 / Math.max(statorD, 1);
   const currentScale = baseScale * zoom;
   
+  // RADIUS CALCULATION (With guaranteed visual clearance for Air Gap)
   const housingRadius = (statorD / 2 * 1.35) * currentScale;
   const statorCoreRadius = (statorD / 2 * 1.25) * currentScale;
   const statorInnerRadius = (statorD / 2) * currentScale;
-  const rotorRadius = ((statorD / 2) - airGap) * currentScale;
+  
+  // VISUAL AIR GAP: Force at least 15 units of space to prevent merging
+  const visualAirGap = Math.max(15, currentScale * 8); 
+  const rotorRadius = statorInnerRadius - visualAirGap;
   const rotorCoreRadius = rotorRadius * 0.75;
   const shaftRadius = rotorCoreRadius * 0.4;
 
@@ -92,26 +95,29 @@ const MotorCrossSection = ({ data }) => {
               const angle = (i * 360) / slots;
               const phase = i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C';
               const phaseColor = i % 3 === 0 ? colors.windingsA : i % 3 === 1 ? colors.windingsB : colors.windingsC;
-              const boxSize = Math.max(24, statorCoreRadius * 0.12);
+              const boxSize = Math.max(22, statorCoreRadius * 0.12);
 
               return (
                 <g key={`slot-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
                   {/* Phase Label Box */}
-                  <rect x={centerX - boxSize/2} y={centerY - statorInnerRadius - boxSize * 1.3} width={boxSize} height={boxSize} rx="4" fill={phaseColor} stroke="#000" strokeWidth="2" />
-                  <text x={centerX} y={centerY - statorInnerRadius - boxSize * 1.3 + boxSize/1.35} fill="#000" fontSize={boxSize * 0.75} textAnchor="middle" fontWeight="900">{phase}</text>
+                  <rect x={centerX - boxSize/2} y={centerY - statorInnerRadius - boxSize * 1.5} width={boxSize} height={boxSize} rx="4" fill={phaseColor} stroke="#000" strokeWidth="2" />
+                  <text x={centerX} y={centerY - statorInnerRadius - boxSize * 1.5 + boxSize/1.35} fill="#000" fontSize={boxSize * 0.75} textAnchor="middle" fontWeight="900">{phase}</text>
                   
                   {/* Trapezoidal Winding */}
                   <path 
                     d={`M ${centerX - 12} ${centerY - statorInnerRadius} 
                        L ${centerX + 12} ${centerY - statorInnerRadius}
-                       L ${centerX + 22} ${centerY - statorInnerRadius + 35}
-                       L ${centerX - 22} ${centerY - statorInnerRadius + 35} Z`}
+                       L ${centerX + 22} ${centerY - statorInnerRadius + 30}
+                       L ${centerX - 22} ${centerY - statorInnerRadius + 30} Z`}
                     fill={phaseColor} fillOpacity="0.8" stroke="#000" strokeWidth="1.5"
                   />
                 </g>
               );
             })}
           </g>
+
+          {/* ── AIR GAP (Dashed visual separator) ── */}
+          <circle cx={centerX} cy={centerY} r={(statorInnerRadius + rotorRadius) / 2} fill="transparent" stroke={colors.airgap} strokeWidth="2" strokeDasharray="6 4" />
 
           {/* ── ROTOR ASSEMBLY ── */}
           <g>
@@ -125,7 +131,7 @@ const MotorCrossSection = ({ data }) => {
               const pW = (2 * Math.PI * rotorRadius) / (poles * 1.3);
               return (
                 <g key={`pole-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
-                  <rect x={centerX - pW/2} y={centerY - rotorRadius + 2} width={pW} height={rotorRadius - rotorCoreRadius} fill={isNorth ? colors.poleN : colors.poleS} stroke="#000" strokeWidth="1" rx="3" />
+                  <rect x={centerX - pW/2} y={centerY - rotorRadius + 2} width={pW} height={rotorRadius - rotorCoreRadius} fill={isNorth ? colors.poleN : colors.poleS} stroke="#000" strokeWidth="1.rx" rx="3" />
                   <text x={centerX} y={centerY - rotorRadius + 18} fill="#fff" fontSize="14" textAnchor="middle" fontWeight="900">{isNorth ? 'N' : 'S'}</text>
                 </g>
               );
@@ -152,6 +158,9 @@ const MotorCrossSection = ({ data }) => {
             <line x1={centerX - rotorRadius} y1={centerY + 30} x2={centerX - statorCoreRadius - 180} y2={centerY + 80} stroke={colors.poleN} strokeWidth="3" />
             <text x={centerX - statorCoreRadius - 185} y={centerY + 85} fill={colors.poleN} textAnchor="end">ROTOR MAGNETS (N/S)</text>
 
+            <line x1={centerX - statorInnerRadius} y1={centerY - statorInnerRadius} x2={centerX - 100} y2={centerY - 350} stroke={colors.airgap} strokeWidth="3" />
+            <text x={centerX - 100} y={centerY - 355} fill={colors.airgap} textAnchor="middle">AIR GAP REGION</text>
+
             <line x1={centerX} y1={centerY + shaftRadius} x2={centerX + 120} y2={centerY + 300} stroke={colors.shaft} strokeWidth="3" />
             <text x={centerX + 125} y={centerY + 305} fill="#fff">DRIVE SHAFT</text>
           </g>
@@ -159,40 +168,42 @@ const MotorCrossSection = ({ data }) => {
 
         {/* ── COMPREHENSIVE PARTS KEY ── */}
         <div className="blueprint-legend" style={{ width: '100%', marginTop: '3rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '2.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '30px', height: '24px', background: colors.housing, border: '1px solid #666' }}></div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>1. Housing & Fins</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>External frame with cooling ribs</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '30px', height: '24px', background: colors.statorIron, border: '1.5px solid #666' }}></div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>2. Stator Iron Core</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>Magnetic iron back-yoke</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '3px' }}>
-              <div style={{ width: '15px', height: '24px', background: colors.windingsA, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '900' }}>A</div>
-              <div style={{ width: '15px', height: '24px', background: colors.windingsB }}></div>
-            </div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>3. Phase Windings</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>{slots} slots with A/B/C boxes</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex' }}>
-              <div style={{ width: '18px', height: '24px', background: colors.poleN, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '900', color: '#fff' }}>N</div>
-              <div style={{ width: '18px', height: '24px', background: colors.poleS, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '900', color: '#fff' }}>S</div>
-            </div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>4. Rotor Magnets</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>{poles} alternating N/S poles</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '30px', height: '24px', background: '#222', border: '1px solid #666' }}></div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>5. Rotor Iron Core</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>Central rotating substrate</span></div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: colors.shaft, border: '2px solid #666' }}></div>
-            <div><strong style={{ display: 'block', color: '#fff' }}>6. Drive Shaft</strong><span style={{ fontSize: '0.75rem', color: '#aaa' }}>Mechanical torque output</span></div>
-          </div>
+          <LegendItem color={colors.housing} title="1. Housing & Fins" desc="Thick frame with ribs" />
+          <LegendItem color={colors.statorIron} title="2. Stator Core" desc="Laminated iron back-yoke" />
+          <LegendItem color={colors.windingsA} title="3. Phase Windings" desc={`${slots} slots with A/B/C phasing`} isPhase />
+          <LegendItem color={colors.airgap} title="4. Air Gap" desc="Clearance for flux transfer" isDashed />
+          <LegendItem color={colors.poleN} title="5. Rotor Magnets" desc={`${poles} high-strength N/S poles`} isPole />
+          <LegendItem color={colors.shaft} title="6. Drive Shaft" desc="Mechanical torque output" isCircle />
         </div>
       </div>
     </div>
   );
 };
+
+const LegendItem = ({ color, title, desc, isPhase, isPole, isCircle, isDashed }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+    {isPhase ? (
+      <div style={{ display: 'flex', gap: '3px' }}>
+        <div style={{ width: '14px', height: '24px', background: '#ff9f43', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', border: '1px solid #444' }}>A</div>
+        <div style={{ width: '14px', height: '24px', background: '#a29bfe', border: '1px solid #444' }}></div>
+      </div>
+    ) : isPole ? (
+      <div style={{ display: 'flex' }}>
+        <div style={{ width: '15px', height: '24px', background: '#ff2d55', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>N</div>
+        <div style={{ width: '15px', height: '24px', background: '#00d2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '900', color: '#fff' }}>S</div>
+      </div>
+    ) : isCircle ? (
+      <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: `2px solid ${color}`, background: '#222' }}></div>
+    ) : isDashed ? (
+      <div style={{ width: '30px', height: '4px', borderTop: `2px dashed ${color}` }}></div>
+    ) : (
+      <div style={{ width: '30px', height: '24px', background: color, border: '1.5px solid #666' }}></div>
+    )}
+    <div>
+      <strong style={{ display: 'block', color: '#fff', fontSize: '0.9rem' }}>{title}</strong>
+      <span style={{ fontSize: '0.75rem', color: '#aaa' }}>{desc}</span>
+    </div>
+  </div>
+);
 
 export default MotorCrossSection;
