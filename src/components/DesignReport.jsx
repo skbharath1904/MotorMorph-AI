@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Cpu, Thermometer, Maximize, Zap, BarChart3, Activity, Settings } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -7,7 +7,7 @@ import MotorCrossSection from './MotorCrossSection';
 
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
-  const [showCrossSection, setShowCrossSection] = React.useState(false);
+  const [showCrossSection, setShowCrossSection] = useState(false);
 
   const handleDownloadPdf = () => {
     const element = reportRef.current;
