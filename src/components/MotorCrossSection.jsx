@@ -82,30 +82,43 @@ const MotorCrossSection = ({ data }) => {
           {/* ── STATOR YOKE ── */}
           <circle cx={centerX} cy={centerY} r={statorRadius} fill="url(#statorGrad)" stroke="#444" strokeWidth="1" className="part-stator-yoke" />
           
-          {/* ── STATOR TEETH & WINDINGS ── */}
+          {/* ── STATOR TEETH & SLOTS ── */}
           {[...Array(slots)].map((_, i) => {
             const angle = (i * 360) / slots;
+            const nextAngle = ((i + 1) * 360) / slots;
             return (
-              <g key={`slot-group-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`} className="part-slot">
-                {/* Teeth */}
+              <g key={`slot-group-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
+                {/* Stator Tooth (The Iron part) */}
                 <path 
-                  d={`M ${centerX - toothWidth/2} ${centerY - statorRadius + yokeThickness} 
-                     L ${centerX + toothWidth/2} ${centerY - statorRadius + yokeThickness}
-                     L ${centerX + toothWidth/1.5} ${centerY - statorRadius + slotDepth}
-                     L ${centerX - toothWidth/1.5} ${centerY - statorRadius + slotDepth} Z`}
-                  fill="#222" stroke="#444" 
+                  d={`M ${-toothWidth/2} ${-statorRadius + yokeThickness} 
+                     L ${toothWidth/2} ${-statorRadius + yokeThickness}
+                     L ${toothWidth/1.2} ${-statorRadius + slotDepth}
+                     L ${-toothWidth/1.2} ${-statorRadius + slotDepth} Z`}
+                  fill="#1a1a1a" stroke="#333" strokeWidth="0.5"
+                  transform={`translate(${centerX}, ${centerY})`}
                 />
-                {/* Windings (Coils) */}
-                <rect
-                  x={centerX - slotWidth/2.2}
-                  y={centerY - statorRadius + yokeThickness + 2}
-                  width={slotWidth/1.1}
-                  height={slotDepth - yokeThickness - 4}
-                  fill="url(#windingGrad)"
-                  stroke="#5c3b16"
-                  rx="2"
-                  className="part-winding"
-                />
+                
+                {/* Winding in the Slot (The space between teeth) */}
+                {/* We shift this by half a slot to place it between teeth */}
+                <g transform={`rotate(${180/slots}, ${centerX}, ${centerY})`}>
+                  <rect
+                    x={centerX - slotWidth/2.5}
+                    y={centerY - statorRadius + yokeThickness + 2}
+                    width={slotWidth/1.25}
+                    height={slotDepth - yokeThickness - 4}
+                    fill="url(#windingGrad)"
+                    stroke="#5c3b16"
+                    strokeWidth="0.5"
+                    rx="1"
+                    className="part-winding"
+                  />
+                  {/* Slot Opening Detail */}
+                  <line 
+                    x1={centerX - slotWidth/2.5} y1={centerY - statorRadius + slotDepth}
+                    x2={centerX + slotWidth/2.5} y2={centerY - statorRadius + slotDepth}
+                    stroke="#444" strokeWidth="0.5" strokeDasharray="1 1"
+                  />
+                </g>
               </g>
             );
           })}
