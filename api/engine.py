@@ -59,15 +59,6 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     base_rpm = round(max_rpm * 0.35)
     peak_torque_nm = (peak_power_kw * 1000 * 60) / (2 * math.pi * max_rpm)
 
-    # Phase Current
-    phase_current = round((peak_power_kw * 1000) / (math.sqrt(3) * voltage * 0.92 * 0.97))
-    phase_current = min(phase_current, i_max)
-
-    # Dimensions
-    stator_d = max(100, round((peak_torque_nm * 3000 / 1.2)**(1/3)))
-    rotor_l = round(stator_d * 1.1)
-    air_gap = max(0.3, stator_d * 0.003)
-
     # Motor Type Selection
     if peak_power_kw > 200: motor_type = MOTOR_TYPES[1]
     elif is_two_wheeler: motor_type = MOTOR_TYPES[2]
@@ -82,10 +73,30 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     kg_per_kw = 1.1 if 'PMSM' in motor_type else 1.3 if 'IM' in motor_type else 1.0 if 'BLDC' in motor_type else 1.4
     motor_weight_kg = round(continuous_power_kw * kg_per_kw + 5)
 
-    # Final Reason String (Safely using variables)
+    # Phase Current
+    phase_current = round((peak_power_kw * 1000) / (math.sqrt(3) * voltage * 0.92 * 0.97))
+    phase_current = min(phase_current, i_max)
+
+    # ── POLES & SLOTS CALCULATION ──
+    if max_rpm > 12000:
+        poles, slots = 6, 18
+    elif max_rpm > 8000:
+        poles, slots = 8, 24
+    elif max_rpm > 5000:
+        poles, slots = 10, 30
+    else:
+        poles, slots = 12, 36
+
+    if motor_type == MOTOR_TYPES[3]: # SRM
+        poles, slots = 8, 12
+
+    # ── PHYSICAL DIMENSIONS ──
+    stator_d = max(110, round((peak_torque_nm * 3500 / 1.5)**(1/3)))
+    rotor_l = round(stator_d * 0.95) if max_rpm > 10000 else round(stator_d * 1.2)
+    air_gap = max(0.4, stator_d * 0.004)
+
     reason = f"{motor_type} selected for {vehicle_type}. Optimized for {battery_kwh} kWh battery and {target_speed} km/h."
 
-    # Efficiency Curves
     efficiency_data = []
     for r in range(0, max_rpm + 500, 500):
         if r > max_rpm: break
@@ -106,7 +117,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'estimatedEfficiency': '94.5%', 'weightKg': motor_weight_kg
         },
         'thermal': { 'coolingMethod': 'Liquid Cooling' if peak_power_kw > 50 else 'Air Cooling', 'maxCoilTemp': '155°C', 'coolantFlowRate': '5.0 L/min', 'thermalResistance': '0.05 K/W' },
-        'dimensions': { 'statorDiameter': f"{stator_d} mm", 'rotorLength': f"{rotor_l} mm", 'overallLength': f"{rotor_l + 40} mm", 'airGap': f"{air_gap:.2f} mm", 'poles': 8, 'slots': 24 },
+        'dimensions': { 'statorDiameter': f"{stator_d} mm", 'rotorLength': f"{rotor_l} mm", 'overallLength': f"{rotor_l + 45} mm", 'airGap': f"{air_gap:.2f} mm", 'poles': poles, 'slots': slots },
         'electrical': { 'phaseCurrent': f"{phase_current} A", 'lineVoltage': f"{voltage} V", 'backEmfConstant': '0.12 V·s/rad', 'switchingFreq': '12 kHz', 'statorResistance': '0.02 Ω', 'dqInductance': '0.1 mH', 'windingType': 'Distributed' },
         'mechanical': { 'maxTorqueDensity': '25 Nm/L', 'rotorInertia': '0.01 kg·m²', 'maxCentrifugalForce': '4000 N', 'bearingLoad': '800 N', 'coggingTorque': '0.1 Nm', 'criticalSpeed': f"{round(max_rpm * 1.2)} RPM" },
         'performanceCurve': efficiency_data
