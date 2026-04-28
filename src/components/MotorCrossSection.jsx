@@ -86,8 +86,8 @@ const MotorCrossSection = ({ data }) => {
 
           {/* ── EXTERNAL HOUSING ── */}
           <g>
-            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#0d0d0d" stroke={colors.housing} strokeWidth="3" />
-            <circle cx={centerX} cy={centerY} r={housingRadius} fill="url(#housingPattern)" opacity="0.5" />
+            <circle cx={centerX} cy={centerY} r={housingRadius} fill="#0d0d0d" stroke={colors.housing} strokeWidth="6" />
+            <circle cx={centerX} cy={centerY} r={housingRadius} fill="url(#housingPattern)" opacity="0.6" />
             {[...Array(60)].map((_, i) => {
               const angle = (i * 360) / 60;
               return (
