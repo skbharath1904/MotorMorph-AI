@@ -44,6 +44,8 @@ const DesignReport = ({ data, inputs }) => {
     );
   }
 
+  const [showCrossSection, setShowCrossSection] = React.useState(false);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -75,10 +77,21 @@ const DesignReport = ({ data, inputs }) => {
             </div>
           </div>
           
-          <button onClick={handleDownloadPdf} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-            <Download size={16} />
-            Export PDF
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => setShowCrossSection(!showCrossSection)} 
+              className={`btn ${showCrossSection ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <Settings size={16} />
+              {showCrossSection ? 'Hide Cross-Section' : 'Motor Cross-Section View'}
+            </button>
+
+            <button onClick={handleDownloadPdf} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+              <Download size={16} />
+              Export PDF
+            </button>
+          </div>
         </div>
 
         <div className="pdf-only">
@@ -108,8 +121,8 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         )}
 
-        {/* ── Engineering Cross-Section Section ── */}
-        <MotorCrossSection data={data} />
+        {/* ── Engineering Cross-Section Section (CONDITIONAL) ── */}
+        {showCrossSection && <MotorCrossSection data={data} />}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
           <div className="stat-card">
