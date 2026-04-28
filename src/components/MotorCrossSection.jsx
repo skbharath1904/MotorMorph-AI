@@ -100,7 +100,7 @@ const MotorCrossSection = ({ data }) => {
               const angle = (i * 360) / slots;
               const phase = i % 3 === 0 ? 'A' : i % 3 === 1 ? 'B' : 'C';
               const phaseColor = i % 3 === 0 ? colors.coil : i % 3 === 1 ? '#a29bfe' : '#ffffff';
-              const boxSize = statorRadius * 0.15;
+              const boxSize = statorCoreInner * 0.15;
 
               return (
                 <g key={`coil-${i}`} transform={`rotate(${angle}, ${centerX}, ${centerY})`}>
