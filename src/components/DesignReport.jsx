@@ -7,12 +7,10 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import html2pdf from 'html2pdf.js';
-import MotorCrossSection from './MotorCrossSection';
 
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
   const [isExporting, setIsExporting] = useState(false);
-  const [showCrossSection, setShowCrossSection] = useState(true);
 
   const handleDownloadPdf = () => {
     setIsExporting(true);
@@ -164,45 +162,7 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         </div>
 
-        {/* 08. LIVE DESIGN PREVIEW (New Image Format) */}
-        <div className="pdf-section ui-only" style={{ marginBottom: '3rem' }}>
-           <div style={{ 
-             display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
-             padding: '1.5rem', background: 'rgba(255,255,255,0.02)', 
-             borderRadius: '16px 16px 0 0', border: '1px solid var(--glass-border)',
-             borderBottom: 'none'
-           }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Live Design Preview</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Toggle interactive CAD-style cross-section view</p>
-              </div>
-              <button 
-                onClick={() => setShowCrossSection(!showCrossSection)} 
-                className="btn btn-primary" 
-                style={{ padding: '0.75rem 1.5rem', fontSize: '0.85rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}
-              >
-                <Settings size={18} />
-                {showCrossSection ? 'HIDE PREVIEW' : 'SHOW PREVIEW'}
-              </button>
-           </div>
-           
-           <AnimatePresence>
-             {showCrossSection && (
-               <motion.div 
-                 initial={{ opacity: 0, height: 0 }}
-                 animate={{ opacity: 1, height: 'auto' }}
-                 exit={{ opacity: 0, height: 0 }}
-                 style={{ overflow: 'hidden' }}
-               >
-                 <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '0 0 16px 16px', border: '1px solid var(--glass-border)' }}>
-                    <MotorCrossSection data={data} isPdfMode={false} />
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-        </div>
-
-        {/* 09. GRAPHS */}
+        {/* 08. GRAPHS */}
         <div className="pdf-section page-break" style={{ marginBottom: '3rem' }}>
           <h3 className="section-header"><Activity size={18}/> Performance Characteristics</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -231,14 +191,6 @@ const DesignReport = ({ data, inputs }) => {
                 </div>
              </div>
           </div>
-        </div>
-
-        {/* 10. PDF ONLY BLUEPRINT (In case PDF is generated) */}
-        <div className="pdf-only-blueprint" style={{ display: 'none' }}>
-           <h2 style={{ textAlign: 'center', textTransform: 'uppercase', marginBottom: '20px', color: '#000' }}>Technical Appendix: Assembly Blueprint</h2>
-           <div style={{ border: '3px solid #000', padding: '20px', background: '#fff' }}>
-              <MotorCrossSection data={data} isPdfMode={true} />
-           </div>
         </div>
 
       </div>
@@ -278,7 +230,6 @@ const DesignReport = ({ data, inputs }) => {
         .pdf-export-mode .justification-box { background: #f0f0f0 !important; border: 1px solid #ccc !important; }
         .pdf-export-mode .pdf-chart-container { background: #fff !important; border: 1px solid #000 !important; }
         .pdf-export-mode .ui-only { display: none !important; }
-        .pdf-export-mode .pdf-only-blueprint { display: block !important; page-break-before: always !important; }
       `}} />
     </motion.div>
   );
