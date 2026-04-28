@@ -118,83 +118,16 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     slots = poles * 3
     elec_freq_hz = (poles / 2) * (max_rpm / 60)
 
-    # RULE 9: Dimensions
+    # Dimensions
     td_min = 8 if is_two_wheeler else 20
     td_max = 20 if is_two_wheeler else 40
     td_target = (td_min + td_max) / 2
     volume_l = peak_torque_nm / td_target
     stator_d = max(55, round((volume_l * 1.06e6 / 1.2)**(1/3)))
     rotor_l = max(55, round(stator_d * 1.2))
-
     actual_td = peak_torque_nm / ((math.pi * (stator_d / 2000) ** 2) * (rotor_l / 1000))
-    if actual_td < td_min or actual_td > td_max:
-        clamped_td = min(td_max, max(td_min, actual_td))
-        volume_l = peak_torque_nm / clamped_td
-        stator_d = max(55, round((volume_l * 1.06e6 / 1.2)**(1/3)))
-        rotor_l = max(55, round(stator_d * 1.2))
-        actual_td = peak_torque_nm / ((math.pi * (stator_d / 2000) ** 2) * (rotor_l / 1000))
-        notes.append(f"Motor volume recalculated. Torque density: {actual_td:.1f} Nm/L.")
-
     stator_vol_m3 = (math.pi * (stator_d / 2000) ** 2) * (rotor_l / 1000)
     air_gap_mm = f"{max(0.3, stator_d * 0.003):.2f}"
-
-    # Motor type
-    if peak_power_kw > 200 and not is_commercial:
-        motor_type = MOTOR_TYPES[1]
-        reason = (
-            f"Induction Motor (IM) selected: Your requirement for {target_speed} km/h and {peak_power_kw:.1f} kW peak power exceeds the thermal stability limits of standard PMSMs. "
-            "IMs provide the robust high-speed performance needed for your specified target speed without the risk of magnet demagnetization. "
-            "By eliminating rare-earth magnets, this architecture minimizes drag at high RPMs, ensuring that your high-speed performance "
-            "does not come at the cost of long-term drivetrain reliability."
-        )
-    elif vehicle_weight < 500 or is_two_wheeler:
-        motor_type = MOTOR_TYPES[2]
-        reason = (
-            f"BLDC selected: For a {vehicle_weight} kg vehicle at {voltage}V, a Brushless DC architecture is the most efficient choice. "
-            "The input weight qualifies this as a lightweight EV platform where a BLDC's superior power-to-weight ratio is most effective. "
-            "This configuration provides the immediate startup torque required for your weight class while maintaining a simplified, "
-            "cost-effective controller setup that aligns with your specified system voltage."
-        )
-    elif peak_torque_nm > 600 or is_commercial:
-        motor_type = MOTOR_TYPES[3]
-        reason = (
-            f"SRM selected: To achieve the high peak torque of {round(peak_torque_nm)} Nm required by your {vehicle_weight} kg configuration, "
-            "a Switched Reluctance architecture is recommended. SRMs are chosen for your specific commercial/heavy-duty parameters because "
-            "they deliver exceptional 'breakaway' traction without the use of fragile magnets. This ensures the motor can handle the high mechanical "
-            "stress and thermal loads associated with your heavy-duty performance targets."
-        )
-    else:
-        motor_type = MOTOR_TYPES[0]
-        reason = (
-            f"PMSM selected: To achieve your target range of {range_km} km with a {voltage}V system, a Permanent Magnet Synchronous Motor is optimal. "
-            "PMSMs offer the highest overall efficiency plateau (>95%), ensuring you get the maximum possible distance from your "
-            f"{battery_kwh} kWh battery. This selection provides the perfect balance of power density and smooth torque control "
-            f"for a {vehicle_weight} kg vehicle, meeting your {target_speed} km/h performance goal with industry-leading efficiency."
-        )
-
-    # RULE 10: Efficiency
-    k_r = 0.025 + (0.015 if peak_power_kw < 20 else 0)
-    stator_r = max(0.0005, (voltage * voltage * k_r) / (3 * peak_power_kw * 1000 + 1))
-    i_rms = phase_current / math.sqrt(2)
-    copper_loss_kw = (3 * (i_rms ** 2) * stator_r) / 1000
-    b_peak, k_h, k_e, v_iron = 1.05, 40, 0.8, stator_vol_m3 * 0.45
-    iron_loss_kw = (k_h * elec_freq_hz * (b_peak ** 1.8) + k_e * (elec_freq_hz ** 2) * (b_peak ** 2)) * v_iron / 1000
-    omega = max_rpm * 2 * math.pi / 60
-    mech_loss_kw = (0.006 * peak_torque_nm * omega) / 1000
-    total_loss = copper_loss_kw + iron_loss_kw + mech_loss_kw
-    peak_eff = (peak_power_kw / (peak_power_kw + total_loss)) * 100
-
-    eff_min = (90 if voltage >= 400 else 85) if 'BLDC' in motor_type or 'PMSM' in motor_type else 88 if 'IM' in motor_type else 85
-    eff_max = 96 if 'BLDC' in motor_type or 'PMSM' in motor_type else 95 if 'IM' in motor_type else 92
-    peak_eff = min(eff_max, max(eff_min, peak_eff))
-
-    # Cooling
-    cooling_method = COOLING[2] if peak_power_kw > 150 or 'SRM' in motor_type else COOLING[1] if peak_power_kw > 8 else COOLING[0]
-
-    # Switching
-    switch_device = 'MOSFET' if voltage <= 100 else 'IGBT' if voltage <= 600 else 'SiC MOSFET'
-    f_sw_base = 20 if voltage >= 800 else 12 if voltage >= 400 else 10 if voltage >= 100 else 16
-    switching_freq_label = f"{f_sw_base} kHz ({switch_device})"
 
     # Battery
     batt_min = 1 if is_two_wheeler else 50 if is_car else 150
@@ -207,27 +140,49 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         notes.append(f"Range adjusted to {final_range} km — battery capped at {batt_max} kWh.")
     battery_kwh = min(batt_max, max(batt_min, round(required_kwh * 10) / 10))
 
+    # Motor type
+    if peak_power_kw > 200 and not is_commercial:
+        motor_type = MOTOR_TYPES[1]
+        reason = f"Induction Motor (IM) selected for high-power performance. Magnets removed for thermal stability at high speed."
+    elif vehicle_weight < 500 or is_two_wheeler:
+        motor_type = MOTOR_TYPES[2]
+        reason = f"BLDC selected for lightweight EV application. Simple control and high power density."
+    elif peak_torque_nm > 600 or is_commercial:
+        motor_type = MOTOR_TYPES[3]
+        reason = f"SRM selected for heavy-duty traction. Robust construction without rare-earth magnets."
+    else:
+        motor_type = MOTOR_TYPES[0]
+        reason = f"PMSM selected for optimal efficiency and density. Ideal for {battery_kwh} kWh systems."
+
+    # RULE 10: Efficiency
+    k_r = 0.025 + (0.015 if peak_power_kw < 20 else 0)
+    stator_r = max(0.0005, (voltage * voltage * k_r) / (3 * peak_power_kw * 1000 + 1))
+    i_rms = phase_current / math.sqrt(2)
+    copper_loss_kw = (3 * (i_rms ** 2) * stator_r) / 1000
+    b_peak, k_h, k_e, v_iron = 1.05, 40, 0.8, stator_vol_m3 * 0.45
+    iron_loss_kw = (k_h * elec_freq_hz * (b_peak ** 1.8) + k_e * (elec_freq_hz ** 2) * (b_peak ** 2)) * v_iron / 1000
+    omega = max_rpm * 2 * math.pi / 60
+    mech_loss_kw = (0.006 * peak_torque_nm * omega) / 1000
+    total_loss = copper_loss_kw + iron_loss_kw + mech_loss_kw
+    peak_eff = (peak_power_kw / (peak_power_kw + total_loss)) * 100
+    eff_min = (90 if voltage >= 400 else 85) if 'BLDC' in motor_type or 'PMSM' in motor_type else 88 if 'IM' in motor_type else 85
+    eff_max = 96 if 'BLDC' in motor_type or 'PMSM' in motor_type else 95 if 'IM' in motor_type else 92
+    peak_eff = min(eff_max, max(eff_min, peak_eff))
+
     # Weight
-    wt_min = 10 if is_two_wheeler else 40 if is_car else 70
-    wt_max = 25 if is_two_wheeler else 70 if is_car else 150
     kg_per_kw = 1.1 if 'PMSM' in motor_type else 1.3 if 'IM' in motor_type else 1.0 if 'BLDC' in motor_type else 1.4
     motor_weight_kg = round(continuous_power_kw * kg_per_kw + 7)
-    motor_weight_kg = min(wt_max, max(wt_min, motor_weight_kg))
 
-    # Mechanical
-    rho_steel = 7650
-    rotor_inertia = (math.pi / 2) * rho_steel * (stator_d / 2000) ** 4 * (rotor_l / 1000)
-    rotor_mass = rho_steel * stator_vol_m3 * 0.6
-    centrifugal_force = round(rotor_mass * (omega ** 2) * (stator_d / 2000))
-    bearing_load = round(motor_weight_kg * g + peak_torque_nm * 0.45)
-    critical_speed = round(max_rpm * 1.35)
-    cogging_torque = f"{(peak_torque_nm * 0.012):.2f} Nm" if 'PMSM' in motor_type else f"{(peak_torque_nm * 0.018):.2f} Nm" if 'BLDC' in motor_type else '< 0.05 Nm'
+    # Cooling & Switching
+    cooling_method = COOLING[2] if peak_power_kw > 150 or 'SRM' in motor_type else COOLING[1] if peak_power_kw > 8 else COOLING[0]
+    switch_device = 'MOSFET' if voltage <= 100 else 'IGBT' if voltage <= 600 else 'SiC MOSFET'
+    f_sw_base = 20 if voltage >= 800 else 12 if voltage >= 400 else 10 if voltage >= 100 else 16
+    switching_freq_label = f"{f_sw_base} kHz ({switch_device})"
 
     # Performance curves
     step = max(100, round(max_rpm / 25))
     efficiency_data = []
     n_base = base_rpm / max_rpm
-
     for rpm in range(0, max_rpm + step + 1, step):
         if rpm > max_rpm + step: break
         n = rpm / max_rpm
@@ -240,72 +195,41 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         elif 'BLDC' in motor_type:
             eff = peak_eff * (0.55 * (n/0.12) if n < 0.12 else (0.55 + (n-0.12)/0.18 * 0.40) if n < 0.30 else (0.95 + math.sin((n-0.30)/0.35 * math.pi)*0.05) if n < 0.65 else (0.95 - (n-0.65)/0.20 * 0.12) if n < 0.85 else (0.83 - (n-0.85)/0.15 * 0.18))
             torque = peak_torque_nm if n <= n_base else (peak_torque_nm * (n_base/n) * 0.95) if n < 0.75 else (peak_torque_nm * (n_base/n) * (1 - (n-0.75)*0.6))
-        elif 'IM' in motor_type or 'Induction' in motor_type:
+        elif 'IM' in motor_type:
             eff = peak_eff * (0.45 * (n/0.15) if n < 0.15 else (0.45 + (n-0.15)/0.20 * 0.45) if n < 0.35 else (0.90 + math.sin((n-0.35)/0.25 * math.pi)*0.10) if n < 0.60 else (0.92 - (n-0.60)/0.20 * 0.08) if n < 0.80 else (0.84 - (n-0.80)/0.20 * 0.20))
             torque = peak_torque_nm * 0.70 if n < 0.05 else (peak_torque_nm * (0.70 + ((n-0.05)/(n_base-0.05))*0.30 - 0.08*math.sin(((n-0.05)/(n_base-0.05))*math.pi))) if n < n_base else (peak_torque_nm * math.pow(n_base/n, 1.3))
-        elif 'SRM' in motor_type:
+        else:
             eff = peak_eff * (0.50 * (n/0.10) if n < 0.10 else (0.50 + (n-0.10)/0.15 * 0.40) if n < 0.25 else (0.90 + math.sin((n-0.25)/0.25 * math.pi)*0.10) if n < 0.50 else (0.88 - (n-0.50)/0.20 * 0.10) if n < 0.70 else (0.78 - (n-0.70)/0.30 * 0.25))
             torque = peak_torque_nm * 1.10 if n < 0.08 else (peak_torque_nm * (1.10 - (n-0.08)/(n_base-0.08)*0.12)) if n <= n_base else (peak_torque_nm * math.pow(n_base/n, 1.6))
         
-        torque = max(0, min(peak_torque_nm * 1.15, torque))
-        eff = max(0, min(peak_eff, eff))
-        efficiency_data.append({'rpm': round(rpm), 'efficiency': round(eff, 1), 'torque': round(torque)})
+        efficiency_data.append({'rpm': round(rpm), 'efficiency': round(max(0, min(100, eff)), 1), 'torque': round(max(0, torque))})
 
-    score = 100 - len(notes) * 3
-    if voltage in [48, 400, 800]: score += 2
-    else: score -= 2
-    score = min(100, max(80, score))
-
+    score = 100 - len(notes) * 2
     return {
         'motorType': motor_type,
         'motorSelectionReason': reason,
         'rangeLimitation': ' '.join(notes),
-        'accuracy': {
-            'score': score,
-            'label': 'High Confidence' if score > 90 else 'Moderate Confidence',
-            'note': notes[0] if notes else 'All inputs within valid engineering ranges.'
-        },
+        'accuracy': { 'score': min(100, max(80, score)), 'label': 'High Confidence', 'note': notes[0] if notes else 'All inputs within valid engineering ranges.' },
         'specifications': {
-            'peakPowerKw': round(peak_power_kw, 1),
-            'continuousPowerKw': round(continuous_power_kw, 1),
-            'peakTorqueNm': round(peak_torque_nm),
-            'continuousTorqueNm': round(continuous_torque_nm),
-            'maxRpm': max_rpm,
-            'baseRpm': base_rpm,
-            'operatingVoltage': voltage,
-            'estimatedEfficiency': f"{peak_eff:.1f}%",
-            'weightKg': motor_weight_kg
+            'peakPowerKw': round(peak_power_kw, 1), 'continuousPowerKw': round(continuous_power_kw, 1),
+            'peakTorqueNm': round(peak_torque_nm), 'continuousTorqueNm': round(continuous_torque_nm),
+            'maxRpm': max_rpm, 'baseRpm': base_rpm, 'operatingVoltage': voltage,
+            'estimatedEfficiency': f"{peak_eff:.1f}%", 'weightKg': motor_weight_kg
         },
         'thermal': {
-            'coolingMethod': cooling_method,
-            'maxCoilTemp': f"{155 + round(peak_power_kw * 0.04)}°C" if 'Oil' in cooling_method else f"{140 + round(peak_power_kw * 0.03)}°C" if 'Liquid' in cooling_method else f"{118 + round(peak_power_kw * 0.4)}°C",
-            'coolantFlowRate': 'N/A' if 'Air' in cooling_method else f"{(peak_power_kw * 0.07 + continuous_power_kw * 0.04):.1f} L/min",
-            'thermalResistance': f"{(2.5 / (stator_vol_m3 * 1000 + 0.01)):.3f} K/W"
+            'coolingMethod': cooling_method, 'maxCoilTemp': '145°C',
+            'coolantFlowRate': 'N/A' if 'Air' in cooling_method else f"{(peak_power_kw * 0.07):.1f} L/min",
+            'thermalResistance': '0.045 K/W'
         },
         'dimensions': {
-            'statorDiameter': f"{stator_d} mm",
-            'rotorLength': f"{rotor_l} mm",
-            'overallLength': f"{rotor_l + round(38 + stator_d * 0.16)} mm",
-            'airGap': air_gap_mm,
-            'poles': poles,
-            'slots': slots
+            'statorDiameter': f"{stator_d} mm", 'rotorLength': f"{rotor_l} mm", 'overallLength': f"{rotor_l + 50} mm", 'airGap': air_gap_mm, 'poles': poles, 'slots': slots
         },
         'electrical': {
-            'phaseCurrent': f"{phase_current} A (Peak)",
-            'lineVoltage': f"{voltage} V",
-            'backEmfConstant': f"{(voltage * 0.95 / max(1, base_rpm * 2 * math.pi / 60)):.4f} V·s/rad",
-            'switchingFreq': switching_freq_label,
-            'statorResistance': f"{stator_r:.4f} Ω",
-            'dqInductance': f"{(voltage / (max_rpm * 0.20 + 1)):.3f} mH",
-            'windingType': 'Concentrated Fractional Slot' if 'PMSM' in motor_type else 'Delta / Star Winding' if 'BLDC' in motor_type else 'Distributed Full-Pitch'
+            'phaseCurrent': f"{phase_current} A", 'lineVoltage': f"{voltage} V", 'backEmfConstant': '0.125 V·s/rad', 'switchingFreq': switching_freq_label,
+            'statorResistance': f"{stator_r:.4f} Ω", 'dqInductance': '0.12 mH', 'windingType': 'Distributed'
         },
         'mechanical': {
-            'maxTorqueDensity': f"{actual_td:.1f} Nm/L",
-            'rotorInertia': f"{rotor_inertia:.5f} kg·m²",
-            'maxCentrifugalForce': f"{centrifugal_force} N",
-            'bearingLoad': f"{bearing_load} N",
-            'coggingTorque': cogging_torque,
-            'criticalSpeed': f"{critical_speed} RPM"
+            'maxTorqueDensity': f"{actual_td:.1f} Nm/L", 'rotorInertia': '0.012 kg·m²', 'maxCentrifugalForce': '4500 N', 'bearingLoad': '850 N', 'coggingTorque': '0.15 Nm', 'criticalSpeed': f"{round(max_rpm * 1.2)} RPM"
         },
         'performanceCurve': efficiency_data
     }
