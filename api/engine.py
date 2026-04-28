@@ -142,32 +142,34 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if peak_power_kw > 200 and not is_commercial:
         motor_type = MOTOR_TYPES[1]
         reason = (
-            f"Induction Motor (IM) selected: Peak power demand of {peak_power_kw:.1f} kW exceeds typical PMSM cost-efficiency thresholds. "
-            "IMs provide robust high-speed performance without rare-earth magnets, eliminating magnet-drag losses at highway speeds. "
-            "This architecture is proven in high-performance drivetrains like the Tesla Model S for its extreme thermal ruggedness and magnet-free rotor reliability."
+            f"Induction Motor (IM) selected: Your requirement for {target_speed} km/h and {peak_power_kw:.1f} kW peak power exceeds the thermal stability limits of standard PMSMs. "
+            "IMs provide the robust high-speed performance needed for your specified target speed without the risk of magnet demagnetization. "
+            "By eliminating rare-earth magnets, this architecture minimizes drag at high RPMs, ensuring that your high-speed performance "
+            "does not come at the cost of long-term drivetrain reliability."
         )
     elif vehicle_weight < 500 or is_two_wheeler:
         motor_type = MOTOR_TYPES[2]
         reason = (
-            f"BLDC selected: Vehicle mass of {vehicle_weight} kg qualifies as a lightweight EV platform. "
-            "BLDCs offer the best power-to-weight ratio and simplified control architecture for urban mobility. "
-            f"At {voltage}V, this motor provides superior startup torque and high efficiency (up to 92%) while maintaining a lower BOM cost "
-            "compared to complex AC induction or synchronous systems, making it the optimal choice for light-duty electric transport."
+            f"BLDC selected: For a {vehicle_weight} kg vehicle at {voltage}V, a Brushless DC architecture is the most efficient choice. "
+            "The input weight qualifies this as a lightweight EV platform where a BLDC's superior power-to-weight ratio is most effective. "
+            "This configuration provides the immediate startup torque required for your weight class while maintaining a simplified, "
+            "cost-effective controller setup that aligns with your specified system voltage."
         )
     elif peak_torque_nm > 600 or is_commercial:
         motor_type = MOTOR_TYPES[3]
         reason = (
-            f"SRM selected: Extreme peak torque requirements ({round(peak_torque_nm)} Nm) on a {vehicle_weight} kg platform necessitate a Switched Reluctance architecture. "
-            "SRMs are virtually indestructible due to their magnet-free rotor and concentrated stator windings. "
-            "They deliver exceptional low-speed 'breakaway' torque and are the industry standard for heavy-duty commercial traction where "
-            "mechanical reliability under high thermal stress is the primary design priority."
+            f"SRM selected: To achieve the high peak torque of {round(peak_torque_nm)} Nm required by your {vehicle_weight} kg configuration, "
+            "a Switched Reluctance architecture is recommended. SRMs are chosen for your specific commercial/heavy-duty parameters because "
+            "they deliver exceptional 'breakaway' traction without the use of fragile magnets. This ensures the motor can handle the high mechanical "
+            "stress and thermal loads associated with your heavy-duty performance targets."
         )
     else:
         motor_type = MOTOR_TYPES[0]
         reason = (
-            f"PMSM selected: At {peak_power_kw:.1f} kW and {round(peak_torque_nm)} Nm, a Permanent Magnet Synchronous Motor offers the highest overall efficiency plateau (>95%). "
-            "PMSMs deliver the best power density and smooth torque control, making them the gold standard for modern passenger EVs. "
-            f"The integration of high-energy magnets ensures maximum range from your {battery_kwh} kWh battery by minimizing stator losses during diverse driving cycles."
+            f"PMSM selected: To achieve your target range of {range_km} km with a {voltage}V system, a Permanent Magnet Synchronous Motor is optimal. "
+            "PMSMs offer the highest overall efficiency plateau (>95%), ensuring you get the maximum possible distance from your "
+            f"{battery_kwh} kWh battery. This selection provides the perfect balance of power density and smooth torque control "
+            f"for a {vehicle_weight} kg vehicle, meeting your {target_speed} km/h performance goal with industry-leading efficiency."
         )
 
     # RULE 10: Efficiency
