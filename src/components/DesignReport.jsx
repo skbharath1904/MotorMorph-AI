@@ -305,6 +305,34 @@ const DesignReport = ({ data, inputs }) => {
           </div>
         </div>
 
+        {/* ── Engineering Visualization UI Toggle ── */}
+        <div className="ui-only-diagram-toggle" style={{ 
+          marginTop: '2.5rem', 
+          marginBottom: '1rem', 
+          padding: '1.5rem', 
+          background: 'rgba(0, 210, 255, 0.03)', 
+          border: '1px solid rgba(0, 210, 255, 0.1)', 
+          borderRadius: '12px', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
+        }}>
+          <div>
+            <h4 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>Live Design Preview</h4>
+            <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Toggle interactive CAD-style cross-section view</p>
+          </div>
+          <button onClick={() => setShowCrossSection(!showCrossSection)} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px', background: showCrossSection ? 'var(--accent-blue)' : 'transparent', color: showCrossSection ? '#000' : 'var(--accent-blue)', border: `2px solid var(--accent-blue)`, fontWeight: 'bold' }}>
+            <Settings size={18} />
+            {showCrossSection ? 'HIDE PREVIEW' : 'VIEW ASSEMBLY'}
+          </button>
+        </div>
+
+        {showCrossSection && (
+          <div className="ui-only-diagram" style={{ marginTop: '1rem', marginBottom: '2.5rem' }}>
+            <MotorCrossSection data={data} />
+          </div>
+        )}
+
         {/* Charts & Cross Section */}
         <div className="pdf-page-break">
           <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
