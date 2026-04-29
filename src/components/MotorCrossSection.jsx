@@ -54,9 +54,9 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
   const pts = {
     housing: getPoint(245, -30),
-    statorCore: getPoint(222, 35),
+    statorCore: getPoint(220, 45), // Anchored in the gap between B and C slots
     statorSlots: getPoint(212, 65),
-    airGap: getPoint(185, 95),
+    airGap: getPoint(185, 85), // Anchored exactly on the green dotted line
     poles: getPoint(170, 150),
     rotorCore: getPoint(110, 210),
     shaft: getPoint(45, 275)
