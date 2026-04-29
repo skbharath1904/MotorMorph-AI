@@ -75,7 +75,7 @@ const DesignReport = ({ data, inputs }) => {
       transition={{ duration: 0.5 }}
       style={{ display: 'flex', flexDirection: 'column', gap: '1rem', height: '100%' }}
     >
-      <div className="report-container" ref={reportRef} style={{ background: 'var(--card-bg)', padding: '2.5rem', borderRadius: '16px' }}>
+      <div className="report-container" ref={reportRef} style={{ background: 'var(--glass-bg)', padding: '2.5rem', borderRadius: '16px' }}>
         
         {/* 01. HEADER */}
         <div className="pdf-section">
@@ -275,9 +275,9 @@ const DesignReport = ({ data, inputs }) => {
 
       <style dangerouslySetInnerHTML={{__html: `
         .label-accent { color: var(--accent-blue); text-transform: uppercase; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .report-title { fontSize: 2.2rem; fontWeight: 800; margin-bottom: 1rem; color: #fff; }
+        .report-title { fontSize: 2.2rem; fontWeight: 800; margin-bottom: 1rem; color: var(--text-primary); }
         .justification-box { background: rgba(0, 210, 255, 0.05); border: 1px solid rgba(0, 210, 255, 0.15); borderRadius: 10px; padding: 1.2rem; margin-bottom: 2rem; }
-        .section-header { font-size: 1rem; margin-bottom: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+        .section-header { font-size: 1rem; margin-bottom: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; color: var(--text-primary); }
         .input-grid { display: grid; gridTemplateColumns: repeat(3, 1fr); gap: 1.5rem; background: rgba(255,255,255,0.02); padding: 1.5rem; borderRadius: 12px; border: 1px solid var(--glass-border); }
         .stat-label { color: var(--text-secondary); font-size: 0.75rem; display: block; }
         .stat-cards-row { display: grid; gridTemplateColumns: repeat(4, 1fr); gap: 1rem; marginBottom: 2rem; }
@@ -287,7 +287,7 @@ const DesignReport = ({ data, inputs }) => {
         .specs-grid-row { display: grid; gridTemplateColumns: 1fr 1fr; gap: 2.5rem; marginBottom: 2.5rem; }
         .spec-item { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .spec-item span { color: var(--text-secondary); font-size: 0.9rem; }
-        .spec-item strong { font-size: 0.95rem; color: #fff; }
+        .spec-item strong { font-size: 0.95rem; color: var(--text-primary); }
         .thermal-card { padding: 1rem; background: rgba(255,255,255,0.02); borderRadius: 10px; border: 1px solid var(--glass-border); }
         .chart-label { textAlign: center; marginBottom: 1rem; fontSize: 0.9rem; color: var(--text-secondary); }
         .pdf-chart-container { background: rgba(255,255,255,0.01); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border); }
