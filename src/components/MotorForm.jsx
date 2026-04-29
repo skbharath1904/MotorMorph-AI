@@ -94,7 +94,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'frontalArea',       min: 0.1,   max: 20,    label: FIELD_LABELS.frontalArea },
       { key: 'rollingResistance', min: 0.001, max: 0.5,   label: FIELD_LABELS.rollingResistance },
       { key: 'range',             min: 1,     max: 5000,  label: FIELD_LABELS.range },
-      { key: 'accelerationTime',  min: 1,     max: 60,    label: FIELD_LABELS.accelerationTime },
+      { key: 'accelerationTime',  min: 0.1,   max: 100,   label: FIELD_LABELS.accelerationTime },
       { key: 'maxGradient',       min: 1,     max: 45,    label: FIELD_LABELS.maxGradient },
     ];
 
