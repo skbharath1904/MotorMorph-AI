@@ -177,18 +177,52 @@ export const generateMotorDesignLocal = async (inputs) => {
   const rotorL = Math.round(statorD * (1.0 + (peakTorqueNm / 1000)));
   const poles = is2W ? 10 : isCar ? 8 : 12;
 
-  // 9. PERFORMANCE CURVE (Dynamic mapping)
+  // 9. PERFORMANCE CURVE (Motor-Type Specific Mapping)
   const performanceCurve = [];
-  for (let i = 0; i <= 20; i++) {
-    const rpm = Math.round((maxRpm / 20) * i);
+  const steps = 25;
+  
+  // Motor-specific curve factors
+  let torqueDropFactor = 1.0; // How fast torque drops after base speed
+  let effPeakPoint = 0.7;     // Where efficiency peaks (ratio of max speed)
+  let effCurveSteepness = 0.5; // How fast efficiency drops away from peak
+
+  if (motorType.includes('BLDC')) {
+    torqueDropFactor = 1.2;  // Sharper drop
+    effPeakPoint = 0.5;      // Peaks earlier
+    effCurveSteepness = 0.7; // Drops faster at high speed
+  } else if (motorType.includes('PMSM')) {
+    torqueDropFactor = 0.8;  // Broad constant power range
+    effPeakPoint = 0.65;
+    effCurveSteepness = 0.3; // Flat efficiency curve
+  } else if (motorType.includes('Induction')) {
+    torqueDropFactor = 1.0;
+    effPeakPoint = 0.75;     // Peaks later
+    effCurveSteepness = 0.4;
+  } else if (motorType.includes('SRM')) {
+    torqueDropFactor = 1.5;  // Very sharp drop
+    effPeakPoint = 0.4;      // Peaks early
+    effCurveSteepness = 0.8; // High speed losses
+  }
+
+  for (let i = 0; i <= steps; i++) {
+    const rpm = Math.round((maxRpm / steps) * i);
     const n = Math.max(0.01, rpm / maxRpm);
-    const torque = rpm <= baseRpm ? peakTorqueNm : peakTorqueNm * (baseRpm / rpm);
-    // Efficiency curve: peaks at 0.7 max speed
-    const effFactor = 1 - Math.pow(Math.abs(n - 0.7), 2) * 0.5;
+    
+    // Torque Curve: Constant torque until baseRpm, then inverse speed drop
+    let torque = peakTorqueNm;
+    if (rpm > baseRpm) {
+      torque = peakTorqueNm * Math.pow((baseRpm / rpm), torqueDropFactor);
+    }
+    
+    // Efficiency Curve: Parabolic around effPeakPoint
+    const effFactor = 1 - Math.pow(Math.abs(n - effPeakPoint), 2) * effCurveSteepness;
+    // Initial ramp up for efficiency
+    const rampUp = n < 0.1 ? (n / 0.1) : 1.0;
+    
     performanceCurve.push({
       rpm,
       torque: Math.round(torque),
-      efficiency: Math.round(finalEfficiency * effFactor * 1000) / 10
+      efficiency: Math.round(finalEfficiency * effFactor * rampUp * 1000) / 10
     });
   }
 
