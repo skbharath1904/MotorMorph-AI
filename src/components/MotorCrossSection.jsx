@@ -128,8 +128,8 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             {/* MAGNETIC POLES */}
             {[...Array(poles)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/poles)} ${CX} ${CY})`}>
-                <path d={`M ${CX-30} ${CY-165} A 165 165 0 0 1 ${CX+30} ${CY-165} L ${CX+25} ${CY-178} A 150 150 0 0 0 ${CX-25} ${CY-178} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
-                <text x={CX} y={CY - 168} textAnchor="middle" fontSize="10" fontWeight="900" fill="#fff" pointerEvents="none">
+                <path d={`M ${CX-40} ${CY-165} A 165 165 0 0 1 ${CX+40} ${CY-165} L ${CX+36} ${CY-182} A 182 182 0 0 0 ${CX-36} ${CY-182} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
+                <text x={CX} y={CY - 172} textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff" pointerEvents="none">
                   {i % 2 === 0 ? 'N' : 'S'}
                 </text>
               </g>
