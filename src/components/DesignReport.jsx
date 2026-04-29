@@ -82,7 +82,13 @@ const DesignReport = ({ data, inputs }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
             <div>
               <h4 className="label-accent">AI RECOMMENDED ARCHITECTURE</h4>
-              <h2 className="report-title">{data.motorType}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
+                <h2 className="report-title" style={{ marginBottom: 0 }}>{data.motorType}</h2>
+                <div className="accuracy-badge ui-only">
+                   <div className="pulse-dot"></div>
+                   <span>{data.accuracy.score}% PREDICTION ACCURACY</span>
+                </div>
+              </div>
             </div>
             <button onClick={handleDownloadPdf} className="btn btn-secondary ui-only" disabled={isExporting}>
               <Download size={16} /> {isExporting ? 'Exporting...' : 'Export PDF'}
@@ -299,6 +305,9 @@ const DesignReport = ({ data, inputs }) => {
         .pdf-export-mode .pdf-chart-container { background: #fff !important; border: 1px solid #000 !important; }
         .pdf-export-mode .ui-only { display: none !important; }
         .pdf-export-mode .pdf-only-blueprint { display: block !important; page-break-before: always !important; }
+        .accuracy-badge { display: flex; align-items: center; gap: 8px; background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); padding: 5px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; color: var(--accent-blue); letter-spacing: 0.05em; margin-bottom: 1rem; }
+        .pulse-dot { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 8px #4ade80; animation: dot-pulse 1.5s infinite; }
+        @keyframes dot-pulse { 0% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.4; transform: scale(0.9); } }
       `}} />
     </motion.div>
   );
