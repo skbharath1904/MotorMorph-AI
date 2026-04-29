@@ -54,10 +54,10 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
 
   const pts = {
     housing: getPoint(245, -30),
-    statorCore: getPoint(220, 45), // Anchored in the gap between B and C slots
-    statorSlots: getPoint(212, 65),
-    airGap: getPoint(185, 85), // Anchored exactly on the green dotted line
-    poles: getPoint(170, 150),
+    statorCore: getPoint(225, 45), 
+    statorSlots: getPoint(217, 65),
+    airGap: getPoint(190, 85), 
+    poles: getPoint(165, 150),
     rotorCore: getPoint(110, 210),
     shaft: getPoint(45, 275)
   };
@@ -107,29 +107,29 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
             </g>
 
             {/* 2. STATOR CORE */}
-            <circle cx={CX} cy={CY} r="215" fill="none" stroke={colors.stator} strokeWidth="30" />
+            <circle cx={CX} cy={CY} r="220" fill="none" stroke={colors.stator} strokeWidth="30" />
 
             {/* 3. STATOR SLOTS */}
             {[...Array(slots)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/slots)} ${CX} ${CY})`}>
-                <rect x={CX - 15} y={CY - 225} width="30" height="25" rx="3" fill={colors.windings[i % 3]} stroke="#000" strokeWidth="1" />
-                <text x={CX} y={CY - 208} textAnchor="middle" fontSize="14" fontWeight="900" fill="#fff" pointerEvents="none">
+                <rect x={CX - 15} y={CY - 230} width="30" height="25" rx="3" fill={colors.windings[i % 3]} stroke="#000" strokeWidth="1" />
+                <text x={CX} y={CY - 213} textAnchor="middle" fontSize="14" fontWeight="900" fill="#fff" pointerEvents="none">
                   {['A', 'B', 'C'][i % 3]}
                 </text>
               </g>
             ))}
 
             {/* 4. AIR GAP */}
-            <circle cx={CX} cy={CY} r="185" fill="none" stroke={colors.dimension} strokeWidth="2" strokeDasharray="8 6" opacity="1.0" />
+            <circle cx={CX} cy={CY} r="190" fill="none" stroke={colors.dimension} strokeWidth="2" strokeDasharray="8 6" opacity="1.0" />
 
             {/* 5. ROTOR CORE */}
-            <circle cx={CX} cy={CY} r="165" fill={colors.rotor} stroke="#333" strokeWidth="2" />
+            <circle cx={CX} cy={CY} r="160" fill={colors.rotor} stroke="#333" strokeWidth="2" />
             
             {/* MAGNETIC POLES */}
             {[...Array(poles)].map((_, i) => (
               <g key={i} transform={`rotate(${i * (360/poles)} ${CX} ${CY})`}>
-                <path d={`M ${CX-40} ${CY-165} A 165 165 0 0 1 ${CX+40} ${CY-165} L ${CX+36} ${CY-182} A 182 182 0 0 0 ${CX-36} ${CY-182} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
-                <text x={CX} y={CY - 172} textAnchor="middle" fontSize="12" fontWeight="900" fill="#fff" pointerEvents="none">
+                <path d={`M ${CX-36} ${CY-160} A 160 160 0 0 1 ${CX+36} ${CY-160} L ${CX+32} ${CY-175} A 175 175 0 0 0 ${CX-32} ${CY-175} Z`} fill={i % 2 === 0 ? colors.magnets.N : colors.magnets.S} stroke="#000" strokeWidth="1" />
+                <text x={CX} y={CY - 165} textAnchor="middle" fontSize="11" fontWeight="900" fill="#fff" pointerEvents="none">
                   {i % 2 === 0 ? 'N' : 'S'}
                 </text>
               </g>
