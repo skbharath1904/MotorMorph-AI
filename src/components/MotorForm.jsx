@@ -82,20 +82,20 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     }
 
     const finalVoltage = isCustomVoltage ? parseFloat(customVoltage) : inputs.voltage;
-    if (!finalVoltage || finalVoltage <= 0) {
-      newErrors.voltage = isCustomVoltage ? 'Enter a valid voltage' : 'Required';
+    if (!finalVoltage || finalVoltage < 40 || finalVoltage > 1000) {
+      newErrors.voltage = isCustomVoltage ? 'Must be 40-1000V' : 'Required';
       missing.push(FIELD_LABELS.voltage);
     }
 
     const numericFields = [
-      { key: 'targetSpeed',       min: 1,     max: 400,   label: FIELD_LABELS.targetSpeed },
-      { key: 'vehicleWeight',     min: 1,     max: 50000, label: FIELD_LABELS.vehicleWeight },
-      { key: 'dragCoefficient',   min: 0.001, max: 5,     label: FIELD_LABELS.dragCoefficient },
-      { key: 'frontalArea',       min: 0.1,   max: 20,    label: FIELD_LABELS.frontalArea },
-      { key: 'rollingResistance', min: 0.001, max: 0.5,   label: FIELD_LABELS.rollingResistance },
-      { key: 'range',             min: 1,     max: 5000,  label: FIELD_LABELS.range },
-      { key: 'accelerationTime',  min: 0.1,   max: 100,   label: FIELD_LABELS.accelerationTime },
-      { key: 'maxGradient',       min: 1,     max: 45,    label: FIELD_LABELS.maxGradient },
+      { key: 'targetSpeed',       min: 40,    max: 300,   label: FIELD_LABELS.targetSpeed },
+      { key: 'vehicleWeight',     min: 50,    max: 20000, label: FIELD_LABELS.vehicleWeight },
+      { key: 'dragCoefficient',   min: 0.1,   max: 1.0,   label: FIELD_LABELS.dragCoefficient },
+      { key: 'frontalArea',       min: 0.1,   max: 10,    label: FIELD_LABELS.frontalArea },
+      { key: 'rollingResistance', min: 0.001, max: 1.0,   label: FIELD_LABELS.rollingResistance },
+      { key: 'range',             min: 40,    max: 1000,  label: FIELD_LABELS.range },
+      { key: 'accelerationTime',  min: 3,     max: 60,    label: FIELD_LABELS.accelerationTime },
+      { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
     ];
 
     for (const { key, min, max, label } of numericFields) {
