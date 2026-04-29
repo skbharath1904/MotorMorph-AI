@@ -263,11 +263,17 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           disabled={isGenerating}
         >
           {isGenerating ? (
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-              <Activity size={24} />
-            </motion.div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ display: 'flex' }}>
+                <Activity size={20} />
+              </motion.div>
+              <span style={{ fontSize: '0.9rem', letterSpacing: '0.1em' }}>FORMULATING DESIGN...</span>
+            </div>
           ) : (
-            <Zap size={24} color="#fff" fill="#fff" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Zap size={20} color="#fff" fill="#fff" />
+              <span style={{ fontSize: '1rem', letterSpacing: '0.05em' }}>GENERATE MOTOR DESIGN</span>
+            </div>
           )}
         </button>
       </form>
