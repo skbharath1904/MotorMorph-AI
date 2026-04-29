@@ -276,27 +276,3 @@ export const generateMotorDesignLocal = async (inputs) => {
     performanceCurve
   };
 };
-
-  return {
-    motorType,
-    motorSelectionReason: reason,
-    rangeLimitation: notes.join(' '),
-    accuracy: { score: 98, label: 'Verified Physics', note: 'Validated against Master Constraint Engine v5.0' },
-    specifications: {
-      peakPowerKw: Math.round(peakPowerKw * 10) / 10,
-      continuousPowerKw: Math.round(peakPowerKw * 0.6 * 10) / 10,
-      peakTorqueNm: Math.round(peakTorqueNm),
-      continuousTorqueNm: Math.round(peakTorqueNm * 0.5),
-      maxRpm: Math.round(maxRpm),
-      baseRpm: Math.round(baseRpm),
-      operatingVoltage: voltage,
-      estimatedEfficiency: `${(efficiency * 100).toFixed(1)}%`,
-      weightKg: Math.round(peakPowerKw * (is2W ? 1.5 : isCar ? 1.2 : 2.5))
-    },
-    thermal: { coolingMethod, maxCoilTemp: '155°C', coolantFlowRate: isTruck ? '12 L/min' : '6 L/min', thermalResistance: '0.04 K/W' },
-    dimensions: { statorDiameter: `${statorD} mm`, rotorLength: `${rotorL} mm`, overallLength: `${rotorL + 60} mm`, airGap: '0.55 mm', poles, slots },
-    electrical: { phaseCurrent: `${phaseCurrent} A`, lineVoltage: `${voltage} V`, backEmfConstant: '0.14 V·s/rad', switchingFreq: isCar ? '16 kHz' : '10 kHz', statorResistance: '0.012 Ω', dqInductance: '0.15 mH', windingType: 'Concentrated' },
-    mechanical: { maxTorqueDensity: `${torqueDensity} Nm/L`, rotorInertia: '0.015 kg·m²', maxCentrifugalForce: '5200 N', bearingLoad: '1200 N', coggingTorque: '0.2 Nm', criticalSpeed: `${Math.round(maxRpm * 1.25)} RPM` },
-    performanceCurve
-  };
-};
