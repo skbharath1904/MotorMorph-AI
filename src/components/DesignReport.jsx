@@ -231,7 +231,7 @@ const DesignReport = ({ data, inputs }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
              <div className="pdf-chart-container">
                 <h4 className="chart-label">EFFICIENCY VS. SPEED</h4>
-                <div style={{ width: '100%', height: 350 }}>
+                <div style={{ width: '100%', height: '350px', minHeight: '350px' }}>
                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                          <XAxis dataKey="rpm" stroke="#888" fontSize={11} label={{ value: 'RPM', position: 'insideBottom', offset: -10, fill: '#888' }} />
@@ -243,7 +243,7 @@ const DesignReport = ({ data, inputs }) => {
              </div>
              <div className="pdf-chart-container">
                 <h4 className="chart-label">TORQUE VS. SPEED</h4>
-                <div style={{ width: '100%', height: 350 }}>
+                <div style={{ width: '100%', height: '350px', minHeight: '350px' }}>
                    <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={data.performanceCurve} margin={{ top: 10, right: 30, left: 10, bottom: 20 }}>
                          <XAxis dataKey="rpm" stroke="#888" fontSize={11} label={{ value: 'RPM', position: 'insideBottom', offset: -10, fill: '#888' }} />
