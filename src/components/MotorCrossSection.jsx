@@ -92,8 +92,16 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
         )}
 
         <motion.div 
-          style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          animate={{ scale: isPdfMode ? 0.65 : scale }}
+          drag={!isPdfMode}
+          dragConstraints={{ left: -600, right: 600, top: -400, bottom: 400 }}
+          style={{ 
+            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: isPdfMode ? 'default' : 'grab'
+          }}
+          whileDrag={{ cursor: 'grabbing' }}
+          animate={{ 
+            scale: isPdfMode ? 0.65 : scale,
+          }}
           transition={{ type: 'spring', damping: 25, stiffness: 120 }}
         >
           <svg viewBox="0 0 1100 900" style={{ width: '100%', height: '100%' }}>
@@ -192,6 +200,83 @@ const MotorCrossSection = ({ data, isPdfMode = false }) => {
           </svg>
         </motion.div>
       </div>
+
+      {/* ── PARTS LEGEND ── */}
+      {!isPdfMode && (
+        <div className="cad-legend glass-panel" style={{ padding: '1.5rem', marginTop: '10px' }}>
+          <h4 style={{ fontSize: '0.8rem', color: 'var(--accent-blue)', marginBottom: '1.2rem', fontWeight: 800 }}>ENGINEERING NOMENCLATURE</h4>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem' }}>
+             
+             <div className="cad-legend-item">
+                <div className="cad-icon-box" style={{ background: colors.housing }}></div>
+                <div>
+                   <div className="cad-label-num">01</div>
+                   <div className="cad-label-desc">EXTERNAL HOUSING</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-icon-box" style={{ background: colors.stator }}></div>
+                <div>
+                   <div className="cad-label-num">02</div>
+                   <div className="cad-label-desc">STATOR CORE</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-icon-multi">
+                   <div style={{ background: colors.windings[0] }}></div>
+                   <div style={{ background: colors.windings[1] }}></div>
+                   <div style={{ background: colors.windings[2] }}></div>
+                </div>
+                <div>
+                   <div className="cad-label-num">03</div>
+                   <div className="cad-label-desc">STATOR SLOTS (ABC)</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-icon-box" style={{ background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <div className="cad-dashed-line"></div>
+                </div>
+                <div>
+                   <div className="cad-label-num">04</div>
+                   <div className="cad-label-desc">AIR GAP ({data.dimensions.airGap})</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-magnet-icon">
+                   <span style={{ background: colors.magnets.N }}>N</span>
+                   <span style={{ background: colors.magnets.S }}>S</span>
+                </div>
+                <div>
+                   <div className="cad-label-num">05</div>
+                   <div className="cad-label-desc">MAGNETIC POLES</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-icon-box" style={{ background: colors.rotor }}></div>
+                <div>
+                   <div className="cad-label-num">06</div>
+                   <div className="cad-label-desc">ROTOR CORE</div>
+                </div>
+             </div>
+
+             <div className="cad-legend-item">
+                <div className="cad-icon-box" style={{ background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                   <div className="cad-shaft-icon"></div>
+                </div>
+                <div>
+                   <div className="cad-label-num">07</div>
+                   <div className="cad-label-desc">MAIN SHAFT</div>
+                </div>
+             </div>
+
+          </div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         .cad-tool-btn { background: #111; border: 1px solid #222; color: #fff; padding: 6px 12px; font-size: 0.75rem; font-weight: 900; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
