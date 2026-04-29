@@ -18,15 +18,15 @@ const FIELD_LABELS = {
 const MotorForm = ({ onSubmit, isGenerating }) => {
   const [inputs, setInputs] = useState({
     vehicleType:       '',
-    targetSpeed:       '120',
-    vehicleWeight:     '1600',
-    range:             '400',
-    voltage:           '400',
-    dragCoefficient:   '0.32',
-    rollingResistance: '0.012',
-    frontalArea:       '2.2',
-    accelerationTime:  '7.5',
-    maxGradient:       '20'
+    targetSpeed:       '',
+    vehicleWeight:     '',
+    range:             '',
+    voltage:           '',
+    dragCoefficient:   '',
+    rollingResistance: '',
+    frontalArea:       '',
+    accelerationTime:  '',
+    maxGradient:       ''
   });
   const [isCustomVoltage, setIsCustomVoltage] = useState(false);
   const [customVoltage, setCustomVoltage] = useState('');
@@ -35,17 +35,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
 
   const handleTypeChange = (e) => {
     const type = e.target.value;
-    // Set class-specific defaults when type changes
-    let defaults = {};
-    if (type === 'Two Wheeler') {
-      defaults = { targetSpeed: '80', vehicleWeight: '180', voltage: '48', dragCoefficient: '0.6', frontalArea: '1.1', rollingResistance: '0.012', range: '150', accelerationTime: '8.0', maxGradient: '15' };
-    } else if (type === 'Car') {
-      defaults = { targetSpeed: '180', vehicleWeight: '1800', voltage: '400', dragCoefficient: '0.28', frontalArea: '2.4', rollingResistance: '0.015', range: '500', accelerationTime: '6.5', maxGradient: '25' };
-    } else if (type === 'Commercial') {
-      defaults = { targetSpeed: '100', vehicleWeight: '8000', voltage: '800', dragCoefficient: '0.55', frontalArea: '6.5', rollingResistance: '0.018', range: '300', accelerationTime: '15.0', maxGradient: '20' };
-    }
-
-    setInputs(prev => ({ ...prev, vehicleType: type, ...defaults }));
+    setInputs(prev => ({ ...prev, vehicleType: type }));
     setErrors(prev => ({ ...prev, vehicleType: '' }));
     setSubmitError('');
   };
