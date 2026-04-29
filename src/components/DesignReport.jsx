@@ -9,6 +9,34 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import html2pdf from 'html2pdf.js';
 import MotorCrossSection from './MotorCrossSection';
 
+const AwaitingDesign = () => {
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="awaiting-container glass-panel"
+    >
+      <div className="ambient-glow"></div>
+      <div className="awaiting-content">
+        <div className="radar-animation">
+           <div className="radar-circle"></div>
+           <div className="radar-circle"></div>
+           <div className="radar-circle"></div>
+           <Cpu size={48} className="awaiting-icon" />
+        </div>
+        <h3>Awaiting <span className="text-gradient">Parameters</span></h3>
+        <p>Configure the vehicle's core requirements on the left to initialize the physics-based AI engine and generate a powertrain design.</p>
+        
+        <div className="status-grid">
+           <div className="status-item"><span className="dot"></span> Neural Engine Status: Ready</div>
+           <div className="status-item"><span className="dot"></span> Physics-Based Solver: Standby</div>
+           <div className="status-item" style={{ color: 'var(--accent-blue)' }}><span className="dot"></span> Waiting for Input Data...</div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
   const [isExporting, setIsExporting] = useState(false);
@@ -34,7 +62,7 @@ const DesignReport = ({ data, inputs }) => {
     });
   };
 
-  if (!data) return null;
+  if (!data) return <AwaitingDesign />;
 
   // Derived dimensions for consistency
   const statorD = parseInt(data.dimensions.statorDiameter);

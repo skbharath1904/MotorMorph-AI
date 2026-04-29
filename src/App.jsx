@@ -74,23 +74,23 @@ function App() {
         </div>
       </header>
 
+      <div style={{ marginBottom: '2rem' }}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: 1.1 }}>
+            Design the <span className="text-gradient">Future</span> of Mobility.
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '800px' }}>
+            Input your vehicle's core requirements, and our advanced physics-based AI engine will formulate the optimal electric motor architecture, estimating performance, efficiency, and physical parameters in seconds.
+          </p>
+        </motion.div>
+      </div>
+
       <main className="main-content">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: 1.1 }}>
-              Design the <span className="text-gradient">Future</span> of Mobility.
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Input your vehicle's core requirements, and our advanced physics-based AI engine will formulate the optimal electric motor architecture, estimating performance, efficiency, and physical parameters in seconds.
-            </p>
-          </motion.div>
-          
-          <MotorForm onSubmit={handleGenerate} isGenerating={isGenerating} />
-        </div>
+        <MotorForm onSubmit={handleGenerate} isGenerating={isGenerating} />
 
         <div style={{ height: '100%' }}>
           <DesignReport data={designData} inputs={userInputs} />
