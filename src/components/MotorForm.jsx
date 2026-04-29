@@ -194,7 +194,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Gauge size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.targetSpeed}
             </label>
-            <input type="number" name="targetSpeed" className="form-input" value={inputs.targetSpeed} onChange={handleChange} onKeyDown={numbersOnly} placeholder="100" style={{ background: '#0a0a0a' }} />
+            <input type="number" name="targetSpeed" className="form-input" value={inputs.targetSpeed} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Weight */}
@@ -202,7 +202,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Weight size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.vehicleWeight}
             </label>
-            <input type="number" name="vehicleWeight" className="form-input" value={inputs.vehicleWeight} onChange={handleChange} onKeyDown={numbersOnly} placeholder="180" style={{ background: '#0a0a0a' }} />
+            <input type="number" name="vehicleWeight" className="form-input" value={inputs.vehicleWeight} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Drag Coeff */}
@@ -210,7 +210,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Wind size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.dragCoefficient}
             </label>
-            <input type="number" step="0.01" name="dragCoefficient" className="form-input" value={inputs.dragCoefficient} onChange={handleChange} onKeyDown={numbersOnly} placeholder="0.6" style={{ background: '#0a0a0a' }} />
+            <input type="number" step="0.01" name="dragCoefficient" className="form-input" value={inputs.dragCoefficient} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Frontal Area */}
@@ -218,7 +218,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Square size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.frontalArea}
             </label>
-            <input type="number" step="0.1" name="frontalArea" className="form-input" value={inputs.frontalArea} onChange={handleChange} onKeyDown={numbersOnly} placeholder="1.1" style={{ background: '#0a0a0a' }} />
+            <input type="number" step="0.1" name="frontalArea" className="form-input" value={inputs.frontalArea} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Rolling Res */}
@@ -226,7 +226,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <CircleDashed size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.rollingResistance}
             </label>
-            <input type="number" step="0.001" name="rollingResistance" className="form-input" value={inputs.rollingResistance} onChange={handleChange} onKeyDown={numbersOnly} placeholder="0.012" style={{ background: '#0a0a0a' }} />
+            <input type="number" step="0.001" name="rollingResistance" className="form-input" value={inputs.rollingResistance} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Desired Range */}
@@ -234,7 +234,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Activity size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.range}
             </label>
-            <input type="number" name="range" className="form-input" value={inputs.range} onChange={handleChange} onKeyDown={numbersOnly} placeholder="300" style={{ background: '#0a0a0a' }} />
+            <input type="number" name="range" className="form-input" value={inputs.range} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Acceleration */}
@@ -242,7 +242,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Timer size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.accelerationTime}
             </label>
-            <input type="number" step="0.1" name="accelerationTime" className="form-input" value={inputs.accelerationTime} onChange={handleChange} onKeyDown={numbersOnly} placeholder="8.5" style={{ background: '#0a0a0a' }} />
+            <input type="number" step="0.1" name="accelerationTime" className="form-input" value={inputs.accelerationTime} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
           {/* Gradient */}
@@ -250,7 +250,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <TrendingUp size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.maxGradient}
             </label>
-            <input type="number" name="maxGradient" className="form-input" value={inputs.maxGradient} onChange={handleChange} onKeyDown={numbersOnly} placeholder="20" style={{ background: '#0a0a0a' }} />
+            <input type="number" name="maxGradient" className="form-input" value={inputs.maxGradient} onChange={handleChange} onKeyDown={numbersOnly} style={{ background: '#0a0a0a' }} />
           </div>
 
         </div>
