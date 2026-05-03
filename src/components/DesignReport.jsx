@@ -303,20 +303,20 @@ const DesignReport = ({ data, inputs }) => {
 
       <style dangerouslySetInnerHTML={{__html: `
         .label-accent { color: var(--accent-blue); text-transform: uppercase; font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .report-title { fontSize: 2.2rem; fontWeight: 800; margin-bottom: 1rem; color: var(--text-primary); }
+        .report-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-primary); }
         .constraint-notice { background: rgba(255, 60, 60, 0.08); border: 1px solid rgba(255, 60, 60, 0.2); border-radius: 10px; padding: 1.2rem; color: #ffb3b3; font-size: 0.85rem; line-height: 1.5; }
         .section-header { font-size: 1.05rem; margin-bottom: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 0.6rem; color: var(--text-primary); }
         .stat-label { color: var(--text-secondary); font-size: 0.75rem; display: block; margin-bottom: 4px; }
-        .stat-cards-row { display: grid; gridTemplateColumns: repeat(4, 1fr); gap: 1rem; marginBottom: 2rem; }
-        .stat-card { padding: 1.5rem; background: rgba(255,255,255,0.03); borderRadius: 12px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; justify-content: center; }
-        .stat-card-label { fontSize: 0.75rem; color: var(--text-secondary); marginBottom: 8px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; font-weight: 700; }
-        .stat-card-val { fontSize: 2rem; fontWeight: 800; color: var(--accent-blue); line-height: 1.1; }
-        .specs-grid-row { display: grid; gridTemplateColumns: 1fr 1fr; gap: 2.5rem; marginBottom: 2.5rem; }
+        .stat-cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; justify-content: center; }
+        .stat-card-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; font-weight: 700; }
+        .stat-card-val { font-size: 2rem; font-weight: 800; color: var(--accent-blue); line-height: 1.1; }
+        .specs-grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem; }
         .spec-item { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .spec-item span { color: var(--text-secondary); font-size: 0.9rem; }
         .spec-item strong { font-size: 0.95rem; color: var(--text-primary); }
-        .thermal-card { padding: 1rem; background: rgba(255,255,255,0.02); borderRadius: 10px; border: 1px solid var(--glass-border); }
-        .chart-label { textAlign: center; marginBottom: 1rem; fontSize: 0.9rem; color: var(--text-secondary); }
+        .thermal-card { padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--glass-border); }
+        .chart-label { text-align: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); }
         .pdf-chart-container { background: rgba(255,255,255,0.01); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border); }
 
         .pdf-export-mode { background: #ffffff !important; color: #000000 !important; width: 210mm !important; padding: 10mm !important; }
