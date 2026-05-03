@@ -226,9 +226,26 @@ export const generateMotorDesignLocal = async (inputs) => {
     });
   }
 
+  let selectionReason = '';
+  if (isCar) {
+    if (motorType.includes('IM')) {
+      selectionReason = `Induction Motor selected. Its rugged construction and absence of rare-earth magnets make it ideal for cost-effective passenger cars. The calculated ${peakPowerKw.toFixed(1)} kW peak power and ${(voltage).toFixed(0)}V system ensure reliable highway performance without risk of demagnetization at high temperatures.`;
+    } else {
+      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency (${(finalEfficiency*100).toFixed(1)}%) is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${vehicleWeight} kg.`;
+    }
+  } else if (isTruck) {
+    if (motorType.includes('SRM')) {
+      selectionReason = `Switched Reluctance Motor (SRM) chosen for heavy-duty commercial applications. The extreme ${Math.round(peakTorqueNm)} Nm torque demand of this ${vehicleWeight} kg vehicle requires a highly robust, fault-tolerant architecture. The SRM's rare-earth-free rotor and excellent thermal management support continuous high-load operation.`;
+    } else {
+      selectionReason = `High-Torque PMSM selected to meet the demanding ${Math.round(peakTorqueNm)} Nm requirement of a ${vehicleWeight} kg commercial vehicle. Operating at ${voltage}V, this architecture ensures high continuous power delivery and maximum energy efficiency for long-haul operations.`;
+    }
+  } else {
+    selectionReason = `BLDC Motor selected. The vehicle mass of ${vehicleWeight} kg qualifies as a lightweight EV. At ${voltage}V, BLDC architectures offer superior power-to-weight ratios and high efficiency (${(finalEfficiency*100).toFixed(1)}%) — optimal for urban two-wheelers targeting ${targetSpeed} km/h.`;
+  }
+
   return {
     motorType,
-    motorSelectionReason: `Optimal for ${vehicleType} based on ${peakPowerKw.toFixed(1)}kW peak requirement.`,
+    motorSelectionReason: selectionReason,
     rangeLimitation: notes.join(' '),
     accuracy: { 
       score: Math.floor(Math.random() * (90 - 80 + 1)) + 80, 

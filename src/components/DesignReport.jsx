@@ -80,9 +80,15 @@ const DesignReport = ({ data, inputs }) => {
         {/* 01. HEADER */}
         <div className="pdf-section" style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
+            <div style={{ maxWidth: '75%' }}>
               <h4 className="label-accent">AI RECOMMENDED ARCHITECTURE</h4>
-              <h2 className="report-title" style={{ marginBottom: 0 }}>{data.motorType}</h2>
+              <h2 className="report-title" style={{ marginBottom: '0.8rem' }}>{data.motorType}</h2>
+              <div className="justification-box" style={{ background: 'rgba(0, 210, 255, 0.05)', border: '1px solid rgba(0, 210, 255, 0.15)', borderRadius: '10px', padding: '1rem', marginTop: '0.5rem' }}>
+                 <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--accent-blue)', fontWeight: 800, marginRight: '8px' }}>💡 Why This Motor?</span>
+                    {data.motorSelectionReason}
+                 </p>
+              </div>
             </div>
             <button onClick={handleDownloadPdf} className="btn btn-secondary ui-only" disabled={isExporting}>
               <Download size={16} /> {isExporting ? 'Exporting...' : 'Export PDF'}
@@ -108,13 +114,10 @@ const DesignReport = ({ data, inputs }) => {
         </div>
 
         {/* 03. CONSTRAINT NOTICE */}
-        {data.motorSelectionReason && (
+        {data.rangeLimitation && (
           <div className="pdf-section" style={{ marginBottom: '2rem' }}>
             <div className="constraint-notice">
-               {data.motorSelectionReason.startsWith('Constraint') ? 
-                 data.motorSelectionReason : 
-                 <><span style={{ fontWeight: 800, marginRight: '8px' }}>Constraint Notice:</span> {data.motorSelectionReason}</>
-               }
+               <span style={{ fontWeight: 800, marginRight: '8px' }}>Constraint Notice:</span> {data.rangeLimitation}
             </div>
           </div>
         )}

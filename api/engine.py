@@ -27,20 +27,20 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if is_2w: 
         motor_type = MOTOR_TYPES[2] # BLDC
         selection_reason = (
-            f"BLDC selected: vehicle mass {m_vehicle:.0f} kg qualifies as lightweight EV. BLDCs offer superior power-to-weight ratio "
-            "and high efficiency at low voltages — optimal for two-wheelers and light EVs."
+            f"BLDC selected: vehicle mass of {m_vehicle:.0f} kg qualifies as a lightweight EV. Operating at {v_system:.0f}V, BLDC architectures "
+            f"offer superior power-to-weight ratios and high efficiency — optimal for urban two-wheelers targeting {v_kmh:.0f} km/h."
         )
     elif is_cv: 
         motor_type = MOTOR_TYPES[3] # SRM
         selection_reason = (
-            "SRM chosen for Commercial Vehicle duty. Its rare-earth-free rotor and robust thermal architecture allow for extreme "
-            "durability and continuous high-load operation in heavy-duty environments."
+            f"Switched Reluctance Motor (SRM) chosen for heavy-duty commercial applications. The demanding requirements of this {m_vehicle:.0f} kg vehicle "
+            f"necessitate a highly robust, fault-tolerant architecture. The SRM's rare-earth-free rotor and excellent thermal management support continuous high-load operations."
         )
     else: 
         motor_type = MOTOR_TYPES[0] # PMSM
         selection_reason = (
-            "PMSM selected for modern EV architecture. It provides industry-leading power density and peak efficiency (95%+), "
-            "critical for maximizing driving range and supporting aggressive performance cycles."
+            f"PMSM selected for this modern {vehicle_type}. Operating at {v_system:.0f}V, it delivers industry-leading power density. "
+            f"Its high efficiency is critical for maximizing range and providing instantaneous acceleration to move {m_vehicle:.0f} kg efficiently at {v_kmh:.0f} km/h."
         )
 
     # 🔴 TRACTIVE EFFORT & POWER
