@@ -176,31 +176,23 @@ export const generateMotorDesignLocal = async (inputs) => {
   }
 
   // Adjust efficiency based on motor type
-  let peakEffMin, peakEffMax, opEffMin, opEffMax;
+  let peakEffStr, opEffStr, opEffVal, peakEffVal;
   if (motorType.includes('BLDC')) {
-    peakEffMin = 0.88; peakEffMax = 0.92; opEffMin = 0.85; opEffMax = 0.90;
+    peakEffStr = "88% - 92%"; opEffStr = "85% - 90%";
+    opEffVal = 0.875; peakEffVal = 0.90;
   } else if (motorType.includes('Induction') || motorType.includes('IM')) {
-    peakEffMin = 0.88; peakEffMax = 0.93; opEffMin = 0.85; opEffMax = 0.90;
+    peakEffStr = "88% - 93%"; opEffStr = "85% - 90%";
+    opEffVal = 0.875; peakEffVal = 0.905;
   } else if (motorType.includes('SRM')) {
-    peakEffMin = 0.85; peakEffMax = 0.92; opEffMin = 0.80; opEffMax = 0.88;
+    peakEffStr = "85% - 92%"; opEffStr = "80% - 88%";
+    opEffVal = 0.84; peakEffVal = 0.885;
   } else { // PMSM
-    peakEffMin = 0.92; peakEffMax = 0.96; opEffMin = 0.90; opEffMax = 0.94;
+    peakEffStr = "92% - 96%"; opEffStr = "90% - 94%";
+    opEffVal = 0.92; peakEffVal = 0.94;
   }
-  
-  // Base efficiency calculation with some variation based on voltage and mass
-  let baseVar = (voltage / 10000) - (totalMass / 500000);
-  let opEff = ((opEffMin + opEffMax) / 2) + baseVar;
-  let peakEff = ((peakEffMin + peakEffMax) / 2) + baseVar;
-  
-  let clampedEff = false;
-  if (opEff < opEffMin || opEff > opEffMax || peakEff < peakEffMin || peakEff > peakEffMax) clampedEff = true;
-  
-  opEff = Math.max(opEffMin, Math.min(opEffMax, opEff));
-  peakEff = Math.max(peakEffMin, Math.min(peakEffMax, peakEff));
-  if (clampedEff) notes.push("Efficiency values clamped to realistic limits for " + motorType + ".");
 
   // 7. ELECTRICAL PARAMETERS
-  const phaseCurrent = Math.round((peakPowerKw * 1000) / (voltage * opEff * 0.95));
+  const phaseCurrent = Math.round((peakPowerKw * 1000) / (voltage * opEffVal * 0.95));
 
   // 8. PHYSICAL DIMENSIONS (Torque Density Strict Bounds)
   const targetTd = is2W ? 20 : isCar ? 35 : 45; // Nm/L
@@ -261,7 +253,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     performanceCurve.push({
       rpm,
       torque: Math.round(torque),
-      efficiency: Math.round(peakEff * effFactor * rampUp * 1000) / 10
+      efficiency: Math.round(peakEffVal * effFactor * rampUp * 1000) / 10
     });
   }
 
@@ -270,7 +262,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     if (motorType.includes('IM')) {
       selectionReason = `Induction Motor selected. Its rugged construction and absence of rare-earth magnets make it ideal for cost-effective passenger cars. The calculated ${peakPowerKw.toFixed(1)} kW peak power and ${(voltage).toFixed(0)}V system ensure reliable highway performance without risk of demagnetization at high temperatures.`;
     } else {
-      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency (${(peakEff*100).toFixed(1)}%) is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${totalMass} kg (incl. rider/payload).`;
+      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${totalMass} kg (incl. rider/payload).`;
     }
   } else if (isTruck) {
     if (motorType.includes('SRM')) {
@@ -279,7 +271,7 @@ export const generateMotorDesignLocal = async (inputs) => {
       selectionReason = `High-Torque PMSM selected to meet the demanding ${Math.round(peakTorqueNm)} Nm requirement of a ${totalMass} kg commercial vehicle (incl. payload). Operating at ${voltage}V, this architecture ensures high continuous power delivery and maximum energy efficiency for long-haul operations.`;
     }
   } else {
-    selectionReason = `BLDC Motor selected. The total mass of ${totalMass} kg qualifies as a lightweight EV. At ${voltage}V, BLDC architectures offer superior power-to-weight ratios and high efficiency (${(peakEff*100).toFixed(1)}%) — optimal for urban two-wheelers targeting ${targetSpeed} km/h.`;
+    selectionReason = `BLDC Motor selected. The total mass of ${totalMass} kg qualifies as a lightweight EV. At ${voltage}V, BLDC architectures offer superior power-to-weight ratios and high efficiency — optimal for urban two-wheelers targeting ${targetSpeed} km/h.`;
   }
 
   return {
@@ -299,8 +291,8 @@ export const generateMotorDesignLocal = async (inputs) => {
       maxRpm: Math.round(maxRpm),
       baseRpm: Math.round(baseRpm),
       operatingVoltage: voltage,
-      peakEfficiency: `${(peakEff * 100).toFixed(1)}%`,
-      operatingEfficiency: `${(opEff * 100).toFixed(1)}%`,
+      peakEfficiency: peakEffStr,
+      operatingEfficiency: opEffStr,
       weightKg: Math.round(peakTorqueNm / (isTruck ? 10 : 6) + 10)
     },
     thermal: (() => {
