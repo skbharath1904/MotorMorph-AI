@@ -175,6 +175,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   const volumeL = peakTorqueNm / torqueDensity;
   const statorD = Math.round(Math.pow(volumeL * 1000 / 1.1, 1/3) * 10);
   const rotorL = Math.round(statorD * (1.0 + (peakTorqueNm / 1000)));
+  const rotorD = Math.round(statorD * 0.70); // Ensure rotor diameter is less than stator diameter (70% of it)
   const poles = is2W ? 10 : isCar ? 8 : 12;
 
   // 9. PERFORMANCE CURVE (Motor-Type Specific Mapping)
@@ -271,7 +272,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     },
     dimensions: { 
       statorDiameter: `${statorD} mm`, 
-      rotorLength: `${rotorL} mm`, 
+      rotorDiameter: `${rotorD} mm`, 
       overallLength: `${rotorL + 80} mm`, 
       airGap: isTruck ? '0.8 mm' : '0.5 mm', 
       poles, 

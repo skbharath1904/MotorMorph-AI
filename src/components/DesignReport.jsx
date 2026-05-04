@@ -172,7 +172,7 @@ const DesignReport = ({ data, inputs }) => {
                {[
                  { l: 'Stator Outer Dia.', v: data.dimensions.statorDiameter }, 
                  { l: 'Stator Bore Dia.', v: `${boreD} mm` },
-                 { l: 'Rotor Length', v: data.dimensions.rotorLength }, 
+                 { l: 'Rotor Diameter', v: data.dimensions.rotorDiameter }, 
                  { l: 'Overall Length', v: data.dimensions.overallLength }, 
                  { l: 'Air Gap', v: data.dimensions.airGap }, 
                  { l: 'Pole/Slot Combo', v: `${data.dimensions.slots}S / ${data.dimensions.poles}P` }
