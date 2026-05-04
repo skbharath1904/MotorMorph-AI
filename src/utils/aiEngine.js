@@ -109,25 +109,27 @@ export const generateMotorDesignLocal = async (inputs) => {
     notes.push(`Voltage auto-corrected to ${voltage}V for ${vehicleType} class.`);
   }
 
-  // 3. CORE PHYSICS ENGINE (Road Load & Peak Power)
+  // 3. CORE PHYSICS ENGINE (Forces & Power)
   const vMps = targetSpeed / 3.6;
   const rho = 1.225, g = 9.81;
   
-  // Power needed to overcome Aerodynamic Drag
-  const P_aero = (0.5 * rho * dragCoefficient * frontalArea * Math.pow(vMps, 3)) / 1000;
-  // Power needed to overcome Rolling Resistance
-  const P_rolling = (rollingResistance * totalMass * g * vMps) / 1000;
-  // Power needed for Gradient Climbing
+  const F_aero = 0.5 * rho * dragCoefficient * frontalArea * Math.pow(vMps, 2);
+  const F_rolling = rollingResistance * totalMass * g;
   const gradRad = Math.atan(maxGradient / 100);
-  const P_grade = (totalMass * g * Math.sin(gradRad) * vMps) / 1000;
-  // Power needed for Acceleration (Kinetic Energy over time)
-  const P_accel = (0.5 * totalMass * Math.pow(vMps, 2)) / (accelerationTime * 1000);
+  const F_grade = totalMass * g * Math.sin(gradRad);
+  const F_accel = totalMass * (vMps / accelerationTime);
 
-  // Peak Power is sum of steady state loads + acceleration load, with an overhead factor
+  const totalForce = F_aero + F_rolling + F_grade + F_accel;
+
+  // Power
+  const P_aero = (F_aero * vMps) / 1000;
+  const P_rolling = (F_rolling * vMps) / 1000;
+  const P_grade = (F_grade * vMps) / 1000;
+  const P_accel = (F_accel * vMps) / 1000;
+
   let peakPowerKw = (P_aero + P_rolling + P_grade + P_accel) * 1.2;
-
-  // Clamp within class rules
   peakPowerKw = Math.max(rules.pRange[0], Math.min(rules.pRange[1], peakPowerKw));
+  const continuousPowerKw = Math.round(peakPowerKw * 0.65 * 10) / 10;
 
   // 4. DYNAMIC RPM CALCULATION
   const wheelRpm = (vMps * 60) / (2 * Math.PI * wheelRadius);
@@ -140,15 +142,27 @@ export const generateMotorDesignLocal = async (inputs) => {
     maxRpm = rules.rpmRange[1] - (Math.random() * 1000);
   }
   const baseRpm = Math.round(maxRpm * 0.38);
-  const calculatedGearRatio = (maxRpm / wheelRpm).toFixed(1);
+  const calculatedGearRatio = maxRpm / wheelRpm;
 
-  // 5. TORQUE DERIVATION (T = P * 9550 / N)
-  let peakTorqueNm = (peakPowerKw * 9550) / (maxRpm * 0.4); // Using lower RPM for peak torque calculation
+  // 5. TORQUE DERIVATION (Strict Method)
+  let wheelTorque = totalForce * wheelRadius;
+  let peakTorqueNm = wheelTorque / calculatedGearRatio;
   
-  // Ensure torque scales with weight class
-  const minTorque = totalMass * (is2W ? 0.1 : isCar ? 0.15 : 0.3);
-  peakTorqueNm = Math.max(peakTorqueNm, minTorque);
-  peakTorqueNm = Math.max(rules.tRange[0], Math.min(rules.tRange[1], peakTorqueNm));
+  let minMotorT = 150, maxMotorT = 400, minWheelT = 800, maxWheelT = 2000;
+  if (is2W) {
+    minMotorT = 20; maxMotorT = 40; minWheelT = 80; maxWheelT = 150;
+  } else if (isTruck) {
+    minMotorT = 500; maxMotorT = 2000; minWheelT = 3000; maxWheelT = 10000;
+  }
+  
+  let clamped = false;
+  if (peakTorqueNm < minMotorT || peakTorqueNm > maxMotorT) clamped = true;
+  if (wheelTorque < minWheelT || wheelTorque > maxWheelT) clamped = true;
+  
+  peakTorqueNm = Math.max(minMotorT, Math.min(maxMotorT, peakTorqueNm));
+  wheelTorque = Math.max(minWheelT, Math.min(maxWheelT, wheelTorque));
+  
+  if (clamped) notes.push("Calculated Torque exceeded class limits. Values clamped for physical feasibility.");
 
   // 6. MOTOR TYPE SELECTION & CHARACTERISTICS
   let motorType = rules.defaultMotor;
@@ -174,13 +188,19 @@ export const generateMotorDesignLocal = async (inputs) => {
   // 7. ELECTRICAL PARAMETERS
   const phaseCurrent = Math.round((peakPowerKw * 1000) / (voltage * finalEfficiency * 0.95));
 
-  // 8. PHYSICAL DIMENSIONS (D^2L Scaling)
-  const torqueDensity = is2W ? 15 : isCar ? 30 : 50; 
-  const volumeL = peakTorqueNm / torqueDensity;
-  const statorD = Math.round(Math.pow(volumeL * 1000 / 1.1, 1/3) * 10);
-  const rotorL = Math.round(statorD * (1.0 + (peakTorqueNm / 1000)));
-  const rotorD = Math.round(statorD * 0.70); // Ensure rotor diameter is less than stator diameter (70% of it)
+  // 8. PHYSICAL DIMENSIONS (Torque Density Strict Bounds)
+  const targetTd = is2W ? 20 : isCar ? 35 : 45; // Nm/L
+  const volumeL = peakTorqueNm / targetTd;
+  
+  const volumeM3 = volumeL / 1000;
+  const d_m = Math.pow((volumeM3 * 4.8) / Math.PI, 1/3); // Assuming L = D/1.2
+  const statorD = Math.max(50, Math.round(d_m * 1000));
+  const rotorL = Math.max(20, Math.round(statorD / 1.2));
+  const rotorD = Math.max(10, Math.round(statorD * 0.70));
   const poles = is2W ? 10 : isCar ? 8 : 12;
+
+  const actualVolumeL = (Math.PI * Math.pow(statorD / 2000, 2) * (rotorL / 1000)) * 1000;
+  const actualTd = peakTorqueNm / actualVolumeL;
 
   // 9. PERFORMANCE CURVE (Motor-Type Specific Mapping)
   const performanceCurve = [];
@@ -259,7 +279,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     },
     specifications: {
       peakPowerKw: Math.round(peakPowerKw * 10) / 10,
-      continuousPowerKw: Math.round(peakPowerKw * 0.65 * 10) / 10,
+      continuousPowerKw: continuousPowerKw,
       peakTorqueNm: Math.round(peakTorqueNm),
       continuousTorqueNm: Math.round(peakTorqueNm * 0.45),
       maxRpm: Math.round(maxRpm),
@@ -268,12 +288,26 @@ export const generateMotorDesignLocal = async (inputs) => {
       estimatedEfficiency: `${(finalEfficiency * 100).toFixed(1)}%`,
       weightKg: Math.round(peakTorqueNm / (isTruck ? 10 : 6) + 10)
     },
-    thermal: { 
-      coolingMethod: peakPowerKw > 85 || isTruck ? 'Liquid Cooling' : 'Air Cooling', 
-      maxCoilTemp: '155°C', 
-      coolantFlowRate: `${(peakPowerKw / 20).toFixed(1)} L/min`, 
-      thermalResistance: '0.04 K/W' 
-    },
+    thermal: (() => {
+      let coolingMethod = 'Air Cooling';
+      if (is2W) {
+        if (continuousPowerKw >= 12) coolingMethod = 'Liquid Cooling';
+        else if (continuousPowerKw >= 8) coolingMethod = 'Forced Air Cooling';
+      } else if (isCar) {
+        if (continuousPowerKw > 80) coolingMethod = 'Advanced Liquid Cooling';
+        else if (continuousPowerKw >= 25) coolingMethod = 'Liquid Cooling';
+        else coolingMethod = 'Forced Air Cooling';
+      } else if (isTruck) {
+        if (continuousPowerKw > 150) coolingMethod = 'Advanced Liquid Cooling';
+        else coolingMethod = 'Liquid Cooling';
+      }
+      return {
+        coolingMethod, 
+        maxCoilTemp: '155°C', 
+        coolantFlowRate: coolingMethod.includes('Liquid') ? `${(continuousPowerKw / 20).toFixed(1)} L/min` : 'N/A', 
+        thermalResistance: '0.04 K/W' 
+      };
+    })(),
     dimensions: { 
       statorDiameter: `${statorD} mm`, 
       rotorDiameter: `${rotorD} mm`, 
@@ -292,14 +326,15 @@ export const generateMotorDesignLocal = async (inputs) => {
       windingType: 'Concentrated' 
     },
     mechanical: { 
-      maxTorqueDensity: `${torqueDensity.toFixed(1)} Nm/L`, 
+      maxTorqueDensity: `${actualTd.toFixed(1)} Nm/L`, 
       rotorInertia: '0.015 kg·m²', 
       maxCentrifugalForce: '5200 N', 
       bearingLoad: '1200 N', 
       coggingTorque: '0.2 Nm', 
       criticalSpeed: `${Math.round(maxRpm * 1.3)} RPM`,
       totalVehicleMass: `${totalMass} kg`,
-      gearRatio: `${calculatedGearRatio}`
+      gearRatio: `${calculatedGearRatio.toFixed(1)}:1`,
+      wheelTorque: `${Math.round(wheelTorque)} Nm`
     },
     performanceCurve
   };
