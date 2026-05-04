@@ -21,6 +21,9 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     v_kmh = float(inputs.get('targetSpeed', 100))
     v_system = float(inputs.get('voltage', 400))
     m_vehicle = float(inputs.get('vehicleWeight', 1500))
+    m_rider = float(inputs.get('riderMass', 80))
+    m_total = m_vehicle + m_rider
+    wheel_radius = float(inputs.get('wheelRadius', 0.3))
     notes = []
     
     # 🔴 MOTOR TYPE SELECTION & EXPLANATION
@@ -40,7 +43,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         motor_type = MOTOR_TYPES[0] # PMSM
         selection_reason = (
             f"PMSM selected for this modern {vehicle_type}. Operating at {v_system:.0f}V, it delivers industry-leading power density. "
-            f"Its high efficiency is critical for maximizing range and providing instantaneous acceleration to move {m_vehicle:.0f} kg efficiently at {v_kmh:.0f} km/h."
+            f"Its high efficiency is critical for maximizing range and providing instantaneous acceleration to move {m_total:.0f} kg efficiently at {v_kmh:.0f} km/h."
         )
 
     # 🔴 TRACTIVE EFFORT & POWER
@@ -52,13 +55,13 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     accel_time = float(inputs.get('accelerationTime', 10))
     
     # Resistance Forces at target speed
-    f_rolling = crr * m_vehicle * 9.81
+    f_rolling = crr * m_total * 9.81
     f_drag = 0.5 * 1.225 * cd * fa * (v_mps**2)
-    f_grade = m_vehicle * 9.81 * math.sin(math.atan(gradient))
+    f_grade = m_total * 9.81 * math.sin(math.atan(gradient))
     
     # Acceleration Force
     v_accel = min(v_mps, 27.7) 
-    f_accel = m_vehicle * (v_accel / accel_time)
+    f_accel = m_total * (v_accel / accel_time)
     
     # Peak Power Required
     p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
@@ -78,6 +81,9 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     
     omega_max = (2 * math.pi * n_max) / 60
     t_peak_nm = (peak_power_kw * 1000) / omega_max
+    
+    wheel_rpm = (v_mps * 60) / (2 * math.pi * wheel_radius)
+    gear_ratio = round(n_max / wheel_rpm, 1) if wheel_rpm > 0 else 1.0
     
     t_min, t_max = (8, 20) if is_2w else (100, 250) if is_car else (300, 1500)
     t_peak_nm = max(t_min, min(t_max, t_peak_nm))
@@ -133,7 +139,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         'mechanical': { 
             'maxTorqueDensity': f"{round(actual_td, 1)} Nm/L", 'rotorInertia': f"{rotor_inertia} kg·m²", 
             'maxCentrifugalForce': f"{round(m_motor_kg*140)} N", 'bearingLoad': f"{bearing_load} N",
-            'coggingTorque': f"{cogging_torque} Nm", 'criticalSpeed': f"{round(n_max * 1.35)} RPM" 
+            'coggingTorque': f"{cogging_torque} Nm", 'criticalSpeed': f"{round(n_max * 1.35)} RPM",
+            'totalVehicleMass': f"{round(m_total, 1)} kg", 'gearRatio': f"{gear_ratio}"
         },
         'performanceCurve': [{'rpm': r, 'efficiency': round(96.0 * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
     }

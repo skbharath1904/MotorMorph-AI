@@ -105,7 +105,8 @@ const DesignReport = ({ data, inputs }) => {
                  { l: 'Vehicle Type', v: inputs?.vehicleType }, { l: 'Vehicle Weight', v: inputs?.vehicleWeight + ' kg' }, { l: 'Target Speed', v: inputs?.targetSpeed + ' km/h' },
                  { l: 'Desired Range', v: inputs?.range + ' km' }, { l: 'System Voltage', v: inputs?.voltage + ' V' }, { l: 'Drag Coeff (Cd)', v: inputs?.dragCoefficient },
                  { l: 'Frontal Area', v: inputs?.frontalArea + ' m²' }, { l: 'Rolling Resistance', v: inputs?.rollingResistance },
-                 { l: '0-100 km/h Time', v: inputs?.accelerationTime + ' s' }, { l: 'Max Gradient', v: inputs?.maxGradient + ' %' }
+                 { l: '0-100 km/h Time', v: inputs?.accelerationTime + ' s' }, { l: 'Max Gradient', v: inputs?.maxGradient + ' %' },
+                 { l: 'Rider Mass', v: inputs?.riderMass + ' kg' }, { l: 'Wheel Radius', v: inputs?.wheelRadius + ' m' }
                ].map((item, i) => (
                  <div key={i}><span className="stat-label">{item.l}</span><strong style={{fontSize:'0.95rem'}}>{item.v}</strong></div>
                ))}
@@ -195,7 +196,7 @@ const DesignReport = ({ data, inputs }) => {
            <div className="specs-col">
              <h3 className="section-header"><Hexagon size={18} color="var(--accent-blue)"/> Mechanical & Thermal</h3>
              <div className="specs-list">
-               {[{ l: 'Torque Density', v: data.mechanical.maxTorqueDensity }, { l: 'Rotor Inertia', v: data.mechanical.rotorInertia }, { l: 'Centrifugal Force', v: data.mechanical.maxCentrifugalForce }, { l: 'Bearing Load', v: data.mechanical.bearingLoad }, { l: 'Critical Speed', v: data.mechanical.criticalSpeed }, { l: 'Cogging Torque', v: data.mechanical.coggingTorque }].map((it, i) => (
+               {[{ l: 'Torque Density', v: data.mechanical.maxTorqueDensity }, { l: 'Rotor Inertia', v: data.mechanical.rotorInertia }, { l: 'Centrifugal Force', v: data.mechanical.maxCentrifugalForce }, { l: 'Bearing Load', v: data.mechanical.bearingLoad }, { l: 'Critical Speed', v: data.mechanical.criticalSpeed }, { l: 'Cogging Torque', v: data.mechanical.coggingTorque }, { l: 'Total Mass', v: data.mechanical.totalVehicleMass }, { l: 'Rec. Gear Ratio', v: `${data.mechanical.gearRatio}:1` }].map((it, i) => (
                  <div key={i} className="spec-item"><span>{it.l}</span><strong>{it.v}</strong></div>
                ))}
              </div>

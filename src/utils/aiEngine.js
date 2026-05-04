@@ -56,7 +56,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   let { 
     targetSpeed, vehicleWeight, range, voltage,
     dragCoefficient, rollingResistance, frontalArea, vehicleType,
-    maxGradient, accelerationTime
+    maxGradient, accelerationTime, riderMass, wheelRadius
   } = inputs;
 
   // Parse inputs with reasonable defaults
@@ -69,6 +69,10 @@ export const generateMotorDesignLocal = async (inputs) => {
   frontalArea = parseFloat(frontalArea) || 1.2;
   maxGradient = parseFloat(maxGradient) || 10;
   accelerationTime = parseFloat(accelerationTime) || 8;
+  riderMass = parseFloat(riderMass) || 80;
+  wheelRadius = parseFloat(wheelRadius) || 0.3;
+
+  const totalMass = vehicleWeight + riderMass;
 
   const is2W = vehicleType.includes('Two Wheeler');
   const isCar = vehicleType.includes('Car');
@@ -112,12 +116,12 @@ export const generateMotorDesignLocal = async (inputs) => {
   // Power needed to overcome Aerodynamic Drag
   const P_aero = (0.5 * rho * dragCoefficient * frontalArea * Math.pow(vMps, 3)) / 1000;
   // Power needed to overcome Rolling Resistance
-  const P_rolling = (rollingResistance * vehicleWeight * g * vMps) / 1000;
+  const P_rolling = (rollingResistance * totalMass * g * vMps) / 1000;
   // Power needed for Gradient Climbing
   const gradRad = Math.atan(maxGradient / 100);
-  const P_grade = (vehicleWeight * g * Math.sin(gradRad) * vMps) / 1000;
+  const P_grade = (totalMass * g * Math.sin(gradRad) * vMps) / 1000;
   // Power needed for Acceleration (Kinetic Energy over time)
-  const P_accel = (0.5 * vehicleWeight * Math.pow(vMps, 2)) / (accelerationTime * 1000);
+  const P_accel = (0.5 * totalMass * Math.pow(vMps, 2)) / (accelerationTime * 1000);
 
   // Peak Power is sum of steady state loads + acceleration load, with an overhead factor
   let peakPowerKw = (P_aero + P_rolling + P_grade + P_accel) * 1.2;
@@ -126,8 +130,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   peakPowerKw = Math.max(rules.pRange[0], Math.min(rules.pRange[1], peakPowerKw));
 
   // 4. DYNAMIC RPM CALCULATION
-  // wheel_rpm = speed(m/s) * 60 / (2 * PI * radius)
-  const wheelRpm = (vMps * 60) / (2 * Math.PI * rules.tireRadius);
+  const wheelRpm = (vMps * 60) / (2 * Math.PI * wheelRadius);
   let maxRpm = Math.round(wheelRpm * rules.gearRatio);
   
   // Dynamic Gear Ratio adjustment if RPM is out of bounds
@@ -137,12 +140,13 @@ export const generateMotorDesignLocal = async (inputs) => {
     maxRpm = rules.rpmRange[1] - (Math.random() * 1000);
   }
   const baseRpm = Math.round(maxRpm * 0.38);
+  const calculatedGearRatio = (maxRpm / wheelRpm).toFixed(1);
 
   // 5. TORQUE DERIVATION (T = P * 9550 / N)
   let peakTorqueNm = (peakPowerKw * 9550) / (maxRpm * 0.4); // Using lower RPM for peak torque calculation
   
   // Ensure torque scales with weight class
-  const minTorque = vehicleWeight * (is2W ? 0.1 : isCar ? 0.15 : 0.3);
+  const minTorque = totalMass * (is2W ? 0.1 : isCar ? 0.15 : 0.3);
   peakTorqueNm = Math.max(peakTorqueNm, minTorque);
   peakTorqueNm = Math.max(rules.tRange[0], Math.min(rules.tRange[1], peakTorqueNm));
 
@@ -164,7 +168,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   if (motorType.includes('SRM'))  eta_base -= 0.03;
 
   // Add sensitivity to voltage and weight
-  eta_base += (voltage / 10000) - (vehicleWeight / 500000);
+  eta_base += (voltage / 10000) - (totalMass / 500000);
   const finalEfficiency = Math.max(rules.effRange[0], Math.min(rules.effRange[1], eta_base));
 
   // 7. ELECTRICAL PARAMETERS
@@ -232,16 +236,16 @@ export const generateMotorDesignLocal = async (inputs) => {
     if (motorType.includes('IM')) {
       selectionReason = `Induction Motor selected. Its rugged construction and absence of rare-earth magnets make it ideal for cost-effective passenger cars. The calculated ${peakPowerKw.toFixed(1)} kW peak power and ${(voltage).toFixed(0)}V system ensure reliable highway performance without risk of demagnetization at high temperatures.`;
     } else {
-      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency (${(finalEfficiency*100).toFixed(1)}%) is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${vehicleWeight} kg.`;
+      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency (${(finalEfficiency*100).toFixed(1)}%) is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${totalMass} kg (incl. rider/payload).`;
     }
   } else if (isTruck) {
     if (motorType.includes('SRM')) {
-      selectionReason = `Switched Reluctance Motor (SRM) chosen for heavy-duty commercial applications. The extreme ${Math.round(peakTorqueNm)} Nm torque demand of this ${vehicleWeight} kg vehicle requires a highly robust, fault-tolerant architecture. The SRM's rare-earth-free rotor and excellent thermal management support continuous high-load operation.`;
+      selectionReason = `Switched Reluctance Motor (SRM) chosen for heavy-duty commercial applications. The extreme ${Math.round(peakTorqueNm)} Nm torque demand of this ${totalMass} kg vehicle (incl. payload) requires a highly robust, fault-tolerant architecture. The SRM's rare-earth-free rotor and excellent thermal management support continuous high-load operation.`;
     } else {
-      selectionReason = `High-Torque PMSM selected to meet the demanding ${Math.round(peakTorqueNm)} Nm requirement of a ${vehicleWeight} kg commercial vehicle. Operating at ${voltage}V, this architecture ensures high continuous power delivery and maximum energy efficiency for long-haul operations.`;
+      selectionReason = `High-Torque PMSM selected to meet the demanding ${Math.round(peakTorqueNm)} Nm requirement of a ${totalMass} kg commercial vehicle (incl. payload). Operating at ${voltage}V, this architecture ensures high continuous power delivery and maximum energy efficiency for long-haul operations.`;
     }
   } else {
-    selectionReason = `BLDC Motor selected. The vehicle mass of ${vehicleWeight} kg qualifies as a lightweight EV. At ${voltage}V, BLDC architectures offer superior power-to-weight ratios and high efficiency (${(finalEfficiency*100).toFixed(1)}%) — optimal for urban two-wheelers targeting ${targetSpeed} km/h.`;
+    selectionReason = `BLDC Motor selected. The total mass of ${totalMass} kg qualifies as a lightweight EV. At ${voltage}V, BLDC architectures offer superior power-to-weight ratios and high efficiency (${(finalEfficiency*100).toFixed(1)}%) — optimal for urban two-wheelers targeting ${targetSpeed} km/h.`;
   }
 
   return {
@@ -293,7 +297,9 @@ export const generateMotorDesignLocal = async (inputs) => {
       maxCentrifugalForce: '5200 N', 
       bearingLoad: '1200 N', 
       coggingTorque: '0.2 Nm', 
-      criticalSpeed: `${Math.round(maxRpm * 1.3)} RPM` 
+      criticalSpeed: `${Math.round(maxRpm * 1.3)} RPM`,
+      totalVehicleMass: `${totalMass} kg`,
+      gearRatio: `${calculatedGearRatio}`
     },
     performanceCurve
   };

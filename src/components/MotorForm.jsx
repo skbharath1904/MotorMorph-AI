@@ -12,7 +12,9 @@ const FIELD_LABELS = {
   rollingResistance: 'ROLLING RES. (CRR)',
   range:             'DESIRED RANGE (KM)',
   accelerationTime:  '0-100 KM/H TIME',
-  maxGradient:       'MAX GRADIENT (%)'
+  maxGradient:       'MAX GRADIENT (%)',
+  riderMass:         'RIDER MASS (KG)',
+  wheelRadius:       'WHEEL RADIUS (M)'
 };
 
 const MotorForm = ({ onSubmit, isGenerating }) => {
@@ -26,7 +28,9 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     rollingResistance: '',
     frontalArea:       '',
     accelerationTime:  '',
-    maxGradient:       ''
+    maxGradient:       '',
+    riderMass:         '',
+    wheelRadius:       ''
   });
   const [isCustomVoltage, setIsCustomVoltage] = useState(false);
   const [customVoltage, setCustomVoltage] = useState('');
@@ -86,6 +90,8 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'range',             min: 40,    max: 1000,  label: FIELD_LABELS.range },
       { key: 'accelerationTime',  min: 3,     max: 60,    label: FIELD_LABELS.accelerationTime },
       { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
+      { key: 'riderMass',         min: 0,     max: 300,   label: FIELD_LABELS.riderMass },
+      { key: 'wheelRadius',       min: 0.1,   max: 1.5,   label: FIELD_LABELS.wheelRadius },
     ];
 
     for (const { key, min, max, label } of numericFields) {
@@ -251,6 +257,22 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
               <TrendingUp size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.maxGradient}
             </label>
             <input type="number" name="maxGradient" className="form-input" value={inputs.maxGradient} onChange={handleChange} onKeyDown={numbersOnly} />
+          </div>
+
+          {/* Rider Mass */}
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Weight size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.riderMass}
+            </label>
+            <input type="number" name="riderMass" className="form-input" value={inputs.riderMass} onChange={handleChange} onKeyDown={numbersOnly} />
+          </div>
+
+          {/* Wheel Radius */}
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <CircleDashed size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.wheelRadius}
+            </label>
+            <input type="number" step="0.01" name="wheelRadius" className="form-input" value={inputs.wheelRadius} onChange={handleChange} onKeyDown={numbersOnly} />
           </div>
 
         </div>
