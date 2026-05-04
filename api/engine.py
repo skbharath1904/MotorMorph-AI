@@ -88,6 +88,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     d_m = (t_peak_nm / (k_mag * ld))**(1/3)
     d_stator_mm = round(d_m * 1000)
     rotor_l_mm = round((t_peak_nm / (k_mag * (d_stator_mm / 1000)**2)) * 1000)
+    rotor_d_mm = round(d_stator_mm * 0.70)
     
     m_motor_kg = (math.pi * (d_stator_mm/2000)**2 * (rotor_l_mm/1000) * 7600) * 1.6
     w_min, w_max = (10, 30) if is_2w else (50, 95) if is_car else (80, 350)
@@ -121,7 +122,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'thermalResistance': f"{thermal_res} K/W" 
         },
         'dimensions': { 
-            'statorDiameter': f"{d_stator_mm} mm", 'rotorLength': f"{rotor_l_mm} mm", 'overallLength': f"{round(rotor_l_mm * 1.5)} mm", 
+            'statorDiameter': f"{d_stator_mm} mm", 'rotorDiameter': f"{rotor_d_mm} mm", 'overallLength': f"{round(rotor_l_mm * 1.5)} mm", 
             'airGap': f"{round(0.2 + 0.001*d_stator_mm, 2):.2f} mm", 'poles': 8 if is_2w else 6, 'slots': 12 if is_2w else 18 
         },
         'electrical': { 
