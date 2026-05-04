@@ -176,23 +176,33 @@ export const generateMotorDesignLocal = async (inputs) => {
   }
 
   // Adjust efficiency based on motor type
-  let peakEffStr, opEffStr, opEffVal, peakEffVal;
+  let peakEffMin, peakEffMax, opEffMin, opEffMax;
   if (motorType.includes('BLDC')) {
-    peakEffStr = "88% - 92%"; opEffStr = "85% - 90%";
-    opEffVal = 0.875; peakEffVal = 0.90;
+    peakEffMin = 88; peakEffMax = 92; opEffMin = 85; opEffMax = 90;
   } else if (motorType.includes('Induction') || motorType.includes('IM')) {
-    peakEffStr = "88% - 93%"; opEffStr = "85% - 90%";
-    opEffVal = 0.875; peakEffVal = 0.905;
+    peakEffMin = 88; peakEffMax = 93; opEffMin = 85; opEffMax = 90;
   } else if (motorType.includes('SRM')) {
-    peakEffStr = "85% - 92%"; opEffStr = "80% - 88%";
-    opEffVal = 0.84; peakEffVal = 0.885;
+    peakEffMin = 85; peakEffMax = 92; opEffMin = 80; opEffMax = 88;
   } else { // PMSM
-    peakEffStr = "92% - 96%"; opEffStr = "90% - 94%";
-    opEffVal = 0.92; peakEffVal = 0.94;
+    peakEffMin = 92; peakEffMax = 96; opEffMin = 90; opEffMax = 94;
   }
 
+  // Predict efficiency based on voltage and weight
+  let voltageFactor = Math.max(0, Math.min(1, (voltage - 48) / (800 - 48)));
+  let weightFactor = Math.max(0, Math.min(1, totalMass / 5000));
+  let effPosition = Math.max(0.1, Math.min(0.9, (voltageFactor * 0.8) - (weightFactor * 0.2) + 0.3));
+
+  let peakEffVal = peakEffMin + (peakEffMax - peakEffMin) * effPosition;
+  let opEffVal = opEffMin + (opEffMax - opEffMin) * effPosition;
+
+  let peakEffStr = `${peakEffVal.toFixed(1)}%`;
+  let opEffStr = `${opEffVal.toFixed(1)}%`;
+
+  const opEffDecimal = opEffVal / 100;
+  const peakEffDecimal = peakEffVal / 100;
+
   // 7. ELECTRICAL PARAMETERS
-  const phaseCurrent = Math.round((peakPowerKw * 1000) / (voltage * opEffVal * 0.95));
+  const phaseCurrent = Math.round((peakPowerKw * 1000) / (voltage * opEffDecimal * 0.95));
 
   // 8. PHYSICAL DIMENSIONS (Torque Density Strict Bounds)
   const targetTd = is2W ? 20 : isCar ? 35 : 45; // Nm/L
@@ -253,7 +263,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     performanceCurve.push({
       rpm,
       torque: Math.round(torque),
-      efficiency: Math.round(peakEffVal * effFactor * rampUp * 1000) / 10
+      efficiency: Math.round(peakEffDecimal * effFactor * rampUp * 1000) / 10
     });
   }
 

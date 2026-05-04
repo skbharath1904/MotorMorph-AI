@@ -48,13 +48,26 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     # Efficiency Ranges
     if 'BLDC' in motor_type:
-        peak_eff_str, op_eff_str, op_eff_val, peak_eff_val = "88% - 92%", "85% - 90%", 0.875, 0.90
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 92, 85, 90
     elif 'Induction' in motor_type or 'IM' in motor_type:
-        peak_eff_str, op_eff_str, op_eff_val, peak_eff_val = "88% - 93%", "85% - 90%", 0.875, 0.905
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 93, 85, 90
     elif 'SRM' in motor_type:
-        peak_eff_str, op_eff_str, op_eff_val, peak_eff_val = "85% - 92%", "80% - 88%", 0.84, 0.885
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 85, 92, 80, 88
     else: # PMSM
-        peak_eff_str, op_eff_str, op_eff_val, peak_eff_val = "92% - 96%", "90% - 94%", 0.92, 0.94
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 92, 96, 90, 94
+        
+    voltage_factor = max(0, min(1, (v_system - 48) / (800 - 48)))
+    weight_factor = max(0, min(1, m_total / 5000))
+    eff_pos = max(0.1, min(0.9, (voltage_factor * 0.8) - (weight_factor * 0.2) + 0.3))
+    
+    peak_eff_val = peak_eff_min + (peak_eff_max - peak_eff_min) * eff_pos
+    op_eff_val = op_eff_min + (op_eff_max - op_eff_min) * eff_pos
+    
+    peak_eff_str = f"{round(peak_eff_val, 1)}%"
+    op_eff_str = f"{round(op_eff_val, 1)}%"
+    
+    op_eff_decimal = op_eff_val / 100
+    peak_eff_decimal = peak_eff_val / 100
 
     # 🔴 TRACTIVE EFFORT & POWER
     v_mps = v_kmh / 3.6
@@ -136,7 +149,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
 
     # Electrical
-    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_val * 0.88)
+    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
     
     # 🔴 MECHANICAL & THERMAL CALCS
     rotor_inertia = round(0.0004 * m_motor_kg, 5)
@@ -192,5 +205,5 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'totalVehicleMass': f"{round(m_total, 1)} kg", 'gearRatio': f"{round(gear_ratio, 1)}:1",
             'wheelTorque': f"{round(wheel_torque)} Nm"
         },
-        'performanceCurve': [{'rpm': r, 'efficiency': round(peak_eff_val * 100 * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
+        'performanceCurve': [{'rpm': r, 'efficiency': round(peak_eff_val * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
     }
