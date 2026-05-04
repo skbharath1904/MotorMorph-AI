@@ -46,6 +46,29 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             f"Its high efficiency is critical for maximizing range and providing instantaneous acceleration to move {m_total:.0f} kg efficiently at {v_kmh:.0f} km/h."
         )
 
+    # Efficiency Ranges
+    if 'BLDC' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 0.88, 0.92, 0.85, 0.90
+    elif 'Induction' in motor_type or 'IM' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 0.88, 0.93, 0.85, 0.90
+    elif 'SRM' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 0.85, 0.92, 0.80, 0.88
+    else: # PMSM
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 0.92, 0.96, 0.90, 0.94
+        
+    base_var = (v_system / 10000) - (m_total / 500000)
+    op_eff = ((op_eff_min + op_eff_max) / 2) + base_var
+    peak_eff = ((peak_eff_min + peak_eff_max) / 2) + base_var
+    
+    clamped_eff = False
+    if op_eff < op_eff_min or op_eff > op_eff_max or peak_eff < peak_eff_min or peak_eff > peak_eff_max:
+        clamped_eff = True
+        
+    op_eff = max(op_eff_min, min(op_eff_max, op_eff))
+    peak_eff = max(peak_eff_min, min(peak_eff_max, peak_eff))
+    if clamped_eff:
+        notes.append(f"Efficiency values clamped to realistic limits for {motor_type}.")
+
     # 🔴 TRACTIVE EFFORT & POWER
     v_mps = v_kmh / 3.6
     crr = float(inputs.get('rollingResistance', 0.015))
@@ -126,7 +149,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
 
     # Electrical
-    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * 0.94 * 0.88)
+    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff * 0.88)
     
     # 🔴 MECHANICAL & THERMAL CALCS
     rotor_inertia = round(0.0004 * m_motor_kg, 5)
@@ -157,7 +180,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'peakPowerKw': round(peak_power_kw, 1), 'continuousPowerKw': continuous_power_kw,
             'peakTorqueNm': round(t_peak_nm), 'continuousTorqueNm': round(t_peak_nm * 0.6),
             'maxRpm': round(n_max), 'baseRpm': round(n_max * 0.35), 'operatingVoltage': v_system,
-            'estimatedEfficiency': '96.0%', 'weightKg': round(m_motor_kg)
+            'peakEfficiency': f"{round(peak_eff * 100, 1)}%", 'operatingEfficiency': f"{round(op_eff * 100, 1)}%",
+            'weightKg': round(m_motor_kg)
         },
         'thermal': { 
             'coolingMethod': cooling_method, 
@@ -181,5 +205,5 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'totalVehicleMass': f"{round(m_total, 1)} kg", 'gearRatio': f"{round(gear_ratio, 1)}:1",
             'wheelTorque': f"{round(wheel_torque)} Nm"
         },
-        'performanceCurve': [{'rpm': r, 'efficiency': round(96.0 * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
+        'performanceCurve': [{'rpm': r, 'efficiency': round(peak_eff * 100 * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
     }

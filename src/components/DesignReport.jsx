@@ -204,7 +204,7 @@ const DesignReport = ({ data, inputs }) => {
            <div className="specs-col">
              <h3 className="section-header"><Activity size={18} color="var(--accent-blue)"/> System Performance</h3>
              <div className="specs-list">
-               {[{ l: 'Continuous Power', v: data.specifications.continuousPowerKw + ' kW' }, { l: 'Peak Efficiency', v: data.specifications.estimatedEfficiency }, { l: 'Cont. Torque', v: data.specifications.continuousTorqueNm + ' Nm' }, { l: 'Base Speed', v: data.specifications.baseRpm + ' RPM' }, { l: 'Est. Total Weight', v: data.specifications.weightKg + ' kg' }].map((it, i) => (
+               {[{ l: 'Continuous Power', v: data.specifications.continuousPowerKw + ' kW' }, { l: 'Peak Efficiency', v: data.specifications.peakEfficiency }, { l: 'Operating Efficiency', v: data.specifications.operatingEfficiency }, { l: 'Cont. Torque', v: data.specifications.continuousTorqueNm + ' Nm' }, { l: 'Base Speed', v: data.specifications.baseRpm + ' RPM' }, { l: 'Est. Total Weight', v: data.specifications.weightKg + ' kg' }].map((it, i) => (
                  <div key={i} className="spec-item"><span>{it.l}</span><strong>{it.v}</strong></div>
                ))}
              </div>
