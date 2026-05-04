@@ -100,7 +100,7 @@ const DesignReport = ({ data, inputs }) => {
         <div className="pdf-section" style={{ marginBottom: '1.5rem' }}>
           <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
              <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 800 }}>Input Parameters</h3>
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+             <div className="input-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                {[
                  { l: 'Vehicle Type', v: inputs?.vehicleType }, { l: 'Vehicle Weight', v: inputs?.vehicleWeight + ' kg' }, { l: 'Target Speed', v: inputs?.targetSpeed + ' km/h' },
                  { l: 'Desired Range', v: inputs?.range + ' km' }, { l: 'System Voltage', v: inputs?.voltage + ' V' }, { l: 'Drag Coeff (Cd)', v: inputs?.dragCoefficient },
@@ -213,7 +213,7 @@ const DesignReport = ({ data, inputs }) => {
         {/* 07. THERMAL MANAGEMENT */}
         <div className="pdf-section" style={{ marginBottom: '3rem' }}>
           <h3 className="section-header"><Thermometer size={18} color="var(--accent-blue)"/> Thermal Management</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+          <div className="thermal-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
              {[
                { l: 'Primary Cooling', v: data.thermal.coolingMethod }, { l: 'Max Coil Temp', v: data.thermal.maxCoilTemp }, { l: 'Coolant Flow', v: data.thermal.coolantFlowRate }, { l: 'Thermal Resistance', v: data.thermal.thermalResistance }
              ].map((item, i) => (
@@ -322,18 +322,44 @@ const DesignReport = ({ data, inputs }) => {
         .chart-label { text-align: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary); }
         .pdf-chart-container { background: rgba(255,255,255,0.01); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--glass-border); }
 
+        /* PDF ALIGNMENT FIXES - USE FLEX INSTEAD OF GRID */
         .pdf-export-mode { background: #ffffff !important; color: #000000 !important; width: 210mm !important; padding: 10mm !important; }
         .pdf-export-mode .report-container { background: #fff !important; border: none !important; padding: 0 !important; }
+        
+        .pdf-export-mode .specs-grid-row { display: flex !important; justify-content: space-between !important; flex-wrap: nowrap !important; gap: 2rem !important; }
+        .pdf-export-mode .specs-col { width: 48% !important; flex: 0 0 48% !important; }
+        .pdf-export-mode .stat-cards-row { display: flex !important; justify-content: space-between !important; gap: 1rem !important; }
+        .pdf-export-mode .stat-card { width: 23% !important; flex: 0 0 23% !important; padding: 1rem !important; }
+        .pdf-export-mode .input-grid { display: flex !important; flex-wrap: wrap !important; gap: 1rem !important; }
+        .pdf-export-mode .input-grid > div { width: 30% !important; flex: 0 0 30% !important; }
+        .pdf-export-mode .thermal-grid { display: flex !important; justify-content: space-between !important; gap: 1rem !important; }
+        .pdf-export-mode .thermal-card { width: 23% !important; flex: 0 0 23% !important; padding: 1rem !important; }
+
+        /* PDF BLACK AND WHITE ENFORCEMENT */
+        .pdf-export-mode * { color: #000 !important; }
         .pdf-export-mode .report-title, .pdf-export-mode .section-header { color: #000 !important; }
         .pdf-export-mode .section-header { border-bottom: 2px solid #000 !important; }
-        .pdf-export-mode .spec-item { border-bottom: 1px solid #eee !important; }
+        .pdf-export-mode .spec-item { border-bottom: 1px solid #ccc !important; }
         .pdf-export-mode .spec-item span, .pdf-export-mode .spec-item strong { color: #000 !important; }
-        .pdf-export-mode .stat-label, .pdf-export-mode .stat-card-label { color: #555 !important; }
+        .pdf-export-mode .stat-label, .pdf-export-mode .stat-card-label { color: #000 !important; font-weight: bold !important; }
         .pdf-export-mode .stat-card-val { color: #000 !important; }
-        .pdf-export-mode .stat-card { border: 1.5px solid #000 !important; background: #fff !important; }
-        .pdf-export-mode .constraint-notice { background: #fff0f0 !important; border: 1px solid #ffcccc !important; color: #cc0000 !important; }
-        .pdf-export-mode .accuracy-strip { background: #f0fbff !important; border: 1px solid #cceeff !important; }
+        .pdf-export-mode .stat-card { border: 1px solid #000 !important; background: #fff !important; }
+        .pdf-export-mode .thermal-card { border: 1px solid #000 !important; background: #fff !important; }
+        .pdf-export-mode .constraint-notice { background: #fff !important; border: 1px solid #000 !important; color: #000 !important; }
+        .pdf-export-mode .accuracy-strip { background: #fff !important; border: 1px solid #000 !important; color: #000 !important; }
+        .pdf-export-mode .accuracy-strip div, .pdf-export-mode .accuracy-strip span { color: #000 !important; border-color: #000 !important; }
+        .pdf-export-mode .justification-box { background: #fff !important; border: 1px solid #000 !important; color: #000 !important; }
+        .pdf-export-mode .justification-box span { color: #000 !important; }
         .pdf-export-mode .pdf-chart-container { background: #fff !important; border: 1px solid #000 !important; }
+        
+        .pdf-export-mode svg { stroke: #000 !important; color: #000 !important; }
+        .pdf-export-mode circle { stroke: #000 !important; }
+        .pdf-export-mode path { stroke: #000 !important; }
+        .pdf-export-mode .recharts-surface { filter: grayscale(100%); }
+        .pdf-export-mode .recharts-cartesian-axis-tick-value { fill: #000 !important; }
+        .pdf-export-mode .recharts-line path { stroke: #000 !important; }
+        .pdf-export-mode .chart-label { color: #000 !important; font-weight: bold; }
+
         .pdf-export-mode .ui-only { display: none !important; }
         .pdf-export-mode .pdf-only-blueprint { display: block !important; page-break-before: always !important; }
       `}} />
