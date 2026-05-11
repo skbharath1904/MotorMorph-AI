@@ -133,6 +133,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Define physical limits
     p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
+    max_i_phase = 150 if is_2w else 800 if is_car else 1500
     
     peak_power_kw = target_p_kw
     
@@ -152,16 +153,30 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Recalculate Power STRICTLY from Clamped Torque (Final verification of P = T * N / 9550)
     peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
     
+    # 3. Electrical Power Balance (Compute current from power)
+    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
+    
+    # 4. Validate Phase Current Limit and RECALCULATE backwards if needed
+    if i_phase > max_i_phase:
+        i_phase = max_i_phase
+        notes.append(f"Phase Current clamped to {max_i_phase}A. Power and Torque reduced to match.")
+        
+        # Recalculate Power from Clamped Current
+        peak_power_kw = (math.sqrt(3) * v_system * i_phase * op_eff_decimal * 0.88) / 1000
+        
+        # Recalculate Torque from Recalculated Power
+        t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
+        
     continuous_power_kw = round(peak_power_kw * 0.55, 1)
     
     # Recalculate wheel torque based on strict final motor torque
     wheel_torque = t_peak_nm * gear_ratio * transmission_efficiency
     
     omega_max = (2 * math.pi * n_max) / 60
-
+    
     # 🔴 SIZING & WEIGHT
     target_td = 20 if is_2w else 35 if is_car else 45 # Nm/L
-    volume_l = t_peak_nm / target_td
+    volume_l = t_peak_nm / target_td if target_td > 0 else 1
     
     volume_m3 = volume_l / 1000
     d_m = ((volume_m3 * 4.8) / math.pi) ** (1/3)
@@ -171,14 +186,11 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     rotor_d_mm = max(10, round(d_stator_mm * 0.70))
     
     actual_volume_l = (math.pi * (d_stator_mm / 2000)**2 * (rotor_l_mm / 1000)) * 1000
-    actual_td = t_peak_nm / actual_volume_l
+    actual_td = t_peak_nm / actual_volume_l if actual_volume_l > 0 else 0
     
     m_motor_kg = (math.pi * (d_stator_mm/2000)**2 * (rotor_l_mm/1000) * 7600) * 1.6
     w_min, w_max = (10, 30) if is_2w else (50, 95) if is_car else (80, 350)
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
-
-    # Electrical
-    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
     
     # 🔴 MECHANICAL & THERMAL CALCS
     rotor_inertia = round(0.0004 * m_motor_kg, 5)
