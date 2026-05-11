@@ -159,10 +159,10 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     i_phase = (peak_power_kw * 1000) / (v_system * peak_eff_decimal)
     
     # 5. Validate Phase Current Limit and RECALCULATE backwards if needed
-    if i_phase > max_i_phase or i_phase < min_i_phase:
+    if i_phase > max_i_phase:
         original_i = i_phase
-        i_phase = max(min_i_phase, min(max_i_phase, i_phase))
-        reason = "max inverter rating" if original_i > max_i_phase else "min inverter requirement"
+        i_phase = max_i_phase
+        reason = "max inverter rating"
         notes.append(f"Phase Current → {int(i_phase)} A (Reason: clamped to {reason})")
         
         # Recalculate Power from Clamped Current (P = V * I * eta)
