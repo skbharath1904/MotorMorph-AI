@@ -112,64 +112,50 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Recalculate Motor RPM based on clamped gear ratio
     n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max_initial
     
-    # 🔴 TRACTIVE EFFORT & MOTOR TORQUE
-    wheel_torque = total_force * wheel_radius
-    transmission_efficiency = 0.97
-    
-    # Motor Torque based on vehicle force (T_motor = T_wheel / (Gear Ratio * eta))
-    raw_t_peak_nm = wheel_torque / (gear_ratio * transmission_efficiency)
-    
-    # 🔴 STRICT POWER-TORQUE-RPM RELATION (P = T * N / 9550)
-    raw_p_kw = (raw_t_peak_nm * n_max) / 9550 if n_max > 0 else 0
-    
-    # Peak Power Required from Road Load (as a secondary linear check)
-    p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
-    p_accel = (f_accel * (v_accel/2)) / 1000 
-    physics_p_kw = max(p_road_load, p_accel) * 1.25
-    
-    # Take the maximum between pure rotational calculation and linear physics check
-    target_p_kw = max(raw_p_kw, physics_p_kw)
+    # 🔴 COMPUTE POWER FIRST (Never compute torque before validating power)
+    # Power = Force * Velocity
+    raw_p_kw = (total_force * v_mps) / 1000
     
     # Define physical limits
     p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
     max_i_phase = 150 if is_2w else 800 if is_car else 1500
+    transmission_efficiency = 0.97
     
-    peak_power_kw = target_p_kw
+    peak_power_kw = raw_p_kw
     
-    # 1. Clamp Power
+    # 1. Validate and Clamp Power
     if peak_power_kw < p_min or peak_power_kw > p_max:
         peak_power_kw = max(p_min, min(p_max, peak_power_kw))
         notes.append(f"Power clamped to {peak_power_kw:.1f}kW safety limit.")
         
-    # Recalculate Torque STRICTLY from Clamped Power (T = P * 9550 / N)
+    # 2. Compute Torque STRICTLY from Validated Power (T = P * 9550 / N)
     t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
     
-    # 2. Clamp Torque
+    # 3. Validate Torque
     if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t:
         t_peak_nm = max(min_motor_t, min(max_motor_t, t_peak_nm))
         notes.append(f"Torque clamped to {t_peak_nm:.1f}Nm physical limit.")
-        
-    # Recalculate Power STRICTLY from Clamped Torque (Final verification of P = T * N / 9550)
-    peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
+        # Recalculate Power STRICTLY from Clamped Torque to maintain P = T * N / 9550
+        peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
     
-    # 3. Electrical Power Balance (Compute current from power)
-    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
+    # 4. Electrical Power Balance (Compute current strictly from P = V * I * eta)
+    i_phase = (peak_power_kw * 1000) / (v_system * peak_eff_decimal)
     
-    # 4. Validate Phase Current Limit and RECALCULATE backwards if needed
+    # 5. Validate Phase Current Limit and RECALCULATE backwards if needed
     if i_phase > max_i_phase:
         i_phase = max_i_phase
         notes.append(f"Phase Current clamped to {max_i_phase}A. Power and Torque reduced to match.")
         
-        # Recalculate Power from Clamped Current
-        peak_power_kw = (math.sqrt(3) * v_system * i_phase * op_eff_decimal * 0.88) / 1000
+        # Recalculate Power from Clamped Current (P = V * I * eta)
+        peak_power_kw = (v_system * i_phase * peak_eff_decimal) / 1000
         
         # Recalculate Torque from Recalculated Power
         t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
         
     continuous_power_kw = round(peak_power_kw * 0.55, 1)
     
-    # Recalculate wheel torque based on strict final motor torque
+    # 6. Recalculate wheel torque based on strict final motor torque (T_wheel = T_motor * GR * eta)
     wheel_torque = t_peak_nm * gear_ratio * transmission_efficiency
     
     omega_max = (2 * math.pi * n_max) / 60
@@ -243,8 +229,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
             'maxTorqueDensity': f"{round(actual_td, 1)} Nm/L", 'rotorInertia': f"{rotor_inertia} kg·m²", 
             'maxCentrifugalForce': f"{round(m_motor_kg*140)} N", 'bearingLoad': f"{bearing_load} N",
             'coggingTorque': f"{cogging_torque} Nm", 'criticalSpeed': f"{round(n_max * 1.35)} RPM",
-            'totalVehicleMass': f"{round(m_total, 1)} kg", 'gearRatio': f"{round(gear_ratio, 1)}:1",
-            'wheelTorque': f"{round(wheel_torque)} Nm"
+            'vehicleMass': f"{round(m_total, 1)} kg", 'motorMass': f"{round(m_motor_kg, 1)} kg",
+            'gearRatio': f"{round(gear_ratio, 1)}:1", 'wheelTorque': f"{round(wheel_torque)} Nm"
         },
         'performanceCurve': [{'rpm': r, 'efficiency': round(peak_eff_val * (1-math.exp(-r/1500)), 1), 'torque': round(t_peak_nm if r < n_max*0.35 else t_peak_nm * (n_max*0.35)/r)} for r in range(0, round(n_max) + 500, 500)]
     }
