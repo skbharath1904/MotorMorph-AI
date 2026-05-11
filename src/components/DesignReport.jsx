@@ -196,7 +196,7 @@ const DesignReport = ({ data, inputs }) => {
            <div className="specs-col">
              <h3 className="section-header"><Hexagon size={18} color="var(--accent-blue)"/> Mechanical & Thermal</h3>
              <div className="specs-list">
-               {[{ l: 'Torque Density', v: data.mechanical.maxTorqueDensity }, { l: 'Rotor Inertia', v: data.mechanical.rotorInertia }, { l: 'Centrifugal Force', v: data.mechanical.maxCentrifugalForce }, { l: 'Bearing Load', v: data.mechanical.bearingLoad }, { l: 'Critical Speed', v: data.mechanical.criticalSpeed }, { l: 'Cogging Torque', v: data.mechanical.coggingTorque }, { l: 'Total Mass', v: data.mechanical.totalVehicleMass }, { l: 'Rec. Gear Ratio', v: data.mechanical.gearRatio }, { l: 'Wheel Torque', v: data.mechanical.wheelTorque }].map((it, i) => (
+               {[{ l: 'Torque Density', v: data.mechanical.maxTorqueDensity }, { l: 'Rotor Inertia', v: data.mechanical.rotorInertia }, { l: 'Centrifugal Force', v: data.mechanical.maxCentrifugalForce }, { l: 'Bearing Load', v: data.mechanical.bearingLoad }, { l: 'Critical Speed', v: data.mechanical.criticalSpeed }, { l: 'Cogging Torque', v: data.mechanical.coggingTorque }, { l: 'Total Vehicle Mass', v: data.mechanical.vehicleMass }, { l: 'Rec. Gear Ratio', v: data.mechanical.gearRatio }, { l: 'Wheel Torque', v: data.mechanical.wheelTorque }].map((it, i) => (
                  <div key={i} className="spec-item"><span>{it.l}</span><strong>{it.v}</strong></div>
                ))}
              </div>
@@ -204,7 +204,7 @@ const DesignReport = ({ data, inputs }) => {
            <div className="specs-col">
              <h3 className="section-header"><Activity size={18} color="var(--accent-blue)"/> System Performance</h3>
              <div className="specs-list">
-               {[{ l: 'Continuous Power', v: data.specifications.continuousPowerKw + ' kW' }, { l: 'Peak Efficiency', v: data.specifications.peakEfficiency }, { l: 'Operating Efficiency', v: data.specifications.operatingEfficiency }, { l: 'Cont. Torque', v: data.specifications.continuousTorqueNm + ' Nm' }, { l: 'Base Speed', v: data.specifications.baseRpm + ' RPM' }, { l: 'Est. Total Weight', v: data.specifications.weightKg + ' kg' }].map((it, i) => (
+               {[{ l: 'Continuous Power', v: data.specifications.continuousPowerKw + ' kW' }, { l: 'Peak Efficiency', v: data.specifications.peakEfficiency }, { l: 'Operating Efficiency', v: data.specifications.operatingEfficiency }, { l: 'Cont. Torque', v: data.specifications.continuousTorqueNm + ' Nm' }, { l: 'Base Speed', v: data.specifications.baseRpm + ' RPM' }, { l: 'Est. Motor Weight', v: data.specifications.weightKg + ' kg' }].map((it, i) => (
                  <div key={i} className="spec-item"><span>{it.l}</span><strong>{it.v}</strong></div>
                ))}
              </div>
