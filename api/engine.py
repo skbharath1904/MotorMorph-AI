@@ -184,19 +184,21 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # 🔴 ELECTROMAGNETIC & ELECTRICAL CALCS
     # 1. Poles & Slots (Industry Standard Combos based on Topology)
     if 'BLDC' in motor_type:
-        combos = [(12, 8), (18, 12), (24, 16), (30, 20)]
-        slots, poles = combos[0] if is_2w else combos[2]
+        combos = [(12, 8), (18, 12), (24, 16)]
     elif 'Induction' in motor_type or 'IM' in motor_type:
-        combos = [(24, 2), (30, 2), (24, 4), (30, 4)]
-        slots, poles = combos[2] if is_car else combos[3]
+        combos = [(24, 4), (18, 6), (30, 4)]
     elif 'SRM' in motor_type:
-        combos = [(12, 8), (18, 12), (24, 16), (30, 20)]
-        slots, poles = combos[3] if is_cv else combos[2]
+        combos = [(18, 12), (18, 6), (24, 16)]
     else: # PMSM
-        combos = [(12, 10), (18, 14), (24, 18), (30, 22), (30, 8)]
-        if is_2w: slots, poles = combos[0]
-        elif is_car: slots, poles = combos[1]
-        else: slots, poles = combos[3]
+        combos = [(24, 8), (18, 6), (24, 16)]
+        
+    # Select combo based on vehicle class input
+    if is_2w:
+        slots, poles = combos[0]
+    elif is_car:
+        slots, poles = combos[1]
+    else: # is_cv
+        slots, poles = combos[2]
     
     # 2. Stator Resistance (from Copper Loss)
     p_loss_kw = continuous_power_kw * (1 / op_eff_decimal - 1) if op_eff_decimal > 0 else 0
