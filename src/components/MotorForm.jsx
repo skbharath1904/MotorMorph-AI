@@ -313,7 +313,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           </div>
 
           {/* Air Density */}
-          <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Cloud size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.airDensity}
             </label>
