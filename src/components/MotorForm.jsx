@@ -256,24 +256,22 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           </div>
 
           {/* Acceleration */}
-          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-                <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
-                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
-              </label>
-              <input 
-                type={isNAAcceleration ? "text" : "number"} 
-                step="0.1" 
-                name="accelerationTime" 
-                className="form-input" 
-                value={inputs.accelerationTime} 
-                onChange={handleChange} 
-                onKeyDown={isNAAcceleration ? undefined : numbersOnly} 
-                disabled={isNAAcceleration}
-                style={{ opacity: isNAAcceleration ? 0.6 : 1 }}
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+              <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
+              <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
+            </label>
+            <input 
+              type={isNAAcceleration ? "text" : "number"} 
+              step="0.1" 
+              name="accelerationTime" 
+              className="form-input" 
+              value={inputs.accelerationTime} 
+              onChange={handleChange} 
+              onKeyDown={isNAAcceleration ? undefined : numbersOnly} 
+              disabled={isNAAcceleration}
+              style={{ opacity: isNAAcceleration ? 0.6 : 1 }}
+            />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '0.4rem' }}>
               <input 
                 type="checkbox" 
