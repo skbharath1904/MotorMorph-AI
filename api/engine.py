@@ -117,7 +117,24 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Define strict physical limits (OEM standard EV validation bounds)
     p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
-    max_i_phase = 150 if is_2w else 800 if is_car else 1500
+    
+    # Phase Current Tiers based on Voltage
+    v = v_system
+    if is_2w:
+        if v <= 48: min_i_phase, max_i_phase = 40, 150
+        elif v <= 60: min_i_phase, max_i_phase = 50, 180
+        elif v <= 72: min_i_phase, max_i_phase = 60, 220
+        else: min_i_phase, max_i_phase = 70, 200
+    elif is_car:
+        if v <= 200: min_i_phase, max_i_phase = 250, 600
+        elif v <= 300: min_i_phase, max_i_phase = 250, 650
+        elif v <= 400: min_i_phase, max_i_phase = 300, 800
+        else: min_i_phase, max_i_phase = 200, 600
+    else: # CV
+        if v <= 400: min_i_phase, max_i_phase = 500, 1000
+        elif v <= 600: min_i_phase, max_i_phase = 600, 1100
+        else: min_i_phase, max_i_phase = 600, 1200
+        
     transmission_efficiency = 0.97
     
     peak_power_kw = raw_p_kw
@@ -142,9 +159,11 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     i_phase = (peak_power_kw * 1000) / (v_system * peak_eff_decimal)
     
     # 5. Validate Phase Current Limit and RECALCULATE backwards if needed
-    if i_phase > max_i_phase:
-        i_phase = max_i_phase
-        notes.append(f"Phase Current → {max_i_phase} A (Reason: clamped to max inverter rating)")
+    if i_phase > max_i_phase or i_phase < min_i_phase:
+        original_i = i_phase
+        i_phase = max(min_i_phase, min(max_i_phase, i_phase))
+        reason = "max inverter rating" if original_i > max_i_phase else "min inverter requirement"
+        notes.append(f"Phase Current → {int(i_phase)} A (Reason: clamped to {reason})")
         
         # Recalculate Power from Clamped Current (P = V * I * eta)
         peak_power_kw = (v_system * i_phase * peak_eff_decimal) / 1000
