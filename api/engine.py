@@ -180,23 +180,24 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Clamp phase current strictly to standard range
     i_phase = max(min_i_phase, min(max_i_phase, i_phase))
 
-    # 1. Poles & Slots (Industry standard combos as per vehicle type inputs)
+    # 1. Poles & Slots (Industry standard combos as per power thresholds)
+    power = peak_power_kw
     if 'BLDC' in motor_type:
-        if is_2w: slots, poles = 12, 8
-        elif is_car: slots, poles = 18, 12
-        else: slots, poles = 24, 16
+        if power <= 10: slots, poles = 12, 8
+        elif power <= 25: slots, poles = 18, 12
+        else: slots, poles = 24, 14
     elif 'Induction' in motor_type or 'IM' in motor_type:
-        if is_2w: slots, poles = 18, 6
-        elif is_car: slots, poles = 24, 4
-        else: slots, poles = 30, 4
+        if power <= 80: slots, poles = 18, 4
+        elif power <= 200: slots, poles = 24, 6
+        else: slots, poles = 30, 6
     elif 'SRM' in motor_type:
-        if is_2w: slots, poles = 18, 6
-        elif is_car: slots, poles = 18, 12
-        else: slots, poles = 24, 16
+        if power <= 80: slots, poles = 18, 6
+        elif power <= 200: slots, poles = 18, 12
+        else: slots, poles = 30, 12
     else: # PMSM
-        if is_2w: slots, poles = 18, 6
-        elif is_car: slots, poles = 24, 8
-        else: slots, poles = 24, 16
+        if power <= 60: slots, poles = 18, 6
+        elif power <= 150: slots, poles = 24, 8
+        else: slots, poles = 30, 10
 
     # 🔴 RESTORE PREVIOUS SECONDARY PREDICTION FORMULAS
     rotor_inertia = round(0.0004 * m_motor_kg, 5)
