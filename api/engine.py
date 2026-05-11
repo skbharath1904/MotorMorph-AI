@@ -231,18 +231,14 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     thermal_res = round(0.08 / (1 + (peak_power_kw/50)), 3)
     
     cooling_method = 'Air Cooling'
-    if is_2w:
-        if continuous_power_kw >= 12: cooling_method = 'Liquid Cooling'
-        elif continuous_power_kw >= 8: cooling_method = 'Forced Air Cooling'
-    elif is_car:
-        if continuous_power_kw > 80: cooling_method = 'Advanced Liquid Cooling'
-        elif continuous_power_kw >= 25: cooling_method = 'Liquid Cooling'
-        else: cooling_method = 'Forced Air Cooling'
-    elif is_cv:
-        if continuous_power_kw > 150: cooling_method = 'Advanced Liquid Cooling'
-        else: cooling_method = 'Liquid Cooling'
+    if continuous_power_kw <= 20:
+        cooling_method = 'Air Cooling'
+    elif continuous_power_kw <= 300:
+        cooling_method = 'Liquid Cooling'
+    else:
+        cooling_method = 'Oil Cooling'
         
-    coolant_flow = f"{round(continuous_power_kw / 20, 1)} L/min" if 'Liquid' in cooling_method else 'N/A'
+    coolant_flow = f"{round(continuous_power_kw / 20, 1)} L/min" if 'Liquid' in cooling_method or 'Oil' in cooling_method else 'N/A'
 
     return {
         'motorType': motor_type,
