@@ -107,7 +107,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         
     gear_ratio = max(min_gr, min(max_gr, raw_gear_ratio))
     if raw_gear_ratio != gear_ratio:
-        notes.append(f"Gear Ratio clamped to {gear_ratio:.1f}:1 to match {vehicle_type} standards.")
+        notes.append(f"Gear Ratio → {gear_ratio:.1f}:1 (Reason: corrected to match {vehicle_type} standards)")
         
     # Recalculate Motor RPM based on clamped gear ratio
     n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max_initial
@@ -127,7 +127,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # 1. Validate and Clamp Power
     if peak_power_kw < p_min or peak_power_kw > p_max:
         peak_power_kw = max(p_min, min(p_max, peak_power_kw))
-        notes.append(f"Power clamped to {peak_power_kw:.1f}kW safety limit.")
+        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: clamped to safety limit)")
         
     # 2. Compute Torque STRICTLY from Validated Power (T = P * 9550 / N)
     t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
@@ -135,9 +135,10 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # 3. Validate Torque
     if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t:
         t_peak_nm = max(min_motor_t, min(max_motor_t, t_peak_nm))
-        notes.append(f"Torque clamped to {t_peak_nm:.1f}Nm physical limit.")
+        notes.append(f"Torque → {t_peak_nm:.1f} Nm (Reason: clamped to physical limit)")
         # Recalculate Power STRICTLY from Clamped Torque to maintain P = T * N / 9550
         peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
+        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: corrected using P-T-RPM consistency equation)")
     
     # 4. Electrical Power Balance (Compute current strictly from P = V * I * eta)
     i_phase = (peak_power_kw * 1000) / (v_system * peak_eff_decimal)
@@ -145,13 +146,15 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # 5. Validate Phase Current Limit and RECALCULATE backwards if needed
     if i_phase > max_i_phase:
         i_phase = max_i_phase
-        notes.append(f"Phase Current clamped to {max_i_phase}A. Power and Torque reduced to match.")
+        notes.append(f"Phase Current → {max_i_phase} A (Reason: clamped to max inverter rating)")
         
         # Recalculate Power from Clamped Current (P = V * I * eta)
         peak_power_kw = (v_system * i_phase * peak_eff_decimal) / 1000
+        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: corrected for electrical power consistency)")
         
         # Recalculate Torque from Recalculated Power
         t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
+        notes.append(f"Torque → {t_peak_nm:.1f} Nm (Reason: corrected using P-T-RPM consistency equation)")
         
     continuous_power_kw = round(peak_power_kw * 0.55, 1)
     

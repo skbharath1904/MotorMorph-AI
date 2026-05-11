@@ -118,7 +118,21 @@ const DesignReport = ({ data, inputs }) => {
         {data.rangeLimitation && (
           <div className="pdf-section" style={{ marginBottom: '2rem' }}>
             <div className="constraint-notice">
-               <span style={{ fontWeight: 800, marginRight: '8px' }}>Constraint Notice:</span> {data.rangeLimitation}
+               <div style={{ fontWeight: 800, marginBottom: '8px', textTransform: 'uppercase', color: '#ffb3b3' }}>⚡ Corrected Parameters:</div>
+               <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.85rem', lineHeight: 1.6 }}>
+                 {data.rangeLimitation.split(' | ').map((note, i) => {
+                    const parts = note.split(' (Reason: ');
+                    if (parts.length === 2) {
+                       return (
+                         <li key={i} style={{ marginBottom: '4px' }}>
+                           <span style={{ fontWeight: 700, color: '#fff' }}>✔ {parts[0]}</span> 
+                           <span style={{ opacity: 0.8 }}> (Reason: {parts[1]}</span>
+                         </li>
+                       );
+                    }
+                    return <li key={i} style={{ marginBottom: '4px' }}>✔ {note}</li>;
+                 })}
+               </ul>
             </div>
           </div>
         )}
