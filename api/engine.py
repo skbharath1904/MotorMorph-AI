@@ -156,8 +156,9 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     w_min, w_max = (10, 30) if is_2w else (50, 95) if is_car else (80, 350)
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
 
-    # Phase Current Tractive Balance
-    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
+    # Phase Current (Peak AC Line Current derived from mechanical power, voltage, and power factor)
+    # I_peak = sqrt(2) * P_mech / (V_dc * eta * PF) where PF ~ 0.90
+    i_phase = 1.414 * (peak_power_kw * 1000) / (v_system * op_eff_decimal * 0.9) if v_system > 0 else 0
     
     # Phase Current Tiers based on Voltage & Vehicle Type
     v = v_system
@@ -204,6 +205,10 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     cogging_torque = round(t_peak_nm * 0.015, 2)
     thermal_res = round(0.08 / (1 + (peak_power_kw/50)), 3)
     
+    # Inductance and Resistance scaling with industry accuracy
+    stator_resistance_val = round(0.004 + m_motor_kg*0.0008, 4)
+    dq_inductance_mh = round(15.0 / (peak_power_kw + 10), 3)
+    
     # Cooling method selection
     if continuous_power_kw <= 20:
         cooling_method = 'Air Cooling'
@@ -238,8 +243,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         },
         'electrical': { 
             'phaseCurrent': f"{round(i_phase, 1)} A (Peak)", 'switchingDevice': 'IGBT' if v_system > 150 else 'MOSFET', 
-            'backEmfConstant': f"{round((v_system*0.92)/omega_max, 4)} V·s/rad", 'statorResistance': f"{round(0.004 + m_motor_kg*0.0008, 4)} Ω", 
-            'dqInductance': f"{round(0.05 / (peak_power_kw + 1), 4)} mH", 'windingType': 'Delta / Star Winding', 'switchingFreq': '16 kHz'
+            'backEmfConstant': f"{round((v_system*0.92)/omega_max, 4)} V·s/rad", 'statorResistance': f"{stator_resistance_val} Ω", 
+            'dqInductance': f"{dq_inductance_mh} mH", 'windingType': 'Delta / Star Winding', 'switchingFreq': '16 kHz'
         },
         'mechanical': { 
             'maxTorqueDensity': f"{round(actual_td, 1)} Nm/L", 'rotorInertia': f"{rotor_inertia} kg·m²", 
