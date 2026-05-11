@@ -103,15 +103,37 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     continuous_power_kw = round(peak_power_kw * 0.55, 1)
 
     # 🔴 RPM & TORQUE
-    n_max = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
-    if is_2w: n_max = max(5000, min(7500, n_max))
-    elif is_car: n_max = max(8000, min(10000, n_max))
+    n_max_initial = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
+    if is_2w: n_max_initial = max(5000, min(7500, n_max_initial))
+    elif is_car: n_max_initial = max(8000, min(10000, n_max_initial))
     
+    # 2. Wheel RPM Formula: Wheel RPM = (Vehicle Speed * 60) / (2 * pi * r)
     wheel_rpm = (v_mps * 60) / (2 * math.pi * wheel_radius)
-    gear_ratio = n_max / wheel_rpm if wheel_rpm > 0 else 1.0
+    
+    # 1. Basic Gear Ratio Formula: Gear Ratio = Motor RPM / Wheel RPM
+    raw_gear_ratio = n_max_initial / wheel_rpm if wheel_rpm > 0 else 1.0
+    
+    # Typical Gear Ratio Ranges
+    if is_2w:
+        min_gr, max_gr = 4.0, 7.0
+    elif is_cv:
+        min_gr, max_gr = 12.0, 25.0
+    else: # Passenger Car
+        min_gr, max_gr = 7.0, 11.0
+        
+    gear_ratio = max(min_gr, min(max_gr, raw_gear_ratio))
+    
+    if raw_gear_ratio != gear_ratio:
+        notes.append(f"Gear Ratio clamped to {gear_ratio:.1f}:1 to match {vehicle_type} standard range ({min_gr}:1 - {max_gr}:1).")
+        
+    # Recalculate Motor RPM based on clamped gear ratio
+    n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max_initial
     
     wheel_torque = total_force * wheel_radius
-    t_peak_nm = wheel_torque / gear_ratio
+    
+    # 4. Torque-Based Formula: Gear Ratio = Wheel Torque / (Motor Torque * eta) -> Motor Torque = Wheel Torque / (Gear Ratio * eta)
+    transmission_efficiency = 0.97
+    t_peak_nm = wheel_torque / (gear_ratio * transmission_efficiency)
     
     min_motor_t, max_motor_t, min_wheel_t, max_wheel_t = 150, 400, 800, 2000
     if is_2w:
