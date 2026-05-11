@@ -116,10 +116,10 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Power = Force * Velocity
     raw_p_kw = (total_force * v_mps) / 1000
     
-    # Define physical limits
-    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
-    min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
-    max_i_phase = 150 if is_2w else 800 if is_car else 1500
+    # Define lenient physical limits (only clamp absurd outliers to allow natural physics variance)
+    p_min, p_max = (0.5, 50) if is_2w else (10, 1000) if is_car else (20, 2000)
+    min_motor_t, max_motor_t = (5, 200) if is_2w else (20, 2000) if is_car else (100, 5000)
+    max_i_phase = 300 if is_2w else 1500 if is_car else 3000
     transmission_efficiency = 0.97
     
     peak_power_kw = raw_p_kw
