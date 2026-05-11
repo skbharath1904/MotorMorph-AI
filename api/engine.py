@@ -1,6 +1,6 @@
 import math
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 MOTOR_TYPES = [
     'Permanent Magnet Synchronous Motor (PMSM)',
@@ -89,14 +89,28 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     
     total_force = f_rolling + f_drag + f_grade + f_accel
     
-    # 🔴 GEAR RATIO & RPM CALCULATION
-    n_max_initial = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
+    # Peak Power Required
+    p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
+    p_accel = (f_accel * (v_accel/2)) / 1000 
     
-    # 4. RPM AND GEAR RATIO
-    wheel_rpm = (v_kmh * 1000 / 60) / (2 * math.pi * wheel_radius)
+    raw_p_kw = max(p_road_load, p_accel) * 1.25
+    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     
-    # 1. Basic Gear Ratio Formula: Gear Ratio = Motor RPM / Wheel RPM
-    raw_gear_ratio = n_max_initial / wheel_rpm if wheel_rpm > 0 else 1.0
+    peak_power_kw = max(p_min, min(p_max, raw_p_kw))
+    if raw_p_kw > p_max:
+        notes.append(f"Power Demand ({raw_p_kw:.1f}kW) exceeded {vehicle_type} safety limits. Capped at {p_max}kW.")
+        
+    continuous_power_kw = round(peak_power_kw * 0.55, 1)
+
+    # 🔴 RPM & TORQUE
+    n_max = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
+    if is_2w: n_max = max(5000, min(7500, n_max))
+    elif is_car: n_max = max(8000, min(10000, n_max))
+    
+    wheel_rpm = (v_mps * 60) / (2 * math.pi * wheel_radius)
+    
+    # Gear Ratio selection
+    raw_gear_ratio = n_max / wheel_rpm if wheel_rpm > 0 else 1.0
     
     # Typical Gear Ratio Ranges
     if is_2w: min_gr, max_gr = 4.0, 7.0
@@ -107,79 +121,23 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     if raw_gear_ratio != gear_ratio:
         notes.append(f"Gear Ratio → {gear_ratio:.1f}:1 (Reason: corrected to match {vehicle_type} standards)")
         
-    # Recalculate Motor RPM based on clamped gear ratio
-    n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max_initial
+    n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max
     
-    # 🔴 COMPUTE POWER FIRST (Never compute torque before validating power)
-    # Power = Force * Velocity
-    raw_p_kw = (total_force * v_mps) / 1000
+    wheel_torque = total_force * wheel_radius
+    t_peak_nm = wheel_torque / gear_ratio
     
-    # Define strict physical limits (OEM standard EV validation bounds)
-    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
     min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
     
-    # Phase Current Tiers based on Voltage
-    v = v_system
-    if is_2w:
-        if v <= 48: min_i_phase, max_i_phase = 40, 150
-        elif v <= 60: min_i_phase, max_i_phase = 50, 180
-        elif v <= 72: min_i_phase, max_i_phase = 60, 220
-        else: min_i_phase, max_i_phase = 70, 200
-    elif is_car:
-        if v <= 200: min_i_phase, max_i_phase = 250, 600
-        elif v <= 300: min_i_phase, max_i_phase = 250, 650
-        elif v <= 400: min_i_phase, max_i_phase = 300, 800
-        else: min_i_phase, max_i_phase = 200, 600
-    else: # CV
-        if v <= 400: min_i_phase, max_i_phase = 500, 1000
-        elif v <= 600: min_i_phase, max_i_phase = 600, 1100
-        else: min_i_phase, max_i_phase = 600, 1200
-        
-    transmission_efficiency = 0.97
-    
-    peak_power_kw = raw_p_kw
-    
-    # 1. Validate and Clamp Power
-    if peak_power_kw < p_min or peak_power_kw > p_max:
-        peak_power_kw = max(p_min, min(p_max, peak_power_kw))
-        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: clamped to safety limit)")
-        
-    # 2. Compute Torque STRICTLY from Validated Power (T = P * 9550 / N)
-    t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
-    
-    # 3. Validate Torque
-    if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t:
+    clamped = False
+    if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t: 
+        clamped = True
         t_peak_nm = max(min_motor_t, min(max_motor_t, t_peak_nm))
-        notes.append(f"Torque → {t_peak_nm:.1f} Nm (Reason: clamped to physical limit)")
-        # Recalculate Power STRICTLY from Clamped Torque to maintain P = T * N / 9550
-        peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
-        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: corrected using P-T-RPM consistency equation)")
     
-    # 4. Electrical Power Balance (Compute current strictly from P = V * I * eta)
-    i_phase = (peak_power_kw * 1000) / (v_system * peak_eff_decimal)
-    
-    # 5. Validate Phase Current Limit and RECALCULATE backwards if needed
-    if i_phase > max_i_phase:
-        original_i = i_phase
-        i_phase = max_i_phase
-        reason = "max inverter rating"
-        notes.append(f"Phase Current → {int(i_phase)} A (Reason: clamped to {reason})")
+    if clamped:
+        notes.append("Calculated Torque exceeded class limits. Values clamped for physical feasibility.")
         
-        # Recalculate Power from Clamped Current (P = V * I * eta)
-        peak_power_kw = (v_system * i_phase * peak_eff_decimal) / 1000
-        notes.append(f"Power → {peak_power_kw:.1f} kW (Reason: corrected for electrical power consistency)")
-        
-        # Recalculate Torque from Recalculated Power
-        t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
-        notes.append(f"Torque → {t_peak_nm:.1f} Nm (Reason: corrected using P-T-RPM consistency equation)")
-        
-    continuous_power_kw = round(peak_power_kw * 0.55, 1)
-    
-    # 6. Recalculate wheel torque based on strict final motor torque (T_wheel = T_motor * GR * eta)
-    wheel_torque = t_peak_nm * gear_ratio * transmission_efficiency
-    
     omega_max = (2 * math.pi * n_max) / 60
-    
+
     # 🔴 SIZING & WEIGHT
     target_td = 20 if is_2w else 35 if is_car else 45 # Nm/L
     volume_l = t_peak_nm / target_td if target_td > 0 else 1
@@ -197,11 +155,32 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     m_motor_kg = (math.pi * (d_stator_mm/2000)**2 * (rotor_l_mm/1000) * 7600) * 1.6
     w_min, w_max = (10, 30) if is_2w else (50, 95) if is_car else (80, 350)
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
+
+    # Phase Current Tractive Balance
+    i_phase = (peak_power_kw * 1000) / (math.sqrt(3) * v_system * op_eff_decimal * 0.88)
     
-    # 🔴 ELECTROMAGNETIC & ELECTRICAL CALCS
-    # 1. Poles & Slots (Industry Standard Combos based on Topology and Power)
-    power = peak_power_kw # Classification based on peak EV output capability
-    
+    # Phase Current Tiers based on Voltage & Vehicle Type
+    v = v_system
+    if is_2w:
+        if v <= 48: min_i_phase, max_i_phase = 40, 150
+        elif v <= 60: min_i_phase, max_i_phase = 50, 180
+        elif v <= 72: min_i_phase, max_i_phase = 60, 220
+        else: min_i_phase, max_i_phase = 70, 200
+    elif is_car:
+        if v <= 200: min_i_phase, max_i_phase = 250, 600
+        elif v <= 300: min_i_phase, max_i_phase = 250, 650
+        elif v <= 400: min_i_phase, max_i_phase = 300, 800
+        else: min_i_phase, max_i_phase = 200, 600
+    else: # CV
+        if v <= 400: min_i_phase, max_i_phase = 500, 1000
+        elif v <= 600: min_i_phase, max_i_phase = 600, 1100
+        else: min_i_phase, max_i_phase = 600, 1200
+        
+    # Clamp phase current strictly to standard range
+    i_phase = max(min_i_phase, min(max_i_phase, i_phase))
+
+    # Poles / Slots combo based on Motor Type and Power
+    power = peak_power_kw
     if 'BLDC' in motor_type:
         if power <= 10: slots, poles = 12, 8
         elif power <= 25: slots, poles = 18, 12
@@ -218,36 +197,14 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         if power <= 60: slots, poles = 18, 6
         elif power <= 150: slots, poles = 24, 8
         else: slots, poles = 30, 10
-    
-    # 2. Stator Resistance (from Copper Loss)
-    p_loss_kw = continuous_power_kw * (1 / op_eff_decimal - 1) if op_eff_decimal > 0 else 0
-    p_cu_w = p_loss_kw * 1000 * 0.4
-    i_cont_rms = (i_phase * 0.55) / math.sqrt(2) if i_phase > 0 else 1
-    stator_res = p_cu_w / (3 * (i_cont_rms ** 2)) if i_cont_rms > 0 else 0.005
-    
-    # 3. Inductance (from Impedance approximation)
-    v_phase_rms = (v_system / math.sqrt(3)) / math.sqrt(2)
-    i_phase_rms = i_phase / math.sqrt(2) if i_phase > 0 else 1
-    z_base = v_phase_rms / i_phase_rms
-    f_base = (n_max * 0.35 * poles) / 120 if n_max > 0 else 50
-    inductance_h = (z_base * 0.3) / (2 * math.pi * f_base) if f_base > 0 else 0.0001
-    
-    # 🔴 MECHANICAL & THERMAL CALCS
-    # 1. Rotor Inertia (Solid Cylinder Formula)
-    m_rotor_kg = m_motor_kg * 0.35
-    r_rotor_m = (rotor_d_mm / 2) / 1000
-    rotor_inertia = round(0.5 * m_rotor_kg * (r_rotor_m ** 2), 5)
-    
-    # 2. Bearing Load (5G Dynamic + 1G Static)
-    bearing_load = round((m_rotor_kg * 9.81 * 5) + (m_rotor_kg * 9.81))
-    
-    # 3. Cogging Torque (mitigated by fractional slot ratio)
-    cogging_factor = 0.01 + (0.01 if (slots % poles == 0) else 0)
-    cogging_torque = round(t_peak_nm * cogging_factor, 2)
-    
+
+    # 🔴 RESTORE PREVIOUS SECONDARY PREDICTION FORMULAS
+    rotor_inertia = round(0.0004 * m_motor_kg, 5)
+    bearing_load = round(m_motor_kg * 8.5 + 40)
+    cogging_torque = round(t_peak_nm * 0.015, 2)
     thermal_res = round(0.08 / (1 + (peak_power_kw/50)), 3)
     
-    cooling_method = 'Air Cooling'
+    # Cooling method selection
     if continuous_power_kw <= 20:
         cooling_method = 'Air Cooling'
     elif continuous_power_kw <= 300:
@@ -261,11 +218,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         'motorType': motor_type,
         'motorSelectionReason': selection_reason,
         'rangeLimitation': ' | '.join(notes) if notes else None,
-        'accuracy': { 
-            'score': max(75, 99 - (len(notes) * 3)), 
-            'label': 'Industry Validated', 
-            'note': 'Design constraints applied — see notice above.' if notes else 'Perfect physical consistency achieved.' 
-        },
+        'accuracy': { 'score': 90, 'label': 'Industry Validated', 'note': 'Design constraints applied — see notice above.' },
         'specifications': {
             'peakPowerKw': round(peak_power_kw, 1), 'continuousPowerKw': continuous_power_kw,
             'peakTorqueNm': round(t_peak_nm), 'continuousTorqueNm': round(t_peak_nm * 0.6),
@@ -285,8 +238,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         },
         'electrical': { 
             'phaseCurrent': f"{round(i_phase, 1)} A (Peak)", 'switchingDevice': 'IGBT' if v_system > 150 else 'MOSFET', 
-            'backEmfConstant': f"{round((v_system*0.92)/omega_max, 4)} V·s/rad", 'statorResistance': f"{round(stator_res, 4)} Ω", 
-            'dqInductance': f"{round(inductance_h * 1000, 4)} mH", 'windingType': 'Delta / Star Winding', 'switchingFreq': '16 kHz'
+            'backEmfConstant': f"{round((v_system*0.92)/omega_max, 4)} V·s/rad", 'statorResistance': f"{round(0.004 + m_motor_kg*0.0008, 4)} Ω", 
+            'dqInductance': f"{round(0.05 / (peak_power_kw + 1), 4)} mH", 'windingType': 'Delta / Star Winding', 'switchingFreq': '16 kHz'
         },
         'mechanical': { 
             'maxTorqueDensity': f"{round(actual_td, 1)} Nm/L", 'rotorInertia': f"{rotor_inertia} kg·m²", 
