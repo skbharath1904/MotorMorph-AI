@@ -91,11 +91,9 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     
     # 🔴 GEAR RATIO & RPM CALCULATION
     n_max_initial = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
-    if is_2w: n_max_initial = max(5000, min(7500, n_max_initial))
-    elif is_car: n_max_initial = max(8000, min(10000, n_max_initial))
     
-    # 2. Wheel RPM Formula: Wheel RPM = (Vehicle Speed * 60) / (2 * pi * r)
-    wheel_rpm = (v_mps * 60) / (2 * math.pi * wheel_radius)
+    # 4. RPM AND GEAR RATIO
+    wheel_rpm = (v_kmh * 1000 / 60) / (2 * math.pi * wheel_radius)
     
     # 1. Basic Gear Ratio Formula: Gear Ratio = Motor RPM / Wheel RPM
     raw_gear_ratio = n_max_initial / wheel_rpm if wheel_rpm > 0 else 1.0
@@ -116,10 +114,10 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     # Power = Force * Velocity
     raw_p_kw = (total_force * v_mps) / 1000
     
-    # Define lenient physical limits (only clamp absurd outliers to allow natural physics variance)
-    p_min, p_max = (0.5, 50) if is_2w else (10, 1000) if is_car else (20, 2000)
-    min_motor_t, max_motor_t = (5, 200) if is_2w else (20, 2000) if is_car else (100, 5000)
-    max_i_phase = 300 if is_2w else 1500 if is_car else 3000
+    # Define strict physical limits (OEM standard EV validation bounds)
+    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
+    min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
+    max_i_phase = 150 if is_2w else 800 if is_car else 1500
     transmission_efficiency = 0.97
     
     peak_power_kw = raw_p_kw
