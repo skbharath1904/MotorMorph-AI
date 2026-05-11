@@ -119,13 +119,16 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .form-label {
-  display: block;
+  display: flex;
+  align-items: flex-end;
+  min-height: 32px;
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  line-height: 1.25;
 }
 
 .form-input {

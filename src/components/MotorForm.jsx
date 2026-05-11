@@ -175,7 +175,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       </AnimatePresence>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem', marginBottom: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.2rem', marginBottom: '2rem' }}>
 
           {/* Vehicle Type */}
           <div className="form-group">
@@ -260,7 +260,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ display: 'flex', alignItems: 'center' }}>
                 <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
-                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
+                <span>{FIELD_LABELS.accelerationTime}</span>
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input 
@@ -313,7 +313,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           </div>
 
           {/* Air Density */}
-          <div className="form-group">
+          <div className="form-group" style={{ gridColumn: 'span 2' }}>
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               <Cloud size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.airDensity}
             </label>
