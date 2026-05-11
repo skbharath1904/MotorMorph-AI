@@ -89,20 +89,7 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     
     total_force = f_rolling + f_drag + f_grade + f_accel
     
-    # Peak Power Required
-    p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
-    p_accel = (f_accel * (v_accel/2)) / 1000 
-    
-    raw_p_kw = max(p_road_load, p_accel) * 1.25
-    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
-    
-    peak_power_kw = max(p_min, min(p_max, raw_p_kw))
-    if raw_p_kw > p_max:
-        notes.append(f"Power Demand ({raw_p_kw:.1f}kW) exceeded {vehicle_type} safety limits. Capped at {p_max}kW.")
-        
-    continuous_power_kw = round(peak_power_kw * 0.55, 1)
-
-    # 🔴 RPM & TORQUE
+    # 🔴 GEAR RATIO & RPM CALCULATION
     n_max_initial = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
     if is_2w: n_max_initial = max(5000, min(7500, n_max_initial))
     elif is_car: n_max_initial = max(8000, min(10000, n_max_initial))
@@ -114,43 +101,62 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     raw_gear_ratio = n_max_initial / wheel_rpm if wheel_rpm > 0 else 1.0
     
     # Typical Gear Ratio Ranges
-    if is_2w:
-        min_gr, max_gr = 4.0, 7.0
-    elif is_cv:
-        min_gr, max_gr = 12.0, 25.0
-    else: # Passenger Car
-        min_gr, max_gr = 7.0, 11.0
+    if is_2w: min_gr, max_gr = 4.0, 7.0
+    elif is_cv: min_gr, max_gr = 12.0, 25.0
+    else: min_gr, max_gr = 7.0, 11.0
         
     gear_ratio = max(min_gr, min(max_gr, raw_gear_ratio))
-    
     if raw_gear_ratio != gear_ratio:
-        notes.append(f"Gear Ratio clamped to {gear_ratio:.1f}:1 to match {vehicle_type} standard range ({min_gr}:1 - {max_gr}:1).")
+        notes.append(f"Gear Ratio clamped to {gear_ratio:.1f}:1 to match {vehicle_type} standards.")
         
     # Recalculate Motor RPM based on clamped gear ratio
     n_max = gear_ratio * wheel_rpm if wheel_rpm > 0 else n_max_initial
     
+    # 🔴 TRACTIVE EFFORT & MOTOR TORQUE
     wheel_torque = total_force * wheel_radius
-    
-    # 4. Torque-Based Formula: Gear Ratio = Wheel Torque / (Motor Torque * eta) -> Motor Torque = Wheel Torque / (Gear Ratio * eta)
     transmission_efficiency = 0.97
-    t_peak_nm = wheel_torque / (gear_ratio * transmission_efficiency)
     
-    min_motor_t, max_motor_t, min_wheel_t, max_wheel_t = 150, 400, 800, 2000
-    if is_2w:
-        min_motor_t, max_motor_t, min_wheel_t, max_wheel_t = 20, 40, 80, 150
-    elif is_cv:
-        min_motor_t, max_motor_t, min_wheel_t, max_wheel_t = 500, 2000, 3000, 10000
+    # Motor Torque based on vehicle force (T_motor = T_wheel / (Gear Ratio * eta))
+    raw_t_peak_nm = wheel_torque / (gear_ratio * transmission_efficiency)
+    
+    # 🔴 STRICT POWER-TORQUE-RPM RELATION (P = T * N / 9550)
+    raw_p_kw = (raw_t_peak_nm * n_max) / 9550 if n_max > 0 else 0
+    
+    # Peak Power Required from Road Load (as a secondary linear check)
+    p_road_load = (f_rolling + f_drag + f_grade) * v_mps / 1000
+    p_accel = (f_accel * (v_accel/2)) / 1000 
+    physics_p_kw = max(p_road_load, p_accel) * 1.25
+    
+    # Take the maximum between pure rotational calculation and linear physics check
+    target_p_kw = max(raw_p_kw, physics_p_kw)
+    
+    # Define physical limits
+    p_min, p_max = (3, 15) if is_2w else (60, 250) if is_car else (120, 500)
+    min_motor_t, max_motor_t = (20, 40) if is_2w else (150, 400) if is_car else (500, 2000)
+    
+    peak_power_kw = target_p_kw
+    
+    # 1. Clamp Power
+    if peak_power_kw < p_min or peak_power_kw > p_max:
+        peak_power_kw = max(p_min, min(p_max, peak_power_kw))
+        notes.append(f"Power clamped to {peak_power_kw:.1f}kW safety limit.")
         
-    clamped = False
-    if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t: clamped = True
-    if wheel_torque < min_wheel_t or wheel_torque > max_wheel_t: clamped = True
+    # Recalculate Torque STRICTLY from Clamped Power (T = P * 9550 / N)
+    t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 0
     
-    t_peak_nm = max(min_motor_t, min(max_motor_t, t_peak_nm))
-    wheel_torque = max(min_wheel_t, min(max_wheel_t, wheel_torque))
-    
-    if clamped:
-        notes.append("Calculated Torque exceeded class limits. Values clamped for physical feasibility.")
+    # 2. Clamp Torque
+    if t_peak_nm < min_motor_t or t_peak_nm > max_motor_t:
+        t_peak_nm = max(min_motor_t, min(max_motor_t, t_peak_nm))
+        notes.append(f"Torque clamped to {t_peak_nm:.1f}Nm physical limit.")
         
+    # Recalculate Power STRICTLY from Clamped Torque (Final verification of P = T * N / 9550)
+    peak_power_kw = (t_peak_nm * n_max) / 9550 if n_max > 0 else 0
+    
+    continuous_power_kw = round(peak_power_kw * 0.55, 1)
+    
+    # Recalculate wheel torque based on strict final motor torque
+    wheel_torque = t_peak_nm * gear_ratio * transmission_efficiency
+    
     omega_max = (2 * math.pi * n_max) / 60
 
     # 🔴 SIZING & WEIGHT
