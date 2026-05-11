@@ -32,7 +32,14 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     cd = float(inputs.get('dragCoefficient', 0.3))
     fa = float(inputs.get('frontalArea', 2.2))
     gradient = float(inputs.get('maxGradient', 10)) / 100
-    accel_time = float(inputs.get('accelerationTime', 10))
+    accel_time_raw = inputs.get('accelerationTime', '10')
+    if accel_time_raw == 'N/A' or not accel_time_raw:
+        accel_time = 10.0
+    else:
+        try:
+            accel_time = float(accel_time_raw)
+        except ValueError:
+            accel_time = 10.0
     air_density = float(inputs.get('airDensity', 1.225))
     
     # Resistance Forces at target speed

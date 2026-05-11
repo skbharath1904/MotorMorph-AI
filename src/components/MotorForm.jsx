@@ -11,7 +11,7 @@ const FIELD_LABELS = {
   frontalArea:       'FRONTAL AREA (M²)',
   rollingResistance: 'ROLLING RES. (CRR)',
   range:             'DESIRED RANGE (KM)',
-  accelerationTime:  '0-100 KM/H TIME',
+  accelerationTime:  'Acceleration Time 0-100 KM/H (Sec)',
   maxGradient:       'MAX GRADIENT (%)',
   riderMass:         'RIDER MASS (KG)',
   wheelRadius:       'WHEEL RADIUS (M)',
@@ -36,6 +36,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
   });
   const [isCustomVoltage, setIsCustomVoltage] = useState(false);
   const [customVoltage, setCustomVoltage] = useState('');
+  const [isNAAcceleration, setIsNAAcceleration] = useState(false);
   const [errors, setErrors] = useState({});       
   const [submitError, setSubmitError] = useState(''); 
 
@@ -68,6 +69,14 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     }));
   };
 
+  const handleNaChange = (e) => {
+    const checked = e.target.checked;
+    setIsNAAcceleration(checked);
+    setInputs(prev => ({ ...prev, accelerationTime: checked ? 'N/A' : '' }));
+    setErrors(prev => ({ ...prev, accelerationTime: '' }));
+    setSubmitError('');
+  };
+
   const validate = () => {
     const newErrors = {};
     const missing = [];
@@ -90,7 +99,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'frontalArea',       min: 0.1,   max: 10,    label: FIELD_LABELS.frontalArea },
       { key: 'rollingResistance', min: 0.001, max: 1.0,   label: FIELD_LABELS.rollingResistance },
       { key: 'range',             min: 40,    max: 1000,  label: FIELD_LABELS.range },
-      { key: 'accelerationTime',  min: 3,     max: 60,    label: FIELD_LABELS.accelerationTime },
+      ...(isNAAcceleration ? [] : [{ key: 'accelerationTime',  min: 3,     max: 60,    label: FIELD_LABELS.accelerationTime }]),
       { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
       { key: 'riderMass',         min: 0,     max: 300,   label: FIELD_LABELS.riderMass },
       { key: 'wheelRadius',       min: 0.1,   max: 1.5,   label: FIELD_LABELS.wheelRadius },
@@ -247,11 +256,36 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           </div>
 
           {/* Acceleration */}
-          <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-              <Timer size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.accelerationTime}
-            </label>
-            <input type="number" step="0.1" name="accelerationTime" className="form-input" value={inputs.accelerationTime} onChange={handleChange} onKeyDown={numbersOnly} />
+          <div className="form-group" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
+                <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
+                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
+              </label>
+              <input 
+                type={isNAAcceleration ? "text" : "number"} 
+                step="0.1" 
+                name="accelerationTime" 
+                className="form-input" 
+                value={inputs.accelerationTime} 
+                onChange={handleChange} 
+                onKeyDown={isNAAcceleration ? undefined : numbersOnly} 
+                disabled={isNAAcceleration}
+                style={{ opacity: isNAAcceleration ? 0.6 : 1 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '0.4rem' }}>
+              <input 
+                type="checkbox" 
+                id="na_acceleration" 
+                checked={isNAAcceleration} 
+                onChange={handleNaChange} 
+                style={{ accentColor: 'var(--accent-blue)', cursor: 'pointer', width: '14px', height: '14px' }}
+              />
+              <label htmlFor="na_acceleration" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
+                Not Applicable
+              </label>
+            </div>
           </div>
 
           {/* Gradient */}
