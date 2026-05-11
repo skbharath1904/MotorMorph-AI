@@ -182,12 +182,21 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
     
     # 🔴 ELECTROMAGNETIC & ELECTRICAL CALCS
-    # 1. Poles & Slots (from Max Frequency Constraint)
-    target_inverter_freq = 600 # Hz
-    calculated_poles = int(round((120 * target_inverter_freq) / n_max / 2) * 2) if n_max > 0 else 6
-    poles = max(4, min(16, calculated_poles))
-    slots = int(poles * 1.5) # Fractional slot concentrated winding typical for EVs
-    if slots % 3 != 0: slots = int(poles * 3)
+    # 1. Poles & Slots (Industry Standard Combos based on Topology)
+    if 'BLDC' in motor_type:
+        combos = [(12, 8), (18, 12), (24, 16), (30, 20)]
+        slots, poles = combos[0] if is_2w else combos[2]
+    elif 'Induction' in motor_type or 'IM' in motor_type:
+        combos = [(24, 2), (30, 2), (24, 4), (30, 4)]
+        slots, poles = combos[2] if is_car else combos[3]
+    elif 'SRM' in motor_type:
+        combos = [(12, 8), (18, 12), (24, 16), (30, 20)]
+        slots, poles = combos[3] if is_cv else combos[2]
+    else: # PMSM
+        combos = [(12, 10), (18, 14), (24, 18), (30, 22), (30, 8)]
+        if is_2w: slots, poles = combos[0]
+        elif is_car: slots, poles = combos[1]
+        else: slots, poles = combos[3]
     
     # 2. Stator Resistance (from Copper Loss)
     p_loss_kw = continuous_power_kw * (1 / op_eff_decimal - 1) if op_eff_decimal > 0 else 0
