@@ -182,23 +182,25 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     m_motor_kg = max(w_min, min(w_max, m_motor_kg))
     
     # 🔴 ELECTROMAGNETIC & ELECTRICAL CALCS
-    # 1. Poles & Slots (Industry Standard Combos based on Topology)
+    # 1. Poles & Slots (Industry Standard Combos based on Topology and Power)
+    power = peak_power_kw # Classification based on peak EV output capability
+    
     if 'BLDC' in motor_type:
-        combos = [(12, 8), (18, 12), (24, 16)]
+        if power <= 10: slots, poles = 12, 8
+        elif power <= 25: slots, poles = 18, 12
+        else: slots, poles = 24, 14
     elif 'Induction' in motor_type or 'IM' in motor_type:
-        combos = [(24, 4), (18, 6), (30, 4)]
+        if power <= 80: slots, poles = 18, 4
+        elif power <= 200: slots, poles = 24, 6
+        else: slots, poles = 30, 6
     elif 'SRM' in motor_type:
-        combos = [(18, 12), (18, 6), (24, 16)]
+        if power <= 80: slots, poles = 18, 6
+        elif power <= 200: slots, poles = 18, 12
+        else: slots, poles = 30, 12
     else: # PMSM
-        combos = [(24, 8), (18, 6), (24, 16)]
-        
-    # Select combo based on vehicle class input
-    if is_2w:
-        slots, poles = combos[0]
-    elif is_car:
-        slots, poles = combos[1]
-    else: # is_cv
-        slots, poles = combos[2]
+        if power <= 60: slots, poles = 18, 6
+        elif power <= 150: slots, poles = 24, 8
+        else: slots, poles = 30, 10
     
     # 2. Stator Resistance (from Copper Loss)
     p_loss_kw = continuous_power_kw * (1 / op_eff_decimal - 1) if op_eff_decimal > 0 else 0
