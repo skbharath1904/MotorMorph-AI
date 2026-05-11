@@ -257,9 +257,23 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
 
           {/* Acceleration */}
           <div className="form-group">
-            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}>
-              <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
-              <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ display: 'flex', alignItems: 'center' }}>
+                <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
+                <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{FIELD_LABELS.accelerationTime}</span>
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input 
+                  type="checkbox" 
+                  id="na_acceleration" 
+                  checked={isNAAcceleration} 
+                  onChange={handleNaChange} 
+                  style={{ accentColor: 'var(--accent-blue)', cursor: 'pointer', width: '12px', height: '12px', margin: 0 }}
+                />
+                <label htmlFor="na_acceleration" style={{ fontSize: '0.65rem', textTransform: 'none', cursor: 'pointer', userSelect: 'none', margin: 0 }}>
+                  N/A
+                </label>
+              </span>
             </label>
             <input 
               type={isNAAcceleration ? "text" : "number"} 
@@ -272,18 +286,6 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
               disabled={isNAAcceleration}
               style={{ opacity: isNAAcceleration ? 0.6 : 1 }}
             />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '0.4rem' }}>
-              <input 
-                type="checkbox" 
-                id="na_acceleration" 
-                checked={isNAAcceleration} 
-                onChange={handleNaChange} 
-                style={{ accentColor: 'var(--accent-blue)', cursor: 'pointer', width: '14px', height: '14px' }}
-              />
-              <label htmlFor="na_acceleration" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
-                Not Applicable
-              </label>
-            </div>
           </div>
 
           {/* Gradient */}

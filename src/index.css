@@ -130,10 +130,11 @@ h1, h2, h3, h4, h5, h6 {
 
 .form-input {
   width: 100%;
+  height: 50px;
   background: var(--input-bg);
   border: 1px solid var(--glass-border);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0 1rem;
   color: var(--text-primary);
   font-family: var(--font-main);
   font-size: 1rem;
