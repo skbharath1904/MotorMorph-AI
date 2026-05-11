@@ -32,7 +32,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     maxGradient:       '',
     riderMass:         '',
     wheelRadius:       '',
-    airDensity:        '1.225'
+    airDensity:        ''
   });
   const [isCustomVoltage, setIsCustomVoltage] = useState(false);
   const [customVoltage, setCustomVoltage] = useState('');
