@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Activity, Weight, Gauge, Car, Wind, CircleDashed, Square, AlertCircle, TrendingUp, Timer } from 'lucide-react';
+import { Zap, Activity, Weight, Gauge, Car, Wind, CircleDashed, Square, AlertCircle, TrendingUp, Timer, Cloud } from 'lucide-react';
 
 const FIELD_LABELS = {
   vehicleType:       'VEHICLE TYPE',
@@ -14,7 +14,8 @@ const FIELD_LABELS = {
   accelerationTime:  '0-100 KM/H TIME',
   maxGradient:       'MAX GRADIENT (%)',
   riderMass:         'RIDER MASS (KG)',
-  wheelRadius:       'WHEEL RADIUS (M)'
+  wheelRadius:       'WHEEL RADIUS (M)',
+  airDensity:        'AIR DENSITY (KG/M³)'
 };
 
 const MotorForm = ({ onSubmit, isGenerating }) => {
@@ -30,7 +31,8 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     accelerationTime:  '',
     maxGradient:       '',
     riderMass:         '',
-    wheelRadius:       ''
+    wheelRadius:       '',
+    airDensity:        '1.225'
   });
   const [isCustomVoltage, setIsCustomVoltage] = useState(false);
   const [customVoltage, setCustomVoltage] = useState('');
@@ -92,6 +94,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
       { key: 'riderMass',         min: 0,     max: 300,   label: FIELD_LABELS.riderMass },
       { key: 'wheelRadius',       min: 0.1,   max: 1.5,   label: FIELD_LABELS.wheelRadius },
+      { key: 'airDensity',        min: 0.5,   max: 2.0,   label: FIELD_LABELS.airDensity },
     ];
 
     for (const { key, min, max, label } of numericFields) {
@@ -273,6 +276,14 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
               <CircleDashed size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.wheelRadius}
             </label>
             <input type="number" step="0.01" name="wheelRadius" className="form-input" value={inputs.wheelRadius} onChange={handleChange} onKeyDown={numbersOnly} />
+          </div>
+
+          {/* Air Density */}
+          <div className="form-group">
+            <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+              <Cloud size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.airDensity}
+            </label>
+            <input type="number" step="0.001" name="airDensity" className="form-input" value={inputs.airDensity} onChange={handleChange} onKeyDown={numbersOnly} placeholder="1.225" />
           </div>
 
         </div>

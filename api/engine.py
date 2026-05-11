@@ -78,8 +78,9 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     accel_time = float(inputs.get('accelerationTime', 10))
     
     # Resistance Forces at target speed
+    air_density = float(inputs.get('airDensity', 1.225))
     f_rolling = crr * m_total * 9.81
-    f_drag = 0.5 * 1.225 * cd * fa * (v_mps**2)
+    f_drag = 0.5 * air_density * cd * fa * (v_mps**2)
     f_grade = m_total * 9.81 * math.sin(math.atan(gradient))
     
     # Acceleration Force
