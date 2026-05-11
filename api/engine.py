@@ -26,49 +26,6 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     wheel_radius = float(inputs.get('wheelRadius', 0.3))
     notes = []
     
-    # 🔴 MOTOR TYPE SELECTION & EXPLANATION
-    if is_2w: 
-        motor_type = MOTOR_TYPES[2] # BLDC
-        selection_reason = (
-            f"BLDC selected: vehicle mass of {m_vehicle:.0f} kg qualifies as a lightweight EV. Operating at {v_system:.0f}V, BLDC architectures "
-            f"offer superior power-to-weight ratios and high efficiency — optimal for urban two-wheelers targeting {v_kmh:.0f} km/h."
-        )
-    elif is_cv: 
-        motor_type = MOTOR_TYPES[3] # SRM
-        selection_reason = (
-            f"Switched Reluctance Motor (SRM) chosen for heavy-duty commercial applications. The demanding requirements of this {m_vehicle:.0f} kg vehicle "
-            f"necessitate a highly robust, fault-tolerant architecture. The SRM's rare-earth-free rotor and excellent thermal management support continuous high-load operations."
-        )
-    else: 
-        motor_type = MOTOR_TYPES[0] # PMSM
-        selection_reason = (
-            f"PMSM selected for this modern {vehicle_type}. Operating at {v_system:.0f}V, it delivers industry-leading power density. "
-            f"Its high efficiency is critical for maximizing range and providing instantaneous acceleration to move {m_total:.0f} kg efficiently at {v_kmh:.0f} km/h."
-        )
-
-    # Efficiency Ranges
-    if 'BLDC' in motor_type:
-        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 92, 85, 90
-    elif 'Induction' in motor_type or 'IM' in motor_type:
-        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 93, 85, 90
-    elif 'SRM' in motor_type:
-        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 85, 92, 80, 88
-    else: # PMSM
-        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 92, 96, 90, 94
-        
-    voltage_factor = max(0, min(1, (v_system - 48) / (800 - 48)))
-    weight_factor = max(0, min(1, m_total / 5000))
-    eff_pos = max(0.1, min(0.9, (voltage_factor * 0.8) - (weight_factor * 0.2) + 0.3))
-    
-    peak_eff_val = peak_eff_min + (peak_eff_max - peak_eff_min) * eff_pos
-    op_eff_val = op_eff_min + (op_eff_max - op_eff_min) * eff_pos
-    
-    peak_eff_str = f"{round(peak_eff_val, 1)}%"
-    op_eff_str = f"{round(op_eff_val, 1)}%"
-    
-    op_eff_decimal = op_eff_val / 100
-    peak_eff_decimal = peak_eff_val / 100
-
     # 🔴 TRACTIVE EFFORT & POWER
     v_mps = v_kmh / 3.6
     crr = float(inputs.get('rollingResistance', 0.015))
@@ -101,6 +58,77 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         notes.append(f"Power Demand ({raw_p_kw:.1f}kW) exceeded {vehicle_type} safety limits. Capped at {p_max}kW.")
         
     continuous_power_kw = round(peak_power_kw * 0.55, 1)
+
+    # 🔴 MOTOR TYPE SELECTION & EXPLANATION (Based on Vehicle Type and Power Range)
+    power = peak_power_kw
+    if is_2w:
+        if power <= 15:
+            motor_type = MOTOR_TYPES[2] # BLDC
+            selection_reason = (
+                f"BLDC selected: at {power:.1f} kW, BLDC (Brushless DC Motor) is recommended because it "
+                f"offers a compact size, low cost, and good efficiency for lightweight electric vehicles."
+            )
+        else:
+            motor_type = MOTOR_TYPES[0] # PMSM
+            selection_reason = (
+                f"PMSM selected: at {power:.1f} kW, PMSM (Permanent Magnet Synchronous Motor) is recommended "
+                f"because it provides higher efficiency, smoother torque delivery, and better performance for high-power electric motorcycles."
+            )
+    elif is_car:
+        if power <= 150:
+            motor_type = MOTOR_TYPES[0] # PMSM
+            selection_reason = (
+                f"PMSM selected: at {power:.1f} kW, PMSM is recommended as it is widely used in electric cars due to "
+                f"its high efficiency, excellent power density, and smooth operation."
+            )
+        else:
+            motor_type = MOTOR_TYPES[1] # Induction Motor (IM)
+            selection_reason = (
+                f"Induction Motor (IM) selected: at {power:.1f} kW, IM is recommended because induction motors "
+                f"are more suitable for high-power applications and high-speed operation."
+            )
+    else: # is_cv
+        if power <= 80:
+            motor_type = MOTOR_TYPES[0] # PMSM
+            selection_reason = (
+                f"PMSM selected: at {power:.1f} kW, PMSM is recommended for small commercial EVs due to "
+                f"its high efficiency and compact design."
+            )
+        elif power <= 300:
+            motor_type = MOTOR_TYPES[1] # Induction Motor (IM)
+            selection_reason = (
+                f"Induction Motor (IM) selected: at {power:.1f} kW, IM is recommended because it offers "
+                f"better durability and reliability for medium-to-heavy commercial applications."
+            )
+        else:
+            motor_type = MOTOR_TYPES[3] # SRM
+            selection_reason = (
+                f"Switched Reluctance Motor (SRM) selected: at {power:.1f} kW, SRM is recommended as "
+                f"it is highly robust and well suited for heavy-duty commercial and industrial electric vehicles."
+            )
+
+    # Efficiency Ranges
+    if 'BLDC' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 92, 85, 90
+    elif 'Induction' in motor_type or 'IM' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 88, 93, 85, 90
+    elif 'SRM' in motor_type:
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 85, 92, 80, 88
+    else: # PMSM
+        peak_eff_min, peak_eff_max, op_eff_min, op_eff_max = 92, 96, 90, 94
+        
+    voltage_factor = max(0, min(1, (v_system - 48) / (800 - 48)))
+    weight_factor = max(0, min(1, m_total / 5000))
+    eff_pos = max(0.1, min(0.9, (voltage_factor * 0.8) - (weight_factor * 0.2) + 0.3))
+    
+    peak_eff_val = peak_eff_min + (peak_eff_max - peak_eff_min) * eff_pos
+    op_eff_val = op_eff_min + (op_eff_max - op_eff_min) * eff_pos
+    
+    peak_eff_str = f"{round(peak_eff_val, 1)}%"
+    op_eff_str = f"{round(op_eff_val, 1)}%"
+    
+    op_eff_decimal = op_eff_val / 100
+    peak_eff_decimal = peak_eff_val / 100
 
     # 🔴 RPM & TORQUE
     n_max = 5000 + (v_kmh * 25) if is_2w else 8000 if is_car else 4500
