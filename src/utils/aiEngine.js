@@ -272,7 +272,7 @@ export const generateMotorDesignLocal = async (inputs) => {
     if (motorType.includes('IM')) {
       selectionReason = `Induction Motor selected. Its rugged construction and absence of rare-earth magnets make it ideal for cost-effective passenger cars. The calculated ${peakPowerKw.toFixed(1)} kW peak power and ${(voltage).toFixed(0)}V system ensure reliable highway performance without risk of demagnetization at high temperatures.`;
     } else {
-      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${totalMass} kg (incl. rider/payload).`;
+      selectionReason = `PMSM selected for this ${vehicleType}. Operating at ${voltage}V, it delivers industry-leading power density and ${Math.round(peakTorqueNm)} Nm of peak torque. Its high efficiency is critical for maximizing range and providing instantaneous acceleration for passenger vehicles weighing ${totalMass} kg (incl. passengers/payload).`;
     }
   } else if (isTruck) {
     if (motorType.includes('SRM')) {

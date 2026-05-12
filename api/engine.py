@@ -21,8 +21,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     v_kmh = float(inputs.get('targetSpeed', 100))
     v_system = float(inputs.get('voltage', 400))
     m_vehicle = float(inputs.get('vehicleWeight', 1500))
-    m_rider = float(inputs.get('riderMass', 80))
-    m_total = m_vehicle + m_rider
+    m_load = float(inputs.get('riderMass', 80))
+    m_total = m_vehicle + m_load
     wheel_radius = float(inputs.get('wheelRadius', 0.3))
     notes = []
 

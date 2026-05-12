@@ -6,7 +6,7 @@ const FIELD_LABELS = {
   vehicleType:       'VEHICLE TYPE',
   voltage:           'BATTERY VOLTAGE (V)',
   targetSpeed:       'TOP SPEED (KM/H)',
-  vehicleWeight:     'WEIGHT (KG)',
+  vehicleWeight:     'VEHICLE MASS (KG)',
   dragCoefficient:   'DRAG COEFF. (CD)',
   frontalArea:       'FRONTAL AREA (M²)',
   rollingResistance: 'ROLLING RES. (CRR)',
@@ -41,6 +41,9 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
   const [isNAAcceleration, setIsNAAcceleration] = useState(false);
   const [errors, setErrors] = useState({});       
   const [submitError, setSubmitError] = useState(''); 
+
+  const isCommercial = inputs.vehicleType === 'Commercial';
+  const loadLabel = isCommercial ? 'PAYLOAD (KG)' : 'PASSENGER MASS (KG)';
 
   const handleTypeChange = (e) => {
     const type = e.target.value;
@@ -121,7 +124,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'range',             min: 40,    max: 1000,  label: FIELD_LABELS.range },
       ...(!isNAAcceleration && inputs.accelerationRange ? [{ key: 'accelerationTime',  min: 3,     max: 60,    label: `Time in seconds for ${inputs.accelerationRange}` }] : []),
       { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
-      { key: 'riderMass',         min: 0,     max: 300,   label: FIELD_LABELS.riderMass },
+      { key: 'riderMass',         min: 0,     max: isCommercial ? 15000 : 1500,   label: loadLabel },
       { key: 'wheelRadius',       min: 0.1,   max: 1.5,   label: FIELD_LABELS.wheelRadius },
       { key: 'airDensity',        min: 0.5,   max: 2.0,   label: FIELD_LABELS.airDensity },
     ];
@@ -353,7 +356,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
           {/* Rider Mass */}
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-              <Weight size={12} style={{ marginRight: '6px' }}/> {FIELD_LABELS.riderMass}
+              <Weight size={12} style={{ marginRight: '6px' }}/> {loadLabel}
             </label>
             <input type="number" name="riderMass" className="form-input" value={inputs.riderMass} onChange={handleChange} onKeyDown={numbersOnly} />
           </div>
