@@ -56,7 +56,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   let { 
     targetSpeed, vehicleWeight, range, voltage,
     dragCoefficient, rollingResistance, frontalArea, vehicleType,
-    maxGradient, accelerationTime, riderMass, wheelRadius
+    maxGradient, accelerationRange, accelerationTime, riderMass, wheelRadius
   } = inputs;
 
   // Parse inputs with reasonable defaults

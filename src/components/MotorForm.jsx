@@ -11,7 +11,8 @@ const FIELD_LABELS = {
   frontalArea:       'FRONTAL AREA (M²)',
   rollingResistance: 'ROLLING RES. (CRR)',
   range:             'DESIRED RANGE (KM)',
-  accelerationTime:  'Acceleration Time 0-100 KM/H (Sec)',
+  accelerationRange: 'ACCELERATION RANGE',
+  accelerationTime:  'ACCELERATION TIME',
   maxGradient:       'MAX GRADIENT (%)',
   riderMass:         'RIDER MASS (KG)',
   wheelRadius:       'WHEEL RADIUS (M)',
@@ -28,6 +29,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
     dragCoefficient:   '',
     rollingResistance: '',
     frontalArea:       '',
+    accelerationRange: '',
     accelerationTime:  '',
     maxGradient:       '',
     riderMass:         '',
@@ -63,6 +65,15 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       setErrors(prev => ({ ...prev, voltage: '' }));
       return;
     }
+    if (name === 'accelerationRange') {
+      setInputs(prev => ({
+        ...prev,
+        accelerationRange: value,
+        accelerationTime: ''
+      }));
+      setErrors(prev => ({ ...prev, accelerationRange: '', accelerationTime: '' }));
+      return;
+    }
     setInputs(prev => ({
       ...prev,
       [name]: value
@@ -72,8 +83,12 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
   const handleNaChange = (e) => {
     const checked = e.target.checked;
     setIsNAAcceleration(checked);
-    setInputs(prev => ({ ...prev, accelerationTime: checked ? 'N/A' : '' }));
-    setErrors(prev => ({ ...prev, accelerationTime: '' }));
+    setInputs(prev => ({ 
+      ...prev, 
+      accelerationRange: checked ? 'N/A' : '', 
+      accelerationTime: checked ? 'N/A' : '' 
+    }));
+    setErrors(prev => ({ ...prev, accelerationRange: '', accelerationTime: '' }));
     setSubmitError('');
   };
 
@@ -92,6 +107,11 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       missing.push(FIELD_LABELS.voltage);
     }
 
+    if (!isNAAcceleration && !inputs.accelerationRange) {
+      newErrors.accelerationRange = 'Required';
+      missing.push(FIELD_LABELS.accelerationRange);
+    }
+
     const numericFields = [
       { key: 'targetSpeed',       min: 40,    max: 300,   label: FIELD_LABELS.targetSpeed },
       { key: 'vehicleWeight',     min: 50,    max: 20000, label: FIELD_LABELS.vehicleWeight },
@@ -99,7 +119,7 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
       { key: 'frontalArea',       min: 0.1,   max: 10,    label: FIELD_LABELS.frontalArea },
       { key: 'rollingResistance', min: 0.001, max: 1.0,   label: FIELD_LABELS.rollingResistance },
       { key: 'range',             min: 40,    max: 1000,  label: FIELD_LABELS.range },
-      ...(isNAAcceleration ? [] : [{ key: 'accelerationTime',  min: 3,     max: 60,    label: FIELD_LABELS.accelerationTime }]),
+      ...(!isNAAcceleration && inputs.accelerationRange ? [{ key: 'accelerationTime',  min: 3,     max: 60,    label: `Time in seconds for ${inputs.accelerationRange}` }] : []),
       { key: 'maxGradient',       min: 5,     max: 50,    label: FIELD_LABELS.maxGradient },
       { key: 'riderMass',         min: 0,     max: 300,   label: FIELD_LABELS.riderMass },
       { key: 'wheelRadius',       min: 0.1,   max: 1.5,   label: FIELD_LABELS.wheelRadius },
@@ -255,12 +275,12 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
             <input type="number" name="range" className="form-input" value={inputs.range} onChange={handleChange} onKeyDown={numbersOnly} />
           </div>
 
-          {/* Acceleration */}
+          {/* Acceleration Range Selector */}
           <div className="form-group">
             <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ display: 'flex', alignItems: 'center' }}>
                 <Timer size={12} style={{ marginRight: '6px', flexShrink: 0 }}/> 
-                <span>{FIELD_LABELS.accelerationTime}</span>
+                <span>{FIELD_LABELS.accelerationRange}</span>
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input 
@@ -275,18 +295,52 @@ const MotorForm = ({ onSubmit, isGenerating }) => {
                 </label>
               </span>
             </label>
-            <input 
-              type={isNAAcceleration ? "text" : "number"} 
-              step="0.1" 
-              name="accelerationTime" 
+            <select 
+              name="accelerationRange" 
               className="form-input" 
-              value={inputs.accelerationTime} 
-              onChange={handleChange} 
-              onKeyDown={isNAAcceleration ? undefined : numbersOnly} 
+              value={inputs.accelerationRange} 
+              onChange={handleChange}
               disabled={isNAAcceleration}
               style={{ opacity: isNAAcceleration ? 0.6 : 1 }}
-            />
+            >
+              <option value="" disabled>{isNAAcceleration ? 'N/A' : 'Select Range'}</option>
+              <option value="0–40 km/h">0–40 km/h</option>
+              <option value="0–50 km/h">0–50 km/h</option>
+              <option value="0–60 km/h">0–60 km/h</option>
+              <option value="0–70 km/h">0–70 km/h</option>
+              <option value="0–80 km/h">0–80 km/h</option>
+              <option value="0–90 km/h">0–90 km/h</option>
+              <option value="0–100 km/h">0–100 km/h</option>
+            </select>
           </div>
+
+          {/* Acceleration Time Input */}
+          <AnimatePresence>
+            {!isNAAcceleration && inputs.accelerationRange && (
+              <motion.div 
+                className="form-group"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: 'hidden' }}
+              >
+                <label className="form-label" style={{ fontSize: '0.7rem', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                  <Timer size={12} style={{ marginRight: '6px' }}/> Enter time in seconds for {inputs.accelerationRange}
+                </label>
+                <input 
+                  type="number" 
+                  step="0.1" 
+                  name="accelerationTime" 
+                  className="form-input" 
+                  placeholder="e.g. 8.0"
+                  value={inputs.accelerationTime} 
+                  onChange={handleChange} 
+                  onKeyDown={numbersOnly} 
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Gradient */}
           <div className="form-group">

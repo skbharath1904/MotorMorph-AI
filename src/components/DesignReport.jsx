@@ -105,7 +105,7 @@ const DesignReport = ({ data, inputs }) => {
                  { l: 'Vehicle Type', v: inputs?.vehicleType }, { l: 'Vehicle Weight', v: inputs?.vehicleWeight + ' kg' }, { l: 'Target Speed', v: inputs?.targetSpeed + ' km/h' },
                  { l: 'Desired Range', v: inputs?.range + ' km' }, { l: 'System Voltage', v: inputs?.voltage + ' V' }, { l: 'Drag Coeff (Cd)', v: inputs?.dragCoefficient },
                  { l: 'Frontal Area', v: inputs?.frontalArea + ' m²' }, { l: 'Rolling Resistance', v: inputs?.rollingResistance },
-                 { l: '0-100 km/h Time', v: inputs?.accelerationTime + ' s' }, { l: 'Max Gradient', v: inputs?.maxGradient + ' %' },
+                 { l: `${inputs?.accelerationRange || '0-100 km/h'} Time`, v: inputs?.accelerationTime + ' s' }, { l: 'Max Gradient', v: inputs?.maxGradient + ' %' },
                  { l: 'Rider Mass', v: inputs?.riderMass + ' kg' }, { l: 'Wheel Radius', v: inputs?.wheelRadius + ' m' }
                ].map((item, i) => (
                  <div key={i}><span className="stat-label">{item.l}</span><strong style={{fontSize:'0.95rem'}}>{item.v}</strong></div>

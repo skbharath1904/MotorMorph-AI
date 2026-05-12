@@ -41,7 +41,6 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
         except ValueError:
             accel_time = 10.0
     air_density = float(inputs.get('airDensity', 1.225))
-    
     # Resistance Forces at target speed
     f_rolling = crr * m_total * 9.81
     f_drag = 0.5 * air_density * cd * fa * (v_mps**2)
