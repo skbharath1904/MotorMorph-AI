@@ -171,8 +171,8 @@ def generate_motor_design_logic(inputs: Dict[str, Any]) -> Dict[str, Any]:
     n_max = wheel_rpm * gear_ratio if wheel_rpm > 0 else 5000
     
     # 🔴 HARD RULE 6: Torque Matches Power and RPM strictly: T = P * 9550 / N
-    wheel_torque = total_force * wheel_radius
     t_peak_nm = (peak_power_kw * 9550) / n_max if n_max > 0 else 5
+    wheel_torque = gear_ratio * t_peak_nm
     omega_max = (2 * math.pi * n_max) / 60
 
     # 🔴 SIZING & WEIGHT

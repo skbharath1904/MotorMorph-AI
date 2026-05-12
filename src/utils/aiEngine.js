@@ -160,7 +160,7 @@ export const generateMotorDesignLocal = async (inputs) => {
   if (wheelTorque < minWheelT || wheelTorque > maxWheelT) clamped = true;
   
   peakTorqueNm = Math.max(minMotorT, Math.min(maxMotorT, peakTorqueNm));
-  wheelTorque = Math.max(minWheelT, Math.min(maxWheelT, wheelTorque));
+  wheelTorque = calculatedGearRatio * peakTorqueNm;
   
   if (clamped) notes.push("Calculated Torque exceeded class limits. Values clamped for physical feasibility.");
 
