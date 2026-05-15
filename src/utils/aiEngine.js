@@ -1,11 +1,11 @@
-// MotorMorph AI Engine — Full Engineering Constraint Set
-// All 30 constraint rules enforced before output.
+// MotorMorph AI Engine — Master Version (Strict Physics Validation)
 
 const MOTOR_TYPES = [
   'Permanent Magnet Synchronous Motor (PMSM)',
   'Induction Motor (IM)',
   'Brushless DC Motor (BLDC)',
-  'Switched Reluctance Motor (SRM)'
+  'Switched Reluctance Motor (SRM)',
+  'PMSM + IM (Dual Motor System)'
 ];
 
 export const generateMotorDesign = async (inputs) => {
@@ -23,7 +23,6 @@ export const generateMotorDesign = async (inputs) => {
     }
 
     const data = await response.json();
-    console.log("AI/ML Backend Result:", data);
     return data;
   } catch (error) {
     console.warn("Backend unavailable, falling back to local physics engine.", error);
@@ -52,123 +51,113 @@ export const generateMotorDesignLocal = async (inputs) => {
   const wheelRadius = parseFloat(inputs.wheelRadius) || 0.3;
   const gradientPercent = parseFloat(inputs.maxGradient) || 10;
   const airDensity = parseFloat(inputs.airDensity) || 1.225;
-  const accelTimeRaw = parseFloat(inputs.accelerationTime) || 8;
+  const accelTimeRaw = parseFloat(inputs.accelerationTime);
 
-  // STEP 1 — TOTAL VEHICLE MASS
+  // 1. VEHICLE DYNAMICS (MANDATORY CORE MODEL)
   const totalMass = mVehicle + mLoad;
   const g = 9.81;
 
-  // STEP 2 — SPEED CONVERSION
   const vMps = vKmh / 3.6;
 
-  // STEP 3 — ROAD LOAD CALCULATION
+  // Road Load
   const fDragCruise = 0.5 * airDensity * cd * fa * Math.pow(vMps, 2);
   const fRoll = crr * totalMass * g;
   const fCruise = fDragCruise + fRoll;
 
-  // STEP 4 — ACCELERATION MODEL
+  // Acceleration
   const accelTargetKmh = Math.min(vKmh, is2W ? 50 : 100);
   const accelTargetMps = accelTargetKmh / 3.6;
   const accelTime = isNaN(accelTimeRaw) ? (is2W ? 6 : isCar ? 8 : 15) : accelTimeRaw;
   const a = accelTargetMps / accelTime;
   const fAccel = totalMass * a;
 
-  // STEP 5 — GRADEABILITY MODEL
+  // Gradeability
   let vGradeMps = vMps;
-  if (isCar && gradientPercent > 12) {
-    vGradeMps = vMps * 0.75;
-    notes.push(`Gradient >12%: Reduced climbing speed to ${(vGradeMps*3.6).toFixed(1)} km/h.`);
-  } else if (isCV && gradientPercent >= 15) {
-    vGradeMps = vMps * 0.50; // 40-60%
-    notes.push(`Gradient >=15%: Reduced climbing speed to ${(vGradeMps*3.6).toFixed(1)} km/h, prioritized torque.`);
-  }
-  const fGrade = totalMass * g * (gradientPercent / 100);
+  const maxGradientRad = Math.atan(gradientPercent / 100);
+  const fGrade = totalMass * g * Math.sin(maxGradientRad);
 
-  // STEP 6 — TOTAL FORCE CONDITIONS
   const fDragAccel = 0.5 * airDensity * cd * fa * Math.pow(accelTargetMps, 2);
   const fTotalAccel = fDragAccel + fRoll + fAccel;
 
   const fDragGrade = 0.5 * airDensity * cd * fa * Math.pow(vGradeMps, 2);
-  const fTotalGrade = fDragGrade + fRoll + fGrade;
+  let fTotalGrade = fDragGrade + fRoll + fGrade;
 
-  // STEP 7 — POWER CALCULATION
-  const pCruise = (fCruise * vMps) / 1000; // kW
+  // Power Calculation
+  const pCruise = (fCruise * vMps) / 1000;
   const pAccel = (fTotalAccel * accelTargetMps) / 1000;
-  const pGrade = (fTotalGrade * vGradeMps) / 1000;
+  let pGrade = (fTotalGrade * vGradeMps) / 1000;
 
-  let pPeak = Math.max(pCruise, pAccel, pGrade);
-
-  let safetyFactor = 1.25;
-  if (is2W) safetyFactor = 1.20;
-  else if (isCar) safetyFactor = 1.25; // 20-25%
-  else if (isCV) safetyFactor = 1.30; // 25-35%
-  
-  let pFinal = pPeak * safetyFactor;
-
-  // STEP 8 — VEHICLE CLASS POWER LIMITS
+  // 4. POWER VALIDATION (VERY IMPORTANT)
+  // Determine absolute bounds per vehicle class
   let pMin, pMax;
-  if (is2W) { pMin = 1; pMax = 20; }
-  else if (isCar) { pMin = 60; pMax = 300; }
-  else if (isCV) { pMin = 80; pMax = 600; }
+  if (is2W) { pMin = 0.25; pMax = 80; }
+  else if (isCar) { pMin = 20; pMax = 450; }
+  else if (isCV) { pMin = 50; pMax = 2000; }
 
-  if (pFinal < pMin) pFinal = pMin;
-  if (pFinal > pMax) pFinal = pMax;
+  let rawPeakPower = Math.max(pCruise, pAccel, pGrade);
 
-  // STEP 17 — MOTOR ARCHITECTURE SELECTION
-  let motorType = MOTOR_TYPES[0]; // PMSM default
-  let reason = "";
-  if (is2W) {
-      if (pFinal <= 5) { motorType = MOTOR_TYPES[2]; reason = "BLDC: Low-cost EVs and compact scooters."; }
-      else { motorType = MOTOR_TYPES[0]; reason = "PMSM: Premium efficiency and high torque density."; }
-  } else if (isCar) {
-      if (pFinal <= 150) { motorType = MOTOR_TYPES[0]; reason = "PMSM: High torque density, standard for passenger EVs."; }
-      else { motorType = MOTOR_TYPES[1]; reason = "IM: Robust high-speed capability for performance passenger EVs."; }
-  } else if (isCV) {
-      if (pFinal > 250 || totalMass > 8000) { motorType = MOTOR_TYPES[3]; reason = "SRM: Rugged heavy-duty commercial vehicles."; }
-      else if (pFinal > 150) { motorType = MOTOR_TYPES[1]; reason = "IM: High-speed robust operation for medium duty."; }
-      else { motorType = MOTOR_TYPES[0]; reason = "PMSM: Premium efficiency for light commercial vehicles."; }
+  // 7. GRADIENT LOGIC (If required power exceeds motor capability)
+  if (rawPeakPower > pMax && pGrade > pMax) {
+      // Reduce climb speed to fit within pMax capability
+      // Iterative reduction or direct calculation if drag is ignored for low speeds
+      const pAvailForGrade = pMax * 1000; // Watts
+      // v = P / F
+      vGradeMps = pAvailForGrade / fTotalGrade;
+      const vGradeKmh = vGradeMps * 3.6;
+      notes.push(`Gradient demand exceeded vehicle limits: Climb speed reduced to ${vGradeKmh.toFixed(1)} km/h. Prioritizing torque over speed.`);
+      
+      // Re-calculate
+      fTotalGrade = (0.5 * airDensity * cd * fa * Math.pow(vGradeMps, 2)) + fRoll + fGrade;
+      pGrade = (fTotalGrade * vGradeMps) / 1000;
+      rawPeakPower = Math.max(pCruise, pAccel, pGrade);
   }
 
-  // STEP 9 — GEAR RATIO RULES
+  let peakPowerKw = Math.max(pMin, Math.min(pMax, rawPeakPower));
+
+  // Continuous Power Rule
+  let contPowerMin, contPowerMax;
+  if (is2W) { contPowerMin = 0.55; contPowerMax = 0.75; }
+  else if (isCar) { contPowerMin = 0.55; contPowerMax = 0.70; }
+  else if (isCV) { contPowerMin = 0.60; contPowerMax = 0.75; }
+  const continuousPowerKw = peakPowerKw * ((contPowerMin + contPowerMax) / 2);
+
+  // 5 & 6. MOTOR TYPE RECOMMENDATION
+  let motorType = MOTOR_TYPES[0];
+  let reason = "";
+  if (is2W) {
+      if (peakPowerKw < 8) { motorType = MOTOR_TYPES[2]; reason = "BLDC: Low-cost EVs, Low power applications."; }
+      else { motorType = MOTOR_TYPES[0]; reason = "PMSM: High efficiency EVs, Premium two wheelers."; }
+  } else if (isCar) {
+      if (peakPowerKw < 80) { motorType = MOTOR_TYPES[0]; reason = "PMSM: High efficiency EVs, passenger cars."; }
+      else if (peakPowerKw <= 200) { motorType = MOTOR_TYPES[0]; reason = "PMSM: High performance passenger car standard."; }
+      else { motorType = MOTOR_TYPES[4]; reason = "PMSM + IM (Dual Motor System): Power > 200 kW, AWD required, High performance vehicle."; }
+  } else if (isCV) {
+      if (peakPowerKw < 150) { motorType = MOTOR_TYPES[1]; reason = "IM: Mid-range commercial vehicles, high-speed EVs."; }
+      else if (peakPowerKw <= 350) { motorType = MOTOR_TYPES[3]; reason = "SRM: Heavy commercial vehicles, trucks and buses."; }
+      else { motorType = MOTOR_TYPES[3]; reason = "SRM: Rugged operation, extreme heavy commercial vehicles."; }
+  }
+
+  // 8. GEAR RATIO RULES
   let grMin, grMax, grTarget;
-  if (is2W) { grMin = 4; grMax = 7; grTarget = 5.5; }
-  else if (isCar) { grMin = 7; grMax = 10; grTarget = 8.5; }
-  else if (isCV) { grMin = 8; grMax = 14; grTarget = 11.0; }
+  if (is2W) { grMin = 3; grMax = 7; grTarget = 5; }
+  else if (isCar) { grMin = 7; grMax = 11; grTarget = 9; }
+  else if (isCV) { grMin = 9; grMax = 16; grTarget = 12; }
   let gearRatio = grTarget;
 
-  // STEP 10 — MOTOR TORQUE CALCULATION
   const fMaxDemand = Math.max(fCruise, fTotalAccel, fTotalGrade);
   const tWheel = fMaxDemand * wheelRadius;
   let tMotor = tWheel / gearRatio;
 
-  // STEP 11 — TORQUE LIMITS
-  let tMin, tMax;
-  if (is2W) { tMin = 10; tMax = 80; }
-  else if (isCar) { tMin = 120; tMax = 600; }
-  else if (isCV) { tMin = 300; tMax = 4000; }
-
-  if (tMotor < tMin) {
-      tMotor = tMin; 
-      // Do NOT decrease gear ratio to compensate; motor is upsized
-  } else if (tMotor > tMax) {
-      tMotor = tMax;
-      gearRatio = tWheel / tMotor;
-      if (gearRatio > grMax) {
-          gearRatio = grMax;
-          notes.push(`Torque demand extremely high. Gear ratio capped at ${grMax}.`);
-      }
-  }
-
-  // STEP 12 — RPM CALCULATION
+  // RPM relation
   const wheelRpm = (vMps / (2 * Math.PI * wheelRadius)) * 60;
   let motorRpm = wheelRpm * gearRatio;
 
-  // STEP 13 — RPM LIMITS
   let rpmMin, rpmMax;
   if (motorType.includes('BLDC')) { rpmMin = 3000; rpmMax = 8000; }
   else if (motorType.includes('PMSM')) { rpmMin = 4000; rpmMax = 18000; }
   else if (motorType.includes('IM')) { rpmMin = 6000; rpmMax = 20000; }
   else if (motorType.includes('SRM')) { rpmMin = 3000; rpmMax = 12000; }
+  else { rpmMin = 4000; rpmMax = 18000; } // Dual Motor limit
 
   if (motorRpm > rpmMax) {
       motorRpm = rpmMax;
@@ -180,167 +169,115 @@ export const generateMotorDesignLocal = async (inputs) => {
       if (gearRatio > grMax) gearRatio = grMax;
   }
 
-  // STEP 14 — POWER-TORQUE VALIDATION
-  // P = (2pi * N * T) / 60
+  // 4. EXACT POWER VALIDATION (Power = Torque * RPM)
   let baseRpm = Math.min(motorRpm * 0.4, rpmMax * 0.5);
-  let peakPowerKw = (2 * Math.PI * baseRpm * tMotor) / 60000;
+  tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
   
-  // Re-verify power is within class limits
-  if (peakPowerKw < pMin) {
-      peakPowerKw = pMin;
-      tMotor = (peakPowerKw * 60000) / (2 * Math.PI * baseRpm);
-  }
-  if (peakPowerKw > pMax) {
-      peakPowerKw = pMax;
-      tMotor = (peakPowerKw * 60000) / (2 * Math.PI * baseRpm);
-  }
-
-  let opEff = 0.90;
+  let opEff = 0.92;
   if (motorType.includes('BLDC')) opEff = 0.88;
   else if (motorType.includes('PMSM')) opEff = 0.94;
   else if (motorType.includes('IM')) opEff = 0.90;
   else if (motorType.includes('SRM')) opEff = 0.86;
 
-  // STEP 15 & 16 — CURRENT CALCULATION & LIMITS
-  let phaseCurrent = (peakPowerKw * 1000) / (vSystem * opEff);
-  
+  // 3. ELECTRICAL LIMITS - Current
   let iMin, iMax;
-  if (vSystem <= 72) { iMin = 50; iMax = 300; }
-  else if (vSystem <= 450) { iMin = 200; iMax = 600; }
-  else { iMin = 400; iMax = 850; }
+  if (is2W) { iMin = 60; iMax = 220; }
+  else if (isCar) { iMin = 150; iMax = 500; }
+  else if (isCV) { iMin = 200; iMax = 700; }
+
+  // Power = Voltage * Current * efficiency
+  let phaseCurrent = (peakPowerKw * 1000) / (vSystem * opEff);
 
   if (phaseCurrent > iMax) {
       phaseCurrent = iMax;
       peakPowerKw = (phaseCurrent * vSystem * opEff) / 1000;
-      tMotor = (peakPowerKw * 60000) / (2 * Math.PI * baseRpm);
-      notes.push(`Current capped at ${iMax}A.`);
+      tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
+      notes.push(`Phase current capped at limit: ${iMax} A. Power adjusted to maintain consistency.`);
   } else if (phaseCurrent < iMin) {
+      // If current is too low, perhaps voltage is huge, or power is very small. Cap it up.
       phaseCurrent = iMin;
+      peakPowerKw = (phaseCurrent * vSystem * opEff) / 1000;
+      tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
   }
 
-  // STEP 18 — MOTOR DIMENSION SCALING
+  // 3. ELECTRICAL LIMITS - Stator Resistance & Inductance
+  let resMin, resMax, indMin, indMax;
+  if (is2W) { resMin = 0.01; resMax = 0.08; indMin = 0.2; indMax = 2.5; }
+  else if (isCar) { resMin = 0.005; resMax = 0.04; indMin = 0.3; indMax = 5.0; }
+  else if (isCV) { resMin = 0.003; resMax = 0.03; indMin = 0.5; indMax = 8.0; }
+
+  // Scale resistance inversely with power (larger motor = lower resistance)
+  const powerScale = Math.max(0, Math.min(1, (peakPowerKw - pMin) / (pMax - pMin)));
+  const statRes = resMax - (resMax - resMin) * powerScale;
+  
+  // Scale inductance inversely with power
+  const ind = indMax - (indMax - indMin) * powerScale;
+
+  // 9. THERMAL LIMITS
+  let coolingMethod = "Air Cooling";
+  if (peakPowerKw > 30 || isCV) {
+      coolingMethod = "Liquid Cooling";
+  }
+  if (peakPowerKw > 150) {
+      coolingMethod = "Liquid + Oil Cooling";
+  }
+
+  let maxTemp = "120°C";
+  if (peakPowerKw > 50) maxTemp = "140°C";
+  if (peakPowerKw > 200 || isCV) maxTemp = "155°C";
+
+  let flow = "N/A";
+  if (coolingMethod.includes("Liquid")) {
+      flow = Math.max(1, Math.min(20, peakPowerKw * 0.05)).toFixed(1) + " L/min";
+  }
+
+  // PHYSICAL DIMENSIONS (Reasonable generic scaling)
   let odMin, odMax, lenMin, lenMax, wMin, wMax;
-  if (is2W) {
-      if (peakPowerKw <= 5) { odMin=100; odMax=160; wMin=3; wMax=10; lenMin=80; lenMax=120; }
-      else { odMin=120; odMax=220; wMin=8; wMax=25; lenMin=120; lenMax=200; }
-  } else if (isCar) {
-      if (peakPowerKw <= 120) { odMin=220; odMax=320; wMin=40; wMax=90; lenMin=200; lenMax=350; }
-      else { odMin=250; odMax=380; wMin=80; wMax=160; lenMin=250; lenMax=400; }
-  } else {
-      odMin=350; odMax=500; wMin=150; wMax=350; lenMin=350; lenMax=600;
-  }
+  if (is2W) { odMin=100; odMax=220; wMin=3; wMax=25; lenMin=80; lenMax=200; }
+  else if (isCar) { odMin=220; odMax=380; wMin=40; wMax=160; lenMin=200; lenMax=400; }
+  else { odMin=350; odMax=600; wMin=150; wMax=500; lenMin=350; lenMax=700; }
 
-  const pTier = is2W ? peakPowerKw / 20 : isCar ? peakPowerKw / 300 : peakPowerKw / 600;
-  let statorOd = odMin + (odMax - odMin) * pTier;
-  let length = lenMin + (lenMax - lenMin) * pTier;
-  let weight = wMin + (wMax - wMin) * pTier;
-
-  // STEP 19 — POWER DENSITY VALIDATION
-  let pdMin, pdMax;
-  if (motorType.includes('BLDC')) { pdMin = 0.3; pdMax = 0.8; }
-  else if (motorType.includes('PMSM')) { pdMin = 0.8; pdMax = 2.5; }
-  else if (motorType.includes('IM')) { pdMin = 0.7; pdMax = 2.0; }
-  else if (motorType.includes('SRM')) { pdMin = 0.6; pdMax = 1.8; }
-
-  let actPd = peakPowerKw / weight;
-  if (actPd > pdMax) weight = peakPowerKw / pdMax;
-  if (actPd < pdMin) weight = peakPowerKw / pdMin;
-
-  // STEP 20 — TORQUE DENSITY VALIDATION
-  let tdMin, tdMax;
-  if (motorType.includes('BLDC')) { tdMin = 8; tdMax = 18; }
-  else if (motorType.includes('PMSM')) { tdMin = 15; tdMax = 30; }
-  else if (motorType.includes('IM')) { tdMin = 10; tdMax = 20; }
-  else if (motorType.includes('SRM')) { tdMin = 10; tdMax = 18; }
+  let statorOd = odMin + (odMax - odMin) * powerScale;
+  let length = lenMin + (lenMax - lenMin) * powerScale;
+  let weight = wMin + (wMax - wMin) * powerScale;
 
   let volL = Math.PI * Math.pow(statorOd / 2000, 2) * (length / 1000) * 1000;
   let actTd = tMotor / volL;
 
-  if (actTd > tdMax) {
-      const scale = Math.pow(actTd / tdMax, 1/3);
-      statorOd *= scale;
-      length *= scale;
-  } else if (actTd < tdMin) {
-      const scale = Math.pow(actTd / tdMin, 1/3);
-      statorOd *= scale;
-      length *= scale;
-  }
-  volL = Math.PI * Math.pow(statorOd / 2000, 2) * (length / 1000) * 1000;
-  actTd = tMotor / volL;
-
-  // STEP 21 & 22 — COOLING SYSTEM & THERMAL MODEL
-  let coolingMethod, thermRes, maxTemp, flow;
-  if (peakPowerKw <= 20) {
-      coolingMethod = "Air Cooling";
-      thermRes = 0.08;
-      maxTemp = "130°C";
-      flow = "N/A";
-  } else if (peakPowerKw <= 150) {
-      coolingMethod = "Liquid Cooling";
-      thermRes = 0.04;
-      maxTemp = "140°C";
-      flow = Math.max(1, Math.min(15, peakPowerKw * 0.08)).toFixed(1) + " L/min";
-  } else {
-      coolingMethod = "Liquid + Oil Cooling";
-      thermRes = 0.01;
-      maxTemp = "160°C";
-      flow = Math.max(5, Math.min(15, peakPowerKw * 0.05)).toFixed(1) + " L/min";
+  // Validate torque density slightly to prevent crazy numbers
+  if (actTd > 35) {
+      const scale = Math.pow(actTd / 35, 1/3);
+      statorOd *= scale; length *= scale; volL *= scale*scale*scale; actTd = 35;
   }
 
-  // STEP 23 — AIR GAP VALIDATION
   let airGap = 0.5;
   if (statorOd < 160) airGap = 0.3;
   else if (statorOd < 320) airGap = 0.8;
   else airGap = 1.5;
 
-  // STEP 24 — ROTOR INERTIA
   const rotorMass = weight * 0.35;
   const rotorRadM = (statorOd * 0.6) / 2000;
   const inertia = 0.5 * rotorMass * Math.pow(rotorRadM, 2);
 
-  // STEP 25 — BEARING LOAD
   const bearingLoad = weight * 9.81 * 2 + tMotor * 4;
-
-  // STEP 26 — CRITICAL SPEED
   const criticalSpeed = motorRpm * 1.30;
+  const cogging = Math.max(0.1, Math.min(5, tMotor * 0.01));
 
-  // STEP 27 — COGGING TORQUE
-  let cogging;
-  if (motorType.includes('IM')) cogging = 0.05;
-  else if (motorType.includes('SRM')) cogging = tMotor * 0.05;
-  else cogging = Math.max(0.1, Math.min(5, tMotor * 0.01));
-
-  // STEP 28 — SLOT/POLE COMBINATIONS (MAX 30 SLOTS)
   let slots = 24, poles = 16;
-  if (motorType.includes('BLDC') || motorType.includes('PMSM')) {
-      if (peakPowerKw <= 10) { slots = 12; poles = 8; }
-      else if (peakPowerKw <= 50) { slots = 18; poles = 16; }
-      else if (peakPowerKw <= 150) { slots = 24; poles = 20; }
-      else { slots = 30; poles = 20; }
-  } else if (motorType.includes('IM')) {
-      if (peakPowerKw <= 150) { slots = 24; poles = 4; }
-      else { slots = 30; poles = 4; }
-  } else if (motorType.includes('SRM')) {
-      if (peakPowerKw <= 100) { slots = 12; poles = 8; }
-      else { slots = 24; poles = 16; }
-  }
+  if (motorType.includes('BLDC')) { slots = 18; poles = 16; }
+  else if (motorType.includes('IM')) { slots = 30; poles = 4; }
+  else if (motorType.includes('SRM')) { slots = 24; poles = 16; }
+  else { slots = 24; poles = 20; } // PMSM
 
-  // STEP 29 — ELECTRICAL PARAMETERS
   let swFreq = "10 kHz";
   if (motorType.includes('BLDC') || motorType.includes('PMSM')) swFreq = "16 kHz";
   else if (motorType.includes('IM')) swFreq = "8 kHz";
-  else if (motorType.includes('SRM')) swFreq = "10 kHz";
 
   const omegaMax = (2 * Math.PI * motorRpm) / 60;
   const backEmf = omegaMax > 0 ? ((vSystem * 0.9) / omegaMax).toFixed(4) : "0.1000";
-  const statRes = (0.01 + 10 / peakPowerKw).toFixed(4);
-  const ind = (5 / peakPowerKw).toFixed(3);
 
-  const continuousPowerKw = peakPowerKw * 0.6;
-  const continuousTorqueNm = tMotor * 0.6;
+  const continuousTorqueNm = tMotor * ((contPowerMin + contPowerMax) / 2);
   const peakEff = (opEff * 100 + 2).toFixed(1);
-
-  // STEP 30 — FINAL VALIDATION ENGINE done incrementally via bounding above.
 
   const curve = [];
   for (let r = 0; r <= motorRpm + 500; r += 500) {
@@ -354,7 +291,6 @@ export const generateMotorDesignLocal = async (inputs) => {
     motorType,
     motorSelectionReason: reason,
     rangeLimitation: notes.length > 0 ? notes.join(' | ') : null,
-    accuracy: { score: 98, label: 'Industry Validated', note: 'Perfect physical consistency achieved.' },
     specifications: {
       peakPowerKw: parseFloat(peakPowerKw.toFixed(1)),
       continuousPowerKw: parseFloat(continuousPowerKw.toFixed(1)),
@@ -371,7 +307,7 @@ export const generateMotorDesignLocal = async (inputs) => {
       coolingMethod,
       maxCoilTemp: maxTemp,
       coolantFlowRate: flow,
-      thermalResistance: `${parseFloat(thermRes).toFixed(3)} K/W`
+      thermalResistance: `${(0.05 / powerScale).toFixed(3)} K/W`
     },
     dimensions: {
       statorDiameter: `${Math.round(statorOd)} mm`,
@@ -386,8 +322,8 @@ export const generateMotorDesignLocal = async (inputs) => {
       switchingDevice: vSystem > 200 ? 'IGBT' : 'MOSFET',
       switchingFreq: swFreq,
       backEmfConstant: `${backEmf} V·s/rad`,
-      statorResistance: `${statRes} Ω`,
-      dqInductance: `${ind} mH`,
+      statorResistance: `${statRes.toFixed(4)} Ω`,
+      dqInductance: `${ind.toFixed(3)} mH`,
       windingType: motorType.includes('BLDC') ? 'Concentrated' : 'Distributed'
     },
     mechanical: {
