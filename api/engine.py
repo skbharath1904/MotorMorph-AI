@@ -144,7 +144,7 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     if is_2w:
         if 'BLDC' in motor_type:
             if p < 5: slots, poles = 12, 8
-            elif p < 10: slots, poles = 18, 12
+            elif p < 10: slots, poles = 18, 16
             else: slots, poles = 24, 16
         elif 'PMSM' in motor_type:
             if p < 5: slots, poles = 12, 10
@@ -157,41 +157,41 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         elif 'IM' in motor_type:
             if p < 5: slots, poles = 18, 4
             elif p < 10: slots, poles = 24, 4
-            else: slots, poles = 30, 4
+            else: slots, poles = 24, 6
     elif is_car:
         if 'PMSM' in motor_type:
             if p < 120: slots, poles = 24, 8
-            elif p < 200: slots, poles = 27, 6
-            else: slots, poles = 30, 10
+            elif p < 200: slots, poles = 24, 10
+            else: slots, poles = 27, 6
         elif 'BLDC' in motor_type:
             if p < 120: slots, poles = 24, 8
-            elif p < 200: slots, poles = 30, 12
-            else: slots, poles = 18, 16
+            elif p < 200: slots, poles = 18, 16
+            else: slots, poles = 24, 12
         elif 'SRM' in motor_type:
             if p < 120: slots, poles = 12, 8
-            elif p < 200: slots, poles = 24, 16
-            else: slots, poles = 18, 12
+            elif p < 200: slots, poles = 18, 16
+            else: slots, poles = 24, 16
         elif 'IM' in motor_type:
             if p < 120: slots, poles = 24, 4
             elif p < 200: slots, poles = 30, 4
-            else: slots, poles = 36, 6
+            else: slots, poles = 24, 6
     elif is_cv:
         if 'PMSM' in motor_type:
             if p < 180: slots, poles = 24, 8
-            elif p < 250: slots, poles = 30, 10
-            else: slots, poles = 36, 12
+            elif p < 250: slots, poles = 24, 10
+            else: slots, poles = 30, 10
         elif 'BLDC' in motor_type:
             if p < 180: slots, poles = 24, 12
-            elif p < 250: slots, poles = 30, 14
-            else: slots, poles = 18, 16
+            elif p < 250: slots, poles = 18, 16
+            else: slots, poles = 24, 16
         elif 'SRM' in motor_type:
-            if p < 180: slots, poles = 18, 12
-            elif p < 250: slots, poles = 30, 20
+            if p < 180: slots, poles = 12, 8
+            elif p < 250: slots, poles = 18, 12
             else: slots, poles = 24, 16
         elif 'IM' in motor_type:
             if p < 180: slots, poles = 24, 4
             elif p < 250: slots, poles = 30, 4
-            else: slots, poles = 36, 6
+            else: slots, poles = 30, 6
 
     return format_master_output({
         'vehicleClass': "Two Wheeler" if is_2w else "Passenger Car" if is_car else "Commercial Vehicle",

@@ -178,33 +178,33 @@ const calculateUniversalFirstPrinciples = (inputs) => {
 
   if (is2W) {
     if (motorType.includes("BLDC")) {
-      if (p < 5) { slots = 12; poles = 8; } else if (p < 10) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
+      if (p < 5) { slots = 12; poles = 8; } else if (p < 10) { slots = 18; poles = 16; } else { slots = 24; poles = 16; }
     } else if (motorType.includes("PMSM")) {
       if (p < 5) { slots = 12; poles = 10; } else if (p < 10) { slots = 18; poles = 14; } else { slots = 24; poles = 20; }
     } else if (motorType.includes("SRM")) {
       if (p < 5) { slots = 12; poles = 8; } else if (p < 10) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
     } else if (motorType.includes("IM")) {
-      if (p < 5) { slots = 18; poles = 4; } else if (p < 10) { slots = 24; poles = 4; } else { slots = 30; poles = 4; }
+      if (p < 5) { slots = 18; poles = 4; } else if (p < 10) { slots = 24; poles = 4; } else { slots = 24; poles = 6; }
     }
   } else if (isCar) {
     if (motorType.includes("PMSM")) {
-      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 27; poles = 6; } else { slots = 30; poles = 10; }
+      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 24; poles = 10; } else { slots = 27; poles = 6; }
     } else if (motorType.includes("BLDC")) {
-      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 30; poles = 12; } else { slots = 18; poles = 16; }
+      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 18; poles = 16; } else { slots = 24; poles = 12; }
     } else if (motorType.includes("SRM")) {
-      if (p < 120) { slots = 12; poles = 8; } else if (p < 200) { slots = 24; poles = 16; } else { slots = 18; poles = 12; }
+      if (p < 120) { slots = 12; poles = 8; } else if (p < 200) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
     } else if (motorType.includes("IM")) {
-      if (p < 120) { slots = 24; poles = 4; } else if (p < 200) { slots = 30; poles = 4; } else { slots = 36; poles = 6; }
+      if (p < 120) { slots = 24; poles = 4; } else if (p < 200) { slots = 30; poles = 4; } else { slots = 24; poles = 6; }
     }
   } else if (isCV) {
     if (motorType.includes("PMSM")) {
-      if (p < 180) { slots = 24; poles = 8; } else if (p < 250) { slots = 30; poles = 10; } else { slots = 36; poles = 12; }
+      if (p < 180) { slots = 24; poles = 8; } else if (p < 250) { slots = 24; poles = 10; } else { slots = 30; poles = 10; }
     } else if (motorType.includes("BLDC")) {
-      if (p < 180) { slots = 24; poles = 12; } else if (p < 250) { slots = 30; poles = 14; } else { slots = 18; poles = 16; }
+      if (p < 180) { slots = 24; poles = 12; } else if (p < 250) { slots = 18; poles = 16; } else { slots = 24; poles = 16; }
     } else if (motorType.includes("SRM")) {
-      if (p < 180) { slots = 18; poles = 12; } else if (p < 250) { slots = 30; poles = 20; } else { slots = 24; poles = 16; }
+      if (p < 180) { slots = 12; poles = 8; } else if (p < 250) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
     } else if (motorType.includes("IM")) {
-      if (p < 180) { slots = 24; poles = 4; } else if (p < 250) { slots = 30; poles = 4; } else { slots = 36; poles = 6; }
+      if (p < 180) { slots = 24; poles = 4; } else if (p < 250) { slots = 30; poles = 4; } else { slots = 30; poles = 6; }
     }
   }
 
