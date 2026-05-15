@@ -58,8 +58,11 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     f_tractive = max(f_drag + f_roll + f_accel, f_roll + f_grade)
     t_wheel = f_tractive * wheel_radius
 
-    # 3. DRIVETRAIN
-    gear_ratio = 5.0 if is_2w else 9.0 if is_car else 11.0
+    # 3. DRIVETRAIN — gear ratio derived from target motor RPM at top speed
+    wheel_rpm = (v_mps / (2 * math.pi * wheel_radius)) * 60 if v_mps > 0 else 1
+    # Target RPM: CV-IM ~2500, Car-PMSM ~8000, 2W-BLDC ~3500
+    target_rpm = 3500 if is_2w else 8000 if is_car else 2500
+    gear_ratio = target_rpm / wheel_rpm if wheel_rpm > 0 else (5.0 if is_2w else 9.0 if is_car else 4.5)
     t_motor = t_wheel / gear_ratio
 
     if t_motor > t_range[1]:
@@ -71,7 +74,6 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         gear_ratio = t_wheel / t_motor
 
     # 4. POWER (P = T * w)
-    wheel_rpm = (v_mps / (2 * math.pi * wheel_radius)) * 60
     motor_rpm = wheel_rpm * gear_ratio
     base_rpm = motor_rpm * 0.45
     peak_power_kw = (t_motor * 2 * math.pi * base_rpm) / (60 * 1000)
