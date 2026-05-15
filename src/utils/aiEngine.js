@@ -39,13 +39,15 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   let pRange, tRange, vRange, wRange, pdRange, tdBase;
   if (is2W) {
     pRange = [2, 15]; tRange = [10, 80]; vRange = [48, 72]; wRange = [6, 12]; 
-    pdRange = [0.3, 1.25]; tdBase = 15; // Adjusted for 6-12kg target
+    pdRange = [0.3, 1.25]; tdBase = 15;
   } else if (isCar) {
     pRange = [80, 250]; tRange = [150, 500]; vRange = [300, 800]; wRange = [60, 120]; 
     pdRange = [2.0, 4.5]; tdBase = 35;
   } else {
-    pRange = [120, 350]; tRange = [600, 2000]; vRange = [400, 800]; wRange = [150, 600]; 
-    pdRange = [1.5, 3.5]; tdBase = 25;
+    // CV supports light (Tata ACE 20kW) to heavy (bus/truck 350kW)
+    // pdRange lowered to realistic traction IM densities (0.4–1.5 kW/kg)
+    pRange = [20, 350]; tRange = [50, 2000]; vRange = [48, 800]; wRange = [30, 600]; 
+    pdRange = [0.4, 1.5]; tdBase = 20;
   }
 
   // 2. VEHICLE DEMAND (The Root)
@@ -109,7 +111,7 @@ const calculateUniversalFirstPrinciples = (inputs) => {
     baseRpm = (peakPowerKw * 1000 * 60) / (2 * Math.PI * tMotor);
   }
 
-  const continuousPowerKw = peakPowerKw * 0.7;
+  // Note: continuousPowerKw is calculated AFTER all adjustments below
 
   // 5. MOTOR TYPE & DENSITIES
   let motorType = MOTOR_TYPES[0]; // PMSM default
@@ -125,25 +127,6 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   const torqueDensity = motorType.includes("PMSM") ? (tdBase * 1.2) : (motorType.includes("IM") ? tdBase : (tdBase * 0.8));
   const powerDensity = motorType.includes("PMSM") ? (pdRange[1] * 0.9) : (motorType.includes("IM") ? (pdRange[0] + pdRange[1])/2 : (pdRange[0] * 1.2));
 
-  // 6. GEOMETRY, MASS & INERTIA (Fully Derived)
-  const weight = peakPowerKw / powerDensity;
-  const volumeL = tMotor / torqueDensity;
-  const volumeM3 = volumeL / 1000;
-
-  // Solve OD and Length (V = pi * r^2 * L). Assume L/D = 1.0 initially.
-  let statorOdM = Math.pow((4 * volumeM3) / Math.PI, 1/3);
-  let lengthM = statorOdM;
-  // Enforce L/D ratio 0.5 to 1.5
-  if (lengthM / statorOdM < 0.5) { lengthM = statorOdM * 0.5; statorOdM = Math.sqrt((4 * volumeM3) / (Math.PI * lengthM)); }
-  if (lengthM / statorOdM > 1.5) { lengthM = statorOdM * 1.5; statorOdM = Math.sqrt((4 * volumeM3) / (Math.PI * lengthM)); }
-
-  const statorOd = statorOdM * 1000;
-  const length = lengthM * 1000;
-
-  const rotorMass = weight * 0.38;
-  const rotorRadM = (statorOd * 0.6) / 2000;
-  const inertia = 0.5 * rotorMass * Math.pow(rotorRadM, 2);
-
   // 7. ELECTRICAL & THERMAL
   let vSystem = parseFloat(inputs.voltage) || (is2W ? 60 : isCar ? 400 : 600);
   const opEff = motorType.includes("PMSM") ? 0.94 : (motorType.includes("IM") ? 0.90 : 0.88);
@@ -156,6 +139,25 @@ const calculateUniversalFirstPrinciples = (inputs) => {
     tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
     notes.push(`Electrical current limit (${currentLimit}A) reached. Motor performance scaled to maintain ${vSystem}V input voltage.`);
   }
+
+  // Continuous power always derived from final adjusted peak power (must be < peak)
+  const continuousPowerKw = peakPowerKw * 0.65;
+
+  // 6. GEOMETRY, MASS & INERTIA — computed AFTER all electrical adjustments
+  const weight = peakPowerKw / powerDensity;
+  const volumeL = tMotor / torqueDensity;
+  const volumeM3 = volumeL / 1000;
+
+  let statorOdM = Math.pow((4 * volumeM3) / Math.PI, 1/3);
+  let lengthM = statorOdM;
+  if (lengthM / statorOdM < 0.5) { lengthM = statorOdM * 0.5; statorOdM = Math.sqrt((4 * volumeM3) / (Math.PI * lengthM)); }
+  if (lengthM / statorOdM > 1.5) { lengthM = statorOdM * 1.5; statorOdM = Math.sqrt((4 * volumeM3) / (Math.PI * lengthM)); }
+
+  const statorOd = statorOdM * 1000;
+  const length = lengthM * 1000;
+  const rotorMass = weight * 0.38;
+  const rotorRadM = (statorOd * 0.6) / 2000;
+  const inertia = 0.5 * rotorMass * Math.pow(rotorRadM, 2);
 
   // Loss Breakdown
   const totalLossKw = peakPowerKw * (1 - opEff);

@@ -27,7 +27,9 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     elif is_car:
         p_range, t_range, v_range, pd_range, td_base = [80, 250], [150, 500], [300, 800], [2.0, 4.5], 35
     else:
-        p_range, t_range, v_range, pd_range, td_base = [120, 350], [600, 2000], [400, 800], [1.5, 3.5], 25
+        # CV range supports light (Tata ACE 27kW) to heavy (bus/truck 350kW)
+        # pd_range lowered to realistic traction IM densities (0.4–1.5 kW/kg)
+        p_range, t_range, v_range, pd_range, td_base = [20, 350], [50, 2000], [48, 800], [0.4, 1.5], 20
 
     # 2. VEHICLE DEMAND
     m_vehicle = float(inputs.get('vehicleWeight', 120 if is_2w else 1500 if is_car else 12000))
@@ -82,7 +84,7 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         peak_power_kw = p_range[0]
         base_rpm = (peak_power_kw * 1000 * 60) / (2 * math.pi * t_motor)
 
-    continuous_power_kw = peak_power_kw * 0.7
+    # Note: continuous_power_kw is calculated AFTER all adjustments below
 
     # 5. MOTOR TYPE
     motor_type = MOTOR_TYPES[0]
@@ -97,7 +99,24 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     torque_density = td_base * 1.2 if 'PMSM' in motor_type else td_base if 'IM' in motor_type else td_base * 0.8
     power_density = pd_range[1] * 0.9 if 'PMSM' in motor_type else (pd_range[0] + pd_range[1])/2 if 'IM' in motor_type else pd_range[0] * 1.2
 
-    # 6. GEOMETRY & MASS
+    # 7. ELECTRICAL
+    v_system = float(inputs.get('voltage', 60 if is_2w else 400 if is_car else 600))
+    # Use input voltage directly — do NOT clamp to class v_range
+    op_eff = 0.94 if 'PMSM' in motor_type else 0.90 if 'IM' in motor_type else 0.88
+    
+    phase_current = (peak_power_kw * 1000) / (v_system * op_eff)
+    curr_limit = 220 if is_2w else 500 if is_car else 600
+    if phase_current > curr_limit:
+        phase_current = curr_limit
+        # Keep v_system as the user's input; scale power and torque instead
+        peak_power_kw = (v_system * phase_current * op_eff) / 1000
+        t_motor = (peak_power_kw * 1000 * 60) / (2 * math.pi * base_rpm)
+        notes.append(f"Electrical current limit ({curr_limit}A) reached. Motor performance scaled to maintain {int(v_system)}V input voltage.")
+
+    # Continuous power always derived from final adjusted peak power (must be < peak)
+    continuous_power_kw = peak_power_kw * 0.65
+
+    # 6. GEOMETRY & MASS (computed after all electrical adjustments so dimensions reflect final power/torque)
     weight = peak_power_kw / power_density
     volume_l = t_motor / torque_density
     volume_m3 = volume_l / 1000
@@ -117,19 +136,6 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     rotor_rad_m = (stator_od * 0.6) / 2000
     inertia = 0.5 * rotor_mass * (rotor_rad_m ** 2)
 
-    # 7. ELECTRICAL
-    v_system = float(inputs.get('voltage', 60 if is_2w else 400 if is_car else 600))
-    # Use input voltage directly — do NOT clamp to class v_range
-    op_eff = 0.94 if 'PMSM' in motor_type else 0.90 if 'IM' in motor_type else 0.88
-    
-    phase_current = (peak_power_kw * 1000) / (v_system * op_eff)
-    curr_limit = 220 if is_2w else 500 if is_car else 600
-    if phase_current > curr_limit:
-        phase_current = curr_limit
-        # Keep v_system as the user's input; scale power and torque instead
-        peak_power_kw = (v_system * phase_current * op_eff) / 1000
-        t_motor = (peak_power_kw * 1000 * 60) / (2 * math.pi * base_rpm)
-        notes.append(f"Electrical current limit ({curr_limit}A) reached. Motor performance scaled to maintain {int(v_system)}V input voltage.")
 
     total_loss = peak_power_kw * (1 - op_eff)
     validation_p = (t_motor * 2 * math.pi * base_rpm) / (60 * 1000)
