@@ -137,6 +137,62 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
     validation_p = (t_motor * 2 * math.pi * base_rpm) / (60 * 1000)
     val_report = f"✔ Physics consistency check: P={peak_power_kw:.2f}kW, T*w={validation_p:.2f}kW. Deviation < 1%."
 
+    # Pole-Slot Combo Selection Logic
+    slots, poles = 24, 8
+    p = peak_power_kw
+
+    if is_2w:
+        if 'BLDC' in motor_type:
+            if p < 5: slots, poles = 12, 8
+            elif p < 10: slots, poles = 18, 12
+            else: slots, poles = 24, 16
+        elif 'PMSM' in motor_type:
+            if p < 5: slots, poles = 12, 10
+            elif p < 10: slots, poles = 18, 14
+            else: slots, poles = 24, 20
+        elif 'SRM' in motor_type:
+            if p < 5: slots, poles = 12, 8
+            elif p < 10: slots, poles = 18, 12
+            else: slots, poles = 24, 16
+        elif 'IM' in motor_type:
+            if p < 5: slots, poles = 18, 4
+            elif p < 10: slots, poles = 24, 4
+            else: slots, poles = 30, 4
+    elif is_car:
+        if 'PMSM' in motor_type:
+            if p < 120: slots, poles = 24, 8
+            elif p < 200: slots, poles = 27, 6
+            else: slots, poles = 30, 10
+        elif 'BLDC' in motor_type:
+            if p < 120: slots, poles = 24, 8
+            elif p < 200: slots, poles = 30, 12
+            else: slots, poles = 18, 16
+        elif 'SRM' in motor_type:
+            if p < 120: slots, poles = 12, 8
+            elif p < 200: slots, poles = 24, 16
+            else: slots, poles = 18, 12
+        elif 'IM' in motor_type:
+            if p < 120: slots, poles = 24, 4
+            elif p < 200: slots, poles = 30, 4
+            else: slots, poles = 36, 6
+    elif is_cv:
+        if 'PMSM' in motor_type:
+            if p < 180: slots, poles = 24, 8
+            elif p < 250: slots, poles = 30, 10
+            else: slots, poles = 36, 12
+        elif 'BLDC' in motor_type:
+            if p < 180: slots, poles = 24, 12
+            elif p < 250: slots, poles = 30, 14
+            else: slots, poles = 18, 16
+        elif 'SRM' in motor_type:
+            if p < 180: slots, poles = 18, 12
+            elif p < 250: slots, poles = 30, 20
+            else: slots, poles = 24, 16
+        elif 'IM' in motor_type:
+            if p < 180: slots, poles = 24, 4
+            elif p < 250: slots, poles = 30, 4
+            else: slots, poles = 36, 6
+
     return format_master_output({
         'vehicleClass': "Two Wheeler" if is_2w else "Passenger Car" if is_car else "Commercial Vehicle",
         'motorType': motor_type, 'reason': reason, 'notes': notes, 'peakPowerKw': peak_power_kw, 
@@ -144,7 +200,8 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         'baseRpm': base_rpm, 'v_system': v_system, 'weight': weight, 'statorOd': stator_od, 
         'length': length, 'opEff': op_eff, 'phase_current': phase_current, 'gearRatio': gear_ratio, 
         'totalMass': total_mass, 'wheelRadius': wheel_radius, 'wheelRpm': wheel_rpm, 'inertia': inertia,
-        'totalLoss': total_loss, 'validationReport': val_report, 'isCV': is_cv, 'is2W': is_2w, 'isCar': is_car
+        'totalLoss': total_loss, 'validationReport': val_report, 'isCV': is_cv, 'is2W': is_2w, 'isCar': is_car,
+        'slots': slots, 'poles': poles
     })
 
 def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
@@ -191,8 +248,8 @@ def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
             'rotorDiameter': f"{round(d['statorOd'] * 0.62)} mm",
             'overallLength': f"{round(d['length'])} mm",
             'airGap': f"{air_gap} mm",
-            'poles': 16 if d['isCV'] else 8,
-            'slots': 48 if d['isCV'] else 24
+            'poles': d['poles'],
+            'slots': d['slots']
         },
         'electrical': {
             'phaseCurrent': f"{round(d['phase_current'])} A (Peak)",

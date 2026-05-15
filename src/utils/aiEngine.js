@@ -172,11 +172,47 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   const validationP = (tMotor * 2 * Math.PI * baseRpm) / (60 * 1000);
   const validationReport = `✔ Physics consistency check: P=${peakPowerKw.toFixed(2)}kW, T*w=${validationP.toFixed(2)}kW. Deviation < 1%. All parameters derived from vehicle load.`;
 
+  // Pole-Slot Combo Selection Logic
+  let slots = 24, poles = 8;
+  const p = peakPowerKw;
+
+  if (is2W) {
+    if (motorType.includes("BLDC")) {
+      if (p < 5) { slots = 12; poles = 8; } else if (p < 10) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
+    } else if (motorType.includes("PMSM")) {
+      if (p < 5) { slots = 12; poles = 10; } else if (p < 10) { slots = 18; poles = 14; } else { slots = 24; poles = 20; }
+    } else if (motorType.includes("SRM")) {
+      if (p < 5) { slots = 12; poles = 8; } else if (p < 10) { slots = 18; poles = 12; } else { slots = 24; poles = 16; }
+    } else if (motorType.includes("IM")) {
+      if (p < 5) { slots = 18; poles = 4; } else if (p < 10) { slots = 24; poles = 4; } else { slots = 30; poles = 4; }
+    }
+  } else if (isCar) {
+    if (motorType.includes("PMSM")) {
+      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 27; poles = 6; } else { slots = 30; poles = 10; }
+    } else if (motorType.includes("BLDC")) {
+      if (p < 120) { slots = 24; poles = 8; } else if (p < 200) { slots = 30; poles = 12; } else { slots = 18; poles = 16; }
+    } else if (motorType.includes("SRM")) {
+      if (p < 120) { slots = 12; poles = 8; } else if (p < 200) { slots = 24; poles = 16; } else { slots = 18; poles = 12; }
+    } else if (motorType.includes("IM")) {
+      if (p < 120) { slots = 24; poles = 4; } else if (p < 200) { slots = 30; poles = 4; } else { slots = 36; poles = 6; }
+    }
+  } else if (isCV) {
+    if (motorType.includes("PMSM")) {
+      if (p < 180) { slots = 24; poles = 8; } else if (p < 250) { slots = 30; poles = 10; } else { slots = 36; poles = 12; }
+    } else if (motorType.includes("BLDC")) {
+      if (p < 180) { slots = 24; poles = 12; } else if (p < 250) { slots = 30; poles = 14; } else { slots = 18; poles = 16; }
+    } else if (motorType.includes("SRM")) {
+      if (p < 180) { slots = 18; poles = 12; } else if (p < 250) { slots = 30; poles = 20; } else { slots = 24; poles = 16; }
+    } else if (motorType.includes("IM")) {
+      if (p < 180) { slots = 24; poles = 4; } else if (p < 250) { slots = 30; poles = 4; } else { slots = 36; poles = 6; }
+    }
+  }
+
   return formatMasterOutput({
     vehicleClass: is2W ? "Two Wheeler" : (isCar ? "Passenger Car" : "Commercial Vehicle"),
     motorType, reason, notes, peakPowerKw, continuousPowerKw, tMotor, motorRpm, baseRpm, vSystem, weight,
     statorOd, length, opEff, phaseCurrent, gearRatio, totalMass, wheelRadius, wheelRpm, inertia,
-    copperLossKw, ironLossKw, switchingLossKw, validationReport, isCV, is2W, isCar
+    copperLossKw, ironLossKw, switchingLossKw, validationReport, isCV, is2W, isCar, slots, poles
   });
 };
 
@@ -225,8 +261,8 @@ const formatMasterOutput = (d) => {
       rotorDiameter: `${Math.round(d.statorOd * 0.62)} mm`,
       overallLength: `${Math.round(d.length)} mm`,
       airGap: `${airGap} mm`,
-      poles: d.isCV ? 16 : 8,
-      slots: d.isCV ? 48 : 24
+      poles: d.poles,
+      slots: d.slots
     },
     electrical: {
       phaseCurrent: `${Math.round(d.phaseCurrent)} A (Peak)`,
