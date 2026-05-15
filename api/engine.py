@@ -208,6 +208,23 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         'slots': slots, 'poles': poles
     })
 
+def _get_winding_type(p: float, is_2w: bool, is_car: bool, is_cv: bool) -> str:
+    if is_2w:
+        if p < 8: return "Concentrated"
+        if p <= 12: return "FSCW (Fractional Slot Concentrated Winding)"
+        return "Distributed"
+    elif is_car:
+        if p < 80: return "Distributed"
+        if p < 250: return "Hairpin"
+        return "Bar"
+    elif is_cv:
+        if p < 80: return "Concentrated"
+        if p < 200: return "Distributed"
+        if p < 400: return "Bar"
+        return "Modular"
+    return "Distributed"
+
+
 def _cooling_method(peak_kw: float, is_2w: bool, is_car: bool, is_cv: bool) -> str:
     if is_2w:
         if peak_kw < 3:   return "Natural Air Cooling"
@@ -282,7 +299,7 @@ def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
             'backEmfConstant': f"{round(d['v_system'] * 0.85 / (2 * math.pi * d['motorRpm'] / 60), 4) if d['motorRpm'] > 0 else 0.1:.4f} V·s/rad",
             'statorResistance': f"{st_res:.4f} Ω",
             'dqInductance': f"{dq_ind:.3f} mH",
-            'windingType': 'Distributed'
+            'windingType': _get_winding_type(d['peakPowerKw'], d['is2W'], d['isCar'], d['isCV'])
         },
         'mechanical': {
             'maxTorqueDensity': f"{round(d['tMotor'] / (math.pi * (d['statorOd'] / 2000) ** 2 * d['length'] / 1000 * 1000), 1)} Nm/L",

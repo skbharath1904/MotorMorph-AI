@@ -211,6 +211,24 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   });
 };
 
+const getWindingType = (p, is2W, isCar, isCV) => {
+  if (is2W) {
+    if (p < 8) return 'Concentrated';
+    if (p <= 12) return 'FSCW (Fractional Slot Concentrated Winding)';
+    return 'Distributed';
+  } else if (isCar) {
+    if (p < 80) return 'Distributed';
+    if (p < 250) return 'Hairpin';
+    return 'Bar';
+  } else if (isCV) {
+    if (p < 80) return 'Concentrated';
+    if (p < 200) return 'Distributed';
+    if (p < 400) return 'Bar';
+    return 'Modular';
+  }
+  return 'Distributed';
+};
+
 const getCoolingMethod = (peakKw, is2W, isCar, isCV) => {
   if (is2W) {
     if (peakKw < 3)  return 'Natural Air Cooling';
@@ -287,7 +305,7 @@ const formatMasterOutput = (d) => {
       backEmfConstant: `${(d.vSystem * 0.85 / (2 * Math.PI * d.motorRpm / 60)).toFixed(4)} V·s/rad`,
       statorResistance: `${statorResistance.toFixed(4)} Ω`,
       dqInductance: `${dqInductance.toFixed(3)} mH`,
-      windingType: 'Distributed'
+      windingType: getWindingType(d.peakPowerKw, d.is2W, d.isCar, d.isCV)
     },
     mechanical: {
       maxTorqueDensity: `${(d.tMotor / (Math.PI * Math.pow(d.statorOd/2000, 2) * d.length/1000 * 1000)).toFixed(1)} Nm/L`,
