@@ -38,8 +38,8 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   // 1. CLASS-SPECIFIC BOUNDS & DENSITIES
   let pRange, tRange, vRange, wRange, pdRange, tdBase;
   if (is2W) {
-    pRange = [2, 15]; tRange = [10, 80]; vRange = [48, 72]; wRange = [3, 10]; 
-    pdRange = [1.0, 3.0]; tdBase = 30; // Nm/L
+    pRange = [2, 15]; tRange = [10, 80]; vRange = [48, 72]; wRange = [6, 12]; 
+    pdRange = [0.3, 1.25]; tdBase = 15; // Adjusted for 6-12kg target
   } else if (isCar) {
     pRange = [80, 250]; tRange = [150, 500]; vRange = [300, 800]; wRange = [60, 120]; 
     pdRange = [2.0, 4.5]; tdBase = 35;

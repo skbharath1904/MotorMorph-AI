@@ -23,7 +23,7 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
 
     # 1. CLASS-SPECIFIC BOUNDS & DENSITIES
     if is_2w:
-        p_range, t_range, v_range, pd_range, td_base = [2, 15], [10, 80], [48, 72], [1.0, 3.0], 30
+        p_range, t_range, v_range, pd_range, td_base = [2, 15], [10, 80], [48, 72], [0.3, 1.25], 15
     elif is_car:
         p_range, t_range, v_range, pd_range, td_base = [80, 250], [150, 500], [300, 800], [2.0, 4.5], 35
     else:
