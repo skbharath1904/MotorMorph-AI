@@ -79,11 +79,8 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   const fTractive = Math.max(fDrag + fRoll + fAccel, fRoll + fGrade);
   const tWheel = fTractive * wheelRadius;
 
-  // 3. DRIVETRAIN — gear ratio derived from target motor RPM at top speed
-  const wheelRpm = (vMps / (2 * Math.PI * wheelRadius)) * 60 || 1;
-  // Target RPM: CV-IM ~2500, Car-PMSM ~8000, 2W-BLDC ~3500
-  const targetRpm = is2W ? 3500 : isCar ? 8000 : 2500;
-  let gearRatio = wheelRpm > 0 ? targetRpm / wheelRpm : (is2W ? 5 : isCar ? 9 : 4.5);
+  // 3. DRIVETRAIN & MOTOR TORQUE
+  let gearRatio = is2W ? 5 : isCar ? 9 : 11;
   let tMotor = tWheel / gearRatio;
 
   // Clamp Torque and adjust Gear Ratio
@@ -97,6 +94,7 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   }
 
   // 4. SPEED & DERIVED POWER
+  const wheelRpm = (vMps / (2 * Math.PI * wheelRadius)) * 60;
   let motorRpm = wheelRpm * gearRatio;
   let baseRpm = motorRpm * 0.45;
   let peakPowerKw = (tMotor * 2 * Math.PI * baseRpm) / (60 * 1000);
