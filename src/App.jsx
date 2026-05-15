@@ -5,6 +5,7 @@ import MotorForm from './components/MotorForm';
 import DesignReport from './components/DesignReport';
 import { generateMotorDesign } from './utils/aiEngine';
 
+// Main Application Component
 function App() {
   const [designData, setDesignData] = useState(null);
   const [userInputs, setUserInputs] = useState(null);
