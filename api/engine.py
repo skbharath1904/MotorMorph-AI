@@ -119,19 +119,17 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
 
     # 7. ELECTRICAL
     v_system = float(inputs.get('voltage', 60 if is_2w else 400 if is_car else 600))
-    v_system = max(v_range[0], min(v_range[1], v_system))
+    # Use input voltage directly — do NOT clamp to class v_range
     op_eff = 0.94 if 'PMSM' in motor_type else 0.90 if 'IM' in motor_type else 0.88
     
     phase_current = (peak_power_kw * 1000) / (v_system * op_eff)
     curr_limit = 220 if is_2w else 500 if is_car else 600
     if phase_current > curr_limit:
         phase_current = curr_limit
-        v_system = (peak_power_kw * 1000) / (phase_current * op_eff)
-        if v_system > v_range[1]:
-            v_system = v_range[1]
-            peak_power_kw = (v_system * phase_current * op_eff) / 1000
-            t_motor = (peak_power_kw * 1000 * 60) / (2 * math.pi * base_rpm)
-            notes.append("Electrical constraint hit. Power and torque scaled down to current limits.")
+        # Keep v_system as the user's input; scale power and torque instead
+        peak_power_kw = (v_system * phase_current * op_eff) / 1000
+        t_motor = (peak_power_kw * 1000 * 60) / (2 * math.pi * base_rpm)
+        notes.append(f"Electrical current limit ({curr_limit}A) reached. Motor performance scaled to maintain {int(v_system)}V input voltage.")
 
     total_loss = peak_power_kw * (1 - op_eff)
     validation_p = (t_motor * 2 * math.pi * base_rpm) / (60 * 1000)

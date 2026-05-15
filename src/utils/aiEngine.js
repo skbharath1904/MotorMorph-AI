@@ -146,20 +146,15 @@ const calculateUniversalFirstPrinciples = (inputs) => {
 
   // 7. ELECTRICAL & THERMAL
   let vSystem = parseFloat(inputs.voltage) || (is2W ? 60 : isCar ? 400 : 600);
-  vSystem = Math.max(vRange[0], Math.min(vRange[1], vSystem));
   const opEff = motorType.includes("PMSM") ? 0.94 : (motorType.includes("IM") ? 0.90 : 0.88);
   
   let phaseCurrent = (peakPowerKw * 1000) / (vSystem * opEff);
   const currentLimit = is2W ? 220 : isCar ? 500 : 600;
   if (phaseCurrent > currentLimit) {
     phaseCurrent = currentLimit;
-    vSystem = (peakPowerKw * 1000) / (phaseCurrent * opEff);
-    if (vSystem > vRange[1]) {
-        vSystem = vRange[1];
-        peakPowerKw = (vSystem * phaseCurrent * opEff) / 1000;
-        tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
-        notes.push("Electrical constraint hit. Motor torque and power scaled down to stay within current limits.");
-    }
+    peakPowerKw = (vSystem * phaseCurrent * opEff) / 1000;
+    tMotor = (peakPowerKw * 1000 * 60) / (2 * Math.PI * baseRpm);
+    notes.push(`Electrical current limit (${currentLimit}A) reached. Motor performance scaled to maintain ${vSystem}V input voltage.`);
   }
 
   // Loss Breakdown
