@@ -152,32 +152,7 @@ const DesignReport = ({ data, inputs }) => {
            ))}
         </div>
 
-        {/* 05. PREDICTION ACCURACY */}
-        <div className="pdf-section" style={{ marginBottom: '2.5rem' }}>
-           <div className="accuracy-strip" style={{
-              display: 'flex', alignItems: 'center', gap: '1.2rem', 
-              background: 'rgba(0, 210, 255, 0.05)', border: '1px solid rgba(0, 210, 255, 0.15)', 
-              padding: '1.2rem 1.5rem', borderRadius: '12px'
-           }}>
-              <div style={{
-                width: '48px', height: '48px', borderRadius: '50%', 
-                border: '3px solid var(--accent-blue)', display: 'flex', 
-                alignItems: 'center', justifyContent: 'center', 
-                fontWeight: '800', color: 'var(--accent-blue)', fontSize: '1rem',
-                flexShrink: 0
-              }}>
-                {data.accuracy.score}%
-              </div>
-              <div>
-                <div style={{ fontWeight: '700', color: 'var(--text-primary)', marginBottom: '4px', fontSize: '1rem' }}>
-                  Prediction Accuracy: <span style={{ color: 'var(--accent-blue)' }}>{data.accuracy.score}%</span>
-                </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Design constraints applied — see notice above.
-                </div>
-              </div>
-           </div>
-        </div>
+
 
         {/* 06. SPECS GRIDS */}
         <div className="pdf-section specs-grid-row">
