@@ -211,6 +211,27 @@ const calculateUniversalFirstPrinciples = (inputs) => {
   });
 };
 
+const getCoolingMethod = (peakKw, is2W, isCar, isCV) => {
+  if (is2W) {
+    if (peakKw < 3)  return 'Natural Air Cooling';
+    if (peakKw < 8)  return 'Forced Air Cooling';
+    if (peakKw < 20) return 'Air + Heat Sink Cooling';
+    return 'Liquid Cooling (Compact Loop)';
+  } else if (isCar) {
+    if (peakKw < 40)  return 'Air Cooling';
+    if (peakKw < 80)  return 'Air + Liquid Hybrid';
+    if (peakKw < 150) return 'Liquid Cooling';
+    if (peakKw < 300) return 'Advanced Liquid Cooling + Oil Spray';
+    return 'Direct Oil Cooling / Integrated Motor Cooling';
+  } else {
+    if (peakKw < 30)  return 'Air + Forced Cooling';
+    if (peakKw < 80)  return 'Liquid Cooling';
+    if (peakKw < 180) return 'Liquid + Oil Cooling';
+    if (peakKw < 350) return 'Advanced Oil Spray + Liquid Loop';
+    return 'Direct Stator Oil Cooling + Active Thermal Management';
+  }
+};
+
 const formatMasterOutput = (d) => {
   const peakEff = (d.opEff * 100 + 1.8).toFixed(1);
   const airGap = d.statorOd < 150 ? 0.3 : (d.statorOd < 350 ? 0.8 : 1.5);
@@ -245,7 +266,7 @@ const formatMasterOutput = (d) => {
       weightKg: Math.round(d.weight)
     },
     thermal: {
-      coolingMethod: d.isCV ? "Liquid + Oil Cooling" : (d.isCar ? "Liquid Cooling" : "Air / Liquid Hybrid"),
+      coolingMethod: getCoolingMethod(d.peakPowerKw, d.is2W, d.isCar, d.isCV),
       maxCoilTemp: d.isCV ? "150°C" : "140°C",
       coolantFlowRate: `${(d.peakPowerKw * 0.06).toFixed(1)} L/min`,
       thermalResistance: d.isCV ? "0.420 K/W" : "0.180 K/W",

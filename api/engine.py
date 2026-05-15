@@ -208,6 +208,26 @@ def calculate_universal_first_principles(inputs: Dict[str, Any]) -> Dict[str, An
         'slots': slots, 'poles': poles
     })
 
+def _cooling_method(peak_kw: float, is_2w: bool, is_car: bool, is_cv: bool) -> str:
+    if is_2w:
+        if peak_kw < 3:   return "Natural Air Cooling"
+        if peak_kw < 8:   return "Forced Air Cooling"
+        if peak_kw < 20:  return "Air + Heat Sink Cooling"
+        return "Liquid Cooling (Compact Loop)"
+    elif is_car:
+        if peak_kw < 40:  return "Air Cooling"
+        if peak_kw < 80:  return "Air + Liquid Hybrid"
+        if peak_kw < 150: return "Liquid Cooling"
+        if peak_kw < 300: return "Advanced Liquid Cooling + Oil Spray"
+        return "Direct Oil Cooling / Integrated Motor Cooling"
+    else:  # CV
+        if peak_kw < 30:  return "Air + Forced Cooling"
+        if peak_kw < 80:  return "Liquid Cooling"
+        if peak_kw < 180: return "Liquid + Oil Cooling"
+        if peak_kw < 350: return "Advanced Oil Spray + Liquid Loop"
+        return "Direct Stator Oil Cooling + Active Thermal Management"
+
+
 def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
     peak_eff = round(d['opEff'] * 100 + 1.8, 1)
     air_gap = 0.3 if d['statorOd'] < 150 else 0.8 if d['statorOd'] < 350 else 1.5
@@ -241,7 +261,7 @@ def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
             'weightKg': round(d['weight'])
         },
         'thermal': {
-            'coolingMethod': "Liquid + Oil Cooling" if d['isCV'] else "Liquid Cooling" if d['isCar'] else "Air / Liquid Hybrid",
+            'coolingMethod': _cooling_method(d['peakPowerKw'], d['is2W'], d['isCar'], d['isCV']),
             'maxCoilTemp': "150°C" if d['isCV'] else "140°C",
             'coolantFlowRate': f"{round(d['peakPowerKw'] * 0.06, 1)} L/min",
             'thermalResistance': "0.420 K/W" if d['isCV'] else "0.180 K/W",
