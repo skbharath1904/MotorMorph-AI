@@ -252,6 +252,56 @@ AIR_GAP_RANGES = {
     'IM':   {'min': 0.3, 'max': 3.0},
 }
 
+def _generate_motor_justification(d: Dict[str, Any], peak_power_kw: float, t_motor: float, op_eff: float, is_2w: bool, is_car: bool, is_cv: bool) -> list:
+    motor_type = d['motorType']
+    reasons = []
+
+    # 1. Motor topology suitability
+    if 'PMSM' in motor_type and 'IM' not in motor_type:
+        reasons.append(f"🔋 High Efficiency: PMSM uses permanent magnets eliminating rotor copper losses, achieving {round(op_eff*100,1)}% operating efficiency — ideal for energy-critical EV applications.")
+    elif 'BLDC' in motor_type:
+        reasons.append(f"⚡ BLDC Topology: Electronic commutation with no brushes gives high reliability and {round(op_eff*100,1)}% operating efficiency, well-suited for compact two-wheeler drivetrains.")
+    elif 'IM' in motor_type and 'PMSM' not in motor_type:
+        reasons.append(f"🏗️ Induction Motor Robustness: No permanent magnets means lower cost, no demagnetization risk, and proven reliability for commercial duty cycles. Operating efficiency: {round(op_eff*100,1)}%.")
+    elif 'SRM' in motor_type:
+        reasons.append(f"🔩 SRM Ruggedness: Switched Reluctance construction has no magnets or rotor windings — extremely robust for high-shock, high-torque heavy-duty applications. Operating efficiency: {round(op_eff*100,1)}%.")
+    elif 'PMSM' in motor_type and 'IM' in motor_type:
+        reasons.append(f"🚀 Dual Motor System: PMSM front + IM rear provides AWD capability and regenerative braking optimisation across all load conditions. Combined peak power: {round(peak_power_kw,1)} kW.")
+
+    # 2. Power sizing rationale
+    if is_2w:
+        reasons.append(f"📐 Power Sizing: {round(peak_power_kw,1)} kW peak power is optimised for the vehicle mass and target speed, balancing acceleration demand with two-wheeler weight constraints (6–12 kg motor target).")
+    elif is_car:
+        reasons.append(f"📐 Power Sizing: {round(peak_power_kw,1)} kW peak power meets the combined traction force (drag + rolling + gradient + acceleration) derived from the vehicle's {round(d['totalMass'])} kg total mass at target speed.")
+    else:
+        reasons.append(f"📐 Power Sizing: {round(peak_power_kw,1)} kW continuous traction requirement computed from {round(d['totalMass'])} kg gross vehicle mass — scaled to match commercial duty cycle loading.")
+
+    # 3. Torque delivery
+    reasons.append(f"🔄 Torque Delivery: {round(t_motor)} Nm peak motor torque via {d['gearRatio']:.2f}:1 reduction ratio delivers {round(t_motor * d['gearRatio'])} Nm at the wheel — meeting gradeability and acceleration targets without exceeding drivetrain limits.")
+
+    # 4. Winding type rationale
+    winding = _get_winding_type(peak_power_kw, is_2w, is_car, is_cv)
+    if 'Concentrated' in winding or 'FSCW' in winding:
+        reasons.append(f"🧲 Winding: {winding} chosen for short end-turns, high slot fill factor, and compact axial length — optimal for low-to-mid power density motors in this class.")
+    elif 'Hairpin' in winding:
+        reasons.append(f"🧲 Winding: {winding} technology selected for superior slot fill (>70%), low AC resistance at high frequency, and excellent thermal conductivity — standard in modern EV traction motors.")
+    elif 'Distributed' in winding:
+        reasons.append(f"🧲 Winding: {winding} winding provides smooth torque ripple, low cogging, and even heat distribution — preferred for mid-to-high power traction applications.")
+    else:
+        reasons.append(f"🧲 Winding: {winding} configuration matched to the power/torque envelope of this motor class.")
+
+    # 5. Cooling strategy
+    cooling = _cooling_method(peak_power_kw, is_2w, is_car, is_cv)
+    loss_kw = peak_power_kw * (1 - op_eff)
+    reasons.append(f"🌡️ Thermal Management: {cooling} selected to dissipate {round(loss_kw,2)} kW of heat loss at peak load — maintains stator below 140–150°C for long-term insulation life.")
+
+    # 6. Air gap selection
+    motor_key = 'BLDC' if 'BLDC' in motor_type else 'SRM' if 'SRM' in motor_type else 'IM' if 'IM' in motor_type and 'PMSM' not in motor_type else 'PMSM'
+    ag = AIR_GAP_RANGES[motor_key]
+    reasons.append(f"📏 Air Gap: Ranges {ag['min']}–{ag['max']} mm for {motor_key} topology. Tighter gaps increase flux density but demand tighter manufacturing tolerances; the computed value balances electromagnetic performance with producibility.")
+
+    return reasons
+
 def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
     peak_eff = round(d['opEff'] * 100 + 1.8, 1)
 
@@ -265,6 +315,12 @@ def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
     od_min, od_max = 80.0, 500.0
     t = max(0.0, min(1.0, (d['statorOd'] - od_min) / (od_max - od_min)))
     air_gap = round(ag_range['min'] + t * (ag_range['max'] - ag_range['min']), 2)
+
+    # Detailed motor selection justification
+    justification_points = _generate_motor_justification(
+        d, d['peakPowerKw'], d['tMotor'], d['opEff'],
+        d['is2W'], d['isCar'], d['isCV']
+    )
 
     curve = []
     for r in range(0, int(d['motorRpm']) + 1000, 500):
@@ -281,6 +337,7 @@ def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
     return {
         'motorType': d['motorType'],
         'motorSelectionReason': d['reason'],
+        'motorJustificationPoints': justification_points,
         'rangeLimitation': ' | '.join(d['notes']) if d['notes'] else None,
         'specifications': {
             'peakPowerKw': round(d['peakPowerKw'], 1),

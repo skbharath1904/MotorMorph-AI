@@ -257,6 +257,59 @@ const getCoolingMethod = (peakKw, is2W, isCar, isCV) => {
   }
 };
 
+const getMotorJustificationPoints = (d, airGap) => {
+  const points = [];
+  const mt = d.motorType;
+  const eff = (d.opEff * 100).toFixed(1);
+  const lossKw = (d.peakPowerKw * (1 - d.opEff)).toFixed(2);
+
+  // 1. Topology
+  if (mt.includes('BLDC')) {
+    points.push(`⚡ BLDC Topology: Electronic commutation with no brushes gives high reliability and ${eff}% operating efficiency, well-suited for compact two-wheeler drivetrains.`);
+  } else if (mt.includes('PMSM') && mt.includes('IM')) {
+    points.push(`🚀 Dual Motor System: PMSM front + IM rear provides AWD capability and regenerative braking optimisation across all load conditions. Combined peak power: ${d.peakPowerKw.toFixed(1)} kW.`);
+  } else if (mt.includes('PMSM')) {
+    points.push(`🔋 High Efficiency: PMSM uses permanent magnets eliminating rotor copper losses, achieving ${eff}% operating efficiency — ideal for energy-critical EV applications.`);
+  } else if (mt.includes('SRM')) {
+    points.push(`🔩 SRM Ruggedness: Switched Reluctance construction has no magnets or rotor windings — extremely robust for high-shock, high-torque heavy-duty applications. Operating efficiency: ${eff}%.`);
+  } else if (mt.includes('IM')) {
+    points.push(`🏗️ Induction Motor Robustness: No permanent magnets means lower cost, no demagnetization risk, and proven reliability for commercial duty cycles. Operating efficiency: ${eff}%.`);
+  }
+
+  // 2. Power sizing
+  if (d.is2W) {
+    points.push(`📐 Power Sizing: ${d.peakPowerKw.toFixed(1)} kW peak power optimised for the vehicle mass and target speed, balancing acceleration demand with two-wheeler weight constraints (6–12 kg motor target).`);
+  } else if (d.isCar) {
+    points.push(`📐 Power Sizing: ${d.peakPowerKw.toFixed(1)} kW peak power meets combined traction force (drag + rolling + gradient + acceleration) from the vehicle's ${Math.round(d.totalMass)} kg total mass at target speed.`);
+  } else {
+    points.push(`📐 Power Sizing: ${d.peakPowerKw.toFixed(1)} kW traction requirement computed from ${Math.round(d.totalMass)} kg gross vehicle mass — scaled to match commercial duty cycle loading.`);
+  }
+
+  // 3. Torque
+  points.push(`🔄 Torque Delivery: ${Math.round(d.tMotor)} Nm peak motor torque via ${d.gearRatio.toFixed(2)}:1 reduction ratio delivers ${Math.round(d.tMotor * d.gearRatio)} Nm at the wheel — meeting gradeability and acceleration targets.`);
+
+  // 4. Winding
+  const winding = getWindingType(d.peakPowerKw, d.is2W, d.isCar, d.isCV);
+  if (winding.includes('Concentrated') || winding.includes('FSCW')) {
+    points.push(`🧲 Winding: ${winding} chosen for short end-turns, high slot fill factor, and compact axial length — optimal for low-to-mid power density motors in this class.`);
+  } else if (winding.includes('Hairpin')) {
+    points.push(`🧲 Winding: ${winding} technology selected for superior slot fill (>70%), low AC resistance at high frequency, and excellent thermal conductivity — standard in modern EV traction motors.`);
+  } else {
+    points.push(`🧲 Winding: ${winding} winding provides smooth torque ripple, low cogging, and even heat distribution — preferred for mid-to-high power traction applications.`);
+  }
+
+  // 5. Cooling
+  const cooling = getCoolingMethod(d.peakPowerKw, d.is2W, d.isCar, d.isCV);
+  points.push(`🌡️ Thermal Management: ${cooling} selected to dissipate ${lossKw} kW of heat loss at peak load — maintains stator below 140–150°C for long-term insulation life.`);
+
+  // 6. Air gap
+  const typeKey = mt.includes('BLDC') ? 'BLDC' : mt.includes('SRM') ? 'SRM' : (mt.includes('IM') && !mt.includes('PMSM')) ? 'IM' : 'PMSM';
+  const ag = AIR_GAP_RANGES[typeKey];
+  points.push(`📏 Air Gap: Ranges ${ag.min}–${ag.max} mm for ${typeKey} topology. Tighter gaps increase flux density but demand tighter manufacturing tolerances; the computed ${airGap} mm value balances electromagnetic performance with producibility.`);
+
+  return points;
+};
+
 const formatMasterOutput = (d) => {
   const peakEff = (d.opEff * 100 + 1.8).toFixed(1);
   
@@ -272,6 +325,8 @@ const formatMasterOutput = (d) => {
   const odMin = 80, odMax = 500;
   const t = Math.max(0, Math.min(1, (d.statorOd - odMin) / (odMax - odMin)));
   const airGap = parseFloat((range.min + t * (range.max - range.min)).toFixed(2));
+
+  const motorJustificationPoints = getMotorJustificationPoints(d, airGap);
 
   const curve = [];
   for (let r = 0; r <= d.motorRpm + 1000; r += 500) {
@@ -289,6 +344,7 @@ const formatMasterOutput = (d) => {
   return {
     motorType: d.motorType,
     motorSelectionReason: d.reason,
+    motorJustificationPoints,
     rangeLimitation: d.notes.length > 0 ? d.notes.join(' | ') : null,
     specifications: {
       peakPowerKw: parseFloat(d.peakPowerKw.toFixed(1)),

@@ -83,11 +83,27 @@ const DesignReport = ({ data, inputs }) => {
             <div style={{ maxWidth: '75%' }}>
               <h4 className="label-accent">AI RECOMMENDED ARCHITECTURE</h4>
               <h2 className="report-title" style={{ marginBottom: '0.8rem' }}>{data.motorType}</h2>
-              <div className="justification-box" style={{ background: 'rgba(0, 210, 255, 0.05)', border: '1px solid rgba(0, 210, 255, 0.15)', borderRadius: '10px', padding: '1rem', marginTop: '0.5rem' }}>
-                 <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-                    <span style={{ color: 'var(--accent-blue)', fontWeight: 800, marginRight: '8px' }}>💡 Why This Motor?</span>
-                    {data.motorSelectionReason}
-                 </p>
+              <div className="justification-box" style={{ background: 'rgba(0, 210, 255, 0.05)', border: '1px solid rgba(0, 210, 255, 0.2)', borderRadius: '12px', padding: '1.2rem', marginTop: '0.75rem' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}>
+                   <span style={{ fontSize: '1.1rem' }}>💡</span>
+                   <span style={{ color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Why This Motor?</span>
+                 </div>
+                 {data.motorJustificationPoints && data.motorJustificationPoints.length > 0 ? (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                     {data.motorJustificationPoints.map((point, i) => {
+                       const emoji = point.slice(0, 2);
+                       const text = point.slice(2).trim();
+                       return (
+                         <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '0.6rem 0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                           <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>{emoji}</span>
+                           <span style={{ fontSize: '0.85rem', lineHeight: '1.55', color: 'var(--text-secondary)' }}>{text}</span>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 ) : (
+                   <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>{data.motorSelectionReason}</p>
+                 )}
               </div>
             </div>
             <button onClick={handleDownloadPdf} className="btn btn-secondary ui-only" disabled={isExporting}>
