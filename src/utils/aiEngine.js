@@ -8,6 +8,13 @@ const MOTOR_TYPES = [
   'PMSM + IM (Dual Motor System)'
 ];
 
+const AIR_GAP_RANGES = {
+  'BLDC': { min: 0.5, max: 2.0 },
+  'PMSM': { min: 0.5, max: 2.5 },
+  'SRM': { min: 0.2, max: 1.5 },
+  'IM': { min: 0.3, max: 3.0 }
+};
+
 export const generateMotorDesign = async (inputs) => {
   try {
     const response = await fetch('/api/generate-design', {
@@ -252,7 +259,19 @@ const getCoolingMethod = (peakKw, is2W, isCar, isCV) => {
 
 const formatMasterOutput = (d) => {
   const peakEff = (d.opEff * 100 + 1.8).toFixed(1);
-  const airGap = d.statorOd < 150 ? 0.3 : (d.statorOd < 350 ? 0.8 : 1.5);
+  
+  // Dynamic Air Gap Prediction based on Motor Type and Physical Dimension (Stator OD)
+  let typeKey = 'PMSM';
+  if (d.motorType.includes('BLDC')) typeKey = 'BLDC';
+  else if (d.motorType.includes('IM')) typeKey = 'IM';
+  else if (d.motorType.includes('SRM')) typeKey = 'SRM';
+  else if (d.motorType.includes('PMSM')) typeKey = 'PMSM';
+
+  const range = AIR_GAP_RANGES[typeKey];
+  // Interpolate based on statorOd (typical range: 80mm to 500mm)
+  const odMin = 80, odMax = 500;
+  const t = Math.max(0, Math.min(1, (d.statorOd - odMin) / (odMax - odMin)));
+  const airGap = parseFloat((range.min + t * (range.max - range.min)).toFixed(2));
 
   const curve = [];
   for (let r = 0; r <= d.motorRpm + 1000; r += 500) {
