@@ -245,9 +245,26 @@ def _cooling_method(peak_kw: float, is_2w: bool, is_car: bool, is_cv: bool) -> s
         return "Direct Stator Oil Cooling + Active Thermal Management"
 
 
+AIR_GAP_RANGES = {
+    'BLDC': {'min': 0.5, 'max': 2.0},
+    'PMSM': {'min': 0.5, 'max': 2.5},
+    'SRM':  {'min': 0.2, 'max': 1.5},
+    'IM':   {'min': 0.3, 'max': 3.0},
+}
+
 def format_master_output(d: Dict[str, Any]) -> Dict[str, Any]:
     peak_eff = round(d['opEff'] * 100 + 1.8, 1)
-    air_gap = 0.3 if d['statorOd'] < 150 else 0.8 if d['statorOd'] < 350 else 1.5
+
+    # Dynamic Air Gap: interpolate within motor-type range based on stator diameter
+    motor_type = d['motorType']
+    if 'BLDC' in motor_type:   type_key = 'BLDC'
+    elif 'SRM' in motor_type:  type_key = 'SRM'
+    elif 'IM' in motor_type:   type_key = 'IM'
+    else:                      type_key = 'PMSM'
+    ag_range = AIR_GAP_RANGES[type_key]
+    od_min, od_max = 80.0, 500.0
+    t = max(0.0, min(1.0, (d['statorOd'] - od_min) / (od_max - od_min)))
+    air_gap = round(ag_range['min'] + t * (ag_range['max'] - ag_range['min']), 2)
 
     curve = []
     for r in range(0, int(d['motorRpm']) + 1000, 500):
