@@ -37,6 +37,25 @@ const AwaitingDesign = () => {
   );
 };
 
+const JustificationContent = ({ points, reason }) => (
+  points && points.length > 0 ? (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+      {points.map((point, i) => {
+        const emoji = point.slice(0, 2);
+        const text = point.slice(2).trim();
+        return (
+          <div key={i} className="justification-item" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '0.6rem 0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>{emoji}</span>
+            <span style={{ fontSize: '0.85rem', lineHeight: '1.55', color: 'var(--text-secondary)' }}>{text}</span>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>{reason}</p>
+  )
+);
+
 const DesignReport = ({ data, inputs }) => {
   const reportRef = useRef();
   const [isExporting, setIsExporting] = useState(false);
@@ -85,7 +104,7 @@ const DesignReport = ({ data, inputs }) => {
               <h4 className="label-accent">AI RECOMMENDED ARCHITECTURE</h4>
               <h2 className="report-title" style={{ marginBottom: '0.8rem' }}>{data.motorType}</h2>
               <div className="justification-box" style={{ background: 'rgba(0, 210, 255, 0.05)', border: '1px solid rgba(0, 210, 255, 0.2)', borderRadius: '12px', padding: '1.2rem', marginTop: '0.75rem' }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: (showJustification || isExporting) ? '1rem' : '0' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: showJustification ? '1rem' : '0' }}>
                    <span style={{ fontSize: '1.1rem' }}>💡</span>
                    <span style={{ color: 'var(--accent-blue)', fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Why This Motor?</span>
                    <button 
@@ -102,35 +121,28 @@ const DesignReport = ({ data, inputs }) => {
                      {showJustification ? 'HIDE DETAILS' : 'VIEW REASON'}
                    </button>
                  </div>
+
+                 {/* PDF-ONLY: Always visible in PDF download */}
+                 <div className="pdf-only-justification" style={{ display: 'none', marginTop: '1rem' }}>
+                    <JustificationContent points={data.motorJustificationPoints} reason={data.motorSelectionReason} />
+                 </div>
                  
-                 <AnimatePresence>
-                   {(showJustification || isExporting) && (
-                     <motion.div 
-                       initial={{ height: 0, opacity: 0 }}
-                       animate={{ height: 'auto', opacity: 1 }}
-                       exit={{ height: 0, opacity: 0 }}
-                       transition={{ duration: 0.3 }}
-                       style={{ overflow: 'hidden' }}
-                     >
-                       {data.motorJustificationPoints && data.motorJustificationPoints.length > 0 ? (
-                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                           {data.motorJustificationPoints.map((point, i) => {
-                             const emoji = point.slice(0, 2);
-                             const text = point.slice(2).trim();
-                             return (
-                               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '0.6rem 0.8rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                 <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: '1px' }}>{emoji}</span>
-                                 <span style={{ fontSize: '0.85rem', lineHeight: '1.55', color: 'var(--text-secondary)' }}>{text}</span>
-                               </div>
-                             );
-                           })}
-                         </div>
-                       ) : (
-                         <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-secondary)' }}>{data.motorSelectionReason}</p>
-                       )}
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
+                 {/* UI-ONLY: Toggleable via button */}
+                 <div className="ui-only">
+                    <AnimatePresence>
+                      {showJustification && (
+                        <motion.div 
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <JustificationContent points={data.motorJustificationPoints} reason={data.motorSelectionReason} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                 </div>
               </div>
             </div>
             <button onClick={handleDownloadPdf} className="btn btn-secondary ui-only" disabled={isExporting}>
@@ -395,6 +407,8 @@ const DesignReport = ({ data, inputs }) => {
 
         .pdf-export-mode .ui-only { display: none !important; }
         .pdf-export-mode .pdf-only-blueprint { display: block !important; page-break-before: always !important; }
+        .pdf-export-mode .pdf-only-justification { display: block !important; }
+        .pdf-export-mode .justification-item { background: #fff !important; border: 1px solid #eee !important; margin-bottom: 4px; }
       `}} />
     </motion.div>
   );
