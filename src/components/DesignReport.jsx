@@ -123,7 +123,7 @@ const DesignReport = ({ data, inputs }) => {
                  </div>
 
                  {/* PDF-ONLY: Always visible in PDF download */}
-                 <div className="pdf-only-justification" style={{ display: 'none', marginTop: '1rem' }}>
+                 <div className="pdf-only-justification" style={{ marginTop: '1rem' }}>
                     <JustificationContent points={data.motorJustificationPoints} reason={data.motorSelectionReason} />
                  </div>
                  
@@ -407,8 +407,11 @@ const DesignReport = ({ data, inputs }) => {
 
         .pdf-export-mode .ui-only { display: none !important; }
         .pdf-export-mode .pdf-only-blueprint { display: block !important; page-break-before: always !important; }
+        
+        .pdf-only-justification { display: none; }
         .pdf-export-mode .pdf-only-justification { display: block !important; }
-        .pdf-export-mode .justification-item { background: #fff !important; border: 1px solid #eee !important; margin-bottom: 4px; }
+        .pdf-export-mode .justification-item { background: #fff !important; border: 1px solid #ddd !important; margin-bottom: 6px; padding: 8px !important; color: #000 !important; }
+        .pdf-export-mode .justification-item span { color: #000 !important; }
       `}} />
     </motion.div>
   );
